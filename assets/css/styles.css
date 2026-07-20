@@ -746,7 +746,8 @@ body.nav-open { overflow: hidden; }
   .split, .split.reverse .split-media { grid-template-columns: 1fr; order: 0; }
   .cols-4 { grid-template-columns: repeat(2, 1fr); }
   .cols-5 { grid-template-columns: repeat(2, 1fr); }
-  .foot-grid { grid-template-columns: 1fr 1fr; }
+  /* matches .site-footer .foot-grid specificity so it actually applies */
+  .site-footer .foot-grid { grid-template-columns: 1fr 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-item.wide { grid-column: span 2; }
 }
@@ -777,7 +778,14 @@ body.nav-open { overflow: hidden; }
   body.nav-open .nav-toggle span:nth-child(3) { width: 26px; transform: translateY(-7px) rotate(-45deg); }
   .cols-2, .cols-3, .cols-5 { grid-template-columns: 1fr; }
   .field-row { grid-template-columns: 1fr; }
-  .foot-grid { grid-template-columns: 1fr; }
+  .site-footer .foot-grid {
+    grid-template-columns: 1fr;
+    gap: 34px;
+    padding-bottom: 36px;
+  }
+  .site-footer .foot-grid p { max-width: 46ch; }
+  .site-footer h4 { margin-bottom: 10px; }
+  .site-footer .foot-links a { padding: 5px 0; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-item.wide { grid-column: span 1; }
   .stat-row { gap: 28px; }
