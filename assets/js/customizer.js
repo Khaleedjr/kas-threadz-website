@@ -282,14 +282,16 @@
     let lbScale = 1;
     const setLbScale = (s) => {
       lbScale = Math.min(3, Math.max(1, s));
-      $("lb-stage").style.transform = "scale(" + lbScale + ")";
+      /* the stage is laid out at 3x, so scale(lbScale/3) keeps the SVG
+         rasterised large and sharp at every zoom level */
+      $("lb-stage").style.transform = "translate(-50%, -50%) scale(" + (lbScale / 3) + ")";
     };
     const openZoom = () => {
       /* open front-facing and centred */
       state.rot = 0;
       $("lb-stage").innerHTML = $("preview-stage").innerHTML;
       document.querySelectorAll(".g3d-inner").forEach((el) => {
-        el.style.transform = "rotateX(-4deg) rotateY(0deg)";
+        el.style.transform = "";
       });
       setLbScale(1);
       $("lb-cap").textContent = nameOf(TYPES, state.type) + " · " + fabName() + " · " + colorName(state.color);

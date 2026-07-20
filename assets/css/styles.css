@@ -732,15 +732,16 @@ body.nav-open { overflow: hidden; }
 @media (max-width: 960px) {
   /* Flatten the hero so the garment can slot between the intro text and
      the action buttons on small screens */
-  .hero-inner { display: flex; flex-direction: column; }
+  .hero-inner { display: flex; flex-direction: column; gap: 14px; }
   .hero-copy { display: contents; }
-  .hero-copy > .eyebrow { order: 1; }
-  .hero-copy > .display-xl { order: 2; }
-  .hero-copy > .hero-jp { order: 3; }
-  .hero-copy > .lead { order: 4; }
-  .hero-visual { order: 5; max-width: 400px; margin-inline: auto; width: 100%; margin-block: 8px 22px; }
+  .hero-copy > .eyebrow { order: 1; margin-bottom: 4px; }
+  .hero-copy > .display-xl { order: 2; margin-block: 6px 4px; }
+  .hero-copy > .hero-jp { order: 3; margin-block: 0 10px; }
+  .hero-copy > .lead { order: 4; margin-block: 0 6px; }
+  .hero-visual { order: 5; max-width: 400px; margin-inline: auto; width: 100%; margin-block: 2px 14px; }
   .hero-copy > .hero-actions { order: 6; }
-  .hero-copy > .stat-row { order: 7; }
+  .hero-copy > .stat-row { order: 7; margin-top: 2rem; }
+  .hero-scroll { display: none; }
   .split, .split.reverse .split-media { grid-template-columns: 1fr; order: 0; }
   .cols-4 { grid-template-columns: repeat(2, 1fr); }
   .cols-5 { grid-template-columns: repeat(2, 1fr); }
@@ -819,7 +820,6 @@ body.nav-open { overflow: hidden; }
   position: relative;
   width: 100%; height: 100%;
   transform-style: preserve-3d;
-  will-change: transform;
 }
 .g3d-face {
   position: absolute; inset: 0;
@@ -867,11 +867,14 @@ body.nav-open { overflow: hidden; }
 }
 .lightbox.open { display: grid; }
 @keyframes lbfade { from { opacity: 0; } to { opacity: 1; } }
+/* The stage is laid out at 3x size and scaled down — the SVG rasterises
+   at the large size, so it stays sharp all the way to 3x zoom */
 .lightbox .lb-stage {
-  width: min(88vw, 62vh);
+  position: absolute;
+  left: 50%; top: 50%;
+  width: calc(min(88vw, 62vh) * 3);
   aspect-ratio: 500 / 660;
-  position: relative;
-  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(0.3334);
   transition: transform 0.3s var(--ease);
 }
 .lightbox .lb-zoom {
