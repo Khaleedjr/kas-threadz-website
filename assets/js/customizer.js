@@ -279,8 +279,19 @@
 
     /* zoom lightbox */
     const lb = $("lightbox");
+    let lbScale = 1;
+    const setLbScale = (s) => {
+      lbScale = Math.min(3, Math.max(1, s));
+      $("lb-stage").style.transform = "scale(" + lbScale + ")";
+    };
     const openZoom = () => {
+      /* open front-facing and centred */
+      state.rot = 0;
       $("lb-stage").innerHTML = $("preview-stage").innerHTML;
+      document.querySelectorAll(".g3d-inner").forEach((el) => {
+        el.style.transform = "rotateX(-4deg) rotateY(0deg)";
+      });
+      setLbScale(1);
       $("lb-cap").textContent = nameOf(TYPES, state.type) + " · " + fabName() + " · " + colorName(state.color);
       lb.classList.add("open");
       lb.setAttribute("aria-hidden", "false");
@@ -292,6 +303,12 @@
       $("lb-close").addEventListener("click", closeZoom);
       lb.addEventListener("click", (e) => { if (e.target === lb) closeZoom(); });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeZoom(); });
+      $("lb-zoom-in").addEventListener("click", () => setLbScale(lbScale + 0.5));
+      $("lb-zoom-out").addEventListener("click", () => setLbScale(lbScale - 0.5));
+      lb.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        setLbScale(lbScale + (e.deltaY < 0 ? 0.25 : -0.25));
+      }, { passive: false });
     }
   }
 

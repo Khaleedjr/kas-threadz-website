@@ -147,7 +147,7 @@ html[data-theme="dark"] .site-header.scrolled .theme-toggle { color: var(--cream
 *::before,
 *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: clip; }
 
 body {
   margin: 0;
@@ -364,7 +364,8 @@ p:last-child { margin-bottom: 0; }
 .nav-toggle span {
   display: block;
   width: 26px;
-  height: 2px;
+  height: 3px;
+  border-radius: 2px;
   background: var(--cream);
   transition: all 0.35s var(--ease);
 }
@@ -469,7 +470,6 @@ body.nav-open { overflow: hidden; }
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 6px; }
 .hero-visual { position: relative; }
-.hero-visual .mobile-hero-photo { display: none; }
 .hero-scroll {
   position: absolute;
   bottom: 28px; left: 50%;
@@ -721,14 +721,7 @@ body.nav-open { overflow: hidden; }
    ============================================================ */
 @media (max-width: 960px) {
   .hero-inner { grid-template-columns: 1fr; }
-  .hero-visual { max-width: 420px; margin-inline: auto; width: 100%; }
-  .hero-visual #hero-garment { display: none; }
-  .hero-visual .mobile-hero-photo {
-    display: block;
-    width: 100%;
-    border-radius: var(--radius);
-    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, .6);
-  }
+  .hero-visual { max-width: 440px; margin-inline: auto; width: 100%; }
   .split, .split.reverse .split-media { grid-template-columns: 1fr; order: 0; }
   .cols-4 { grid-template-columns: repeat(2, 1fr); }
   .cols-5 { grid-template-columns: repeat(2, 1fr); }
@@ -745,10 +738,10 @@ body.nav-open { overflow: hidden; }
     justify-content: center;
     gap: 26px;
     background: var(--burgundy-deep);
-    transform: translateX(100%);
-    transition: transform 0.5s var(--ease);
+    clip-path: inset(0 0 0 100%);
+    transition: clip-path 0.5s var(--ease);
   }
-  body.nav-open .nav-links { transform: translateX(0); }
+  body.nav-open .nav-links { clip-path: inset(0 0 0 0); }
   .nav-links a { color: var(--cream) !important; font-size: 1.05rem; }
   .nav-links .theme-toggle { color: var(--cream) !important; }
   .nav-toggle {
@@ -851,6 +844,7 @@ body.nav-open { overflow: hidden; }
   display: none; place-items: center;
   padding: 4vh 4vw;
   animation: lbfade 0.3s var(--ease);
+  overflow: hidden;
 }
 .lightbox.open { display: grid; }
 @keyframes lbfade { from { opacity: 0; } to { opacity: 1; } }
@@ -858,10 +852,23 @@ body.nav-open { overflow: hidden; }
   width: min(88vw, 62vh);
   aspect-ratio: 500 / 660;
   position: relative;
+  transform-origin: center center;
+  transition: transform 0.3s var(--ease);
 }
+.lightbox .lb-zoom {
+  position: absolute; bottom: 22px; right: 28px;
+  display: flex; gap: 10px; z-index: 6;
+}
+.lightbox .lb-zoom button {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(202,191,177,0.4);
+  color: var(--cream); font-size: 1.35rem; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; transition: all 0.25s var(--ease);
+}
+.lightbox .lb-zoom button:hover { background: var(--burgundy); border-color: var(--burgundy); }
 .lightbox .lb-stage .garment-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .lightbox .lb-close {
-  position: absolute; top: 22px; right: 28px;
+  position: absolute; top: 22px; right: 28px; z-index: 6;
   width: 46px; height: 46px; border-radius: 50%;
   background: rgba(255,255,255,0.08); border: 1px solid rgba(202,191,177,0.4);
   color: var(--cream); font-size: 1.4rem; cursor: pointer;
