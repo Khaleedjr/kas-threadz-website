@@ -93,8 +93,8 @@ html[data-theme="dark"] .way.selected .name { color: #d9a2a9; }
 html[data-theme="dark"] .svc-icon { border-color: #d9a2a9; color: #d9a2a9; }
 
 /* header (solid / scrolled state) */
-html[data-theme="dark"] .site-header.solid,
-html[data-theme="dark"] .site-header.scrolled {
+html[data-theme="dark"] .site-header.solid::before,
+html[data-theme="dark"] .site-header.scrolled::before {
   background: rgba(23, 18, 19, 0.92);
   box-shadow: 0 1px 0 #382e31, 0 12px 30px -24px rgba(0, 0, 0, .6);
 }
@@ -330,12 +330,22 @@ p:last-child { margin-bottom: 0; }
 .nav-cta { margin-left: 8px; }
 
 /* Scrolled / solid header (default on inner pages) */
+/* The tinted blur lives on a ::before layer — putting backdrop-filter on
+   the header itself would make it the containing block for the fixed
+   full-screen mobile menu, clipping the menu to the header strip. */
 .site-header.solid,
 .site-header.scrolled {
+  padding-block: 12px;
+}
+.site-header.solid::before,
+.site-header.scrolled::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background: rgba(248, 248, 248, 0.92);
   backdrop-filter: blur(14px);
   box-shadow: 0 1px 0 var(--line), 0 12px 30px -24px rgba(0,0,0,.4);
-  padding-block: 12px;
 }
 .site-header.solid .nav-links a,
 .site-header.scrolled .nav-links a { color: var(--ink); }
@@ -720,8 +730,17 @@ body.nav-open { overflow: hidden; }
    Responsive
    ============================================================ */
 @media (max-width: 960px) {
-  .hero-inner { grid-template-columns: 1fr; }
-  .hero-visual { max-width: 440px; margin-inline: auto; width: 100%; }
+  /* Flatten the hero so the garment can slot between the intro text and
+     the action buttons on small screens */
+  .hero-inner { display: flex; flex-direction: column; }
+  .hero-copy { display: contents; }
+  .hero-copy > .eyebrow { order: 1; }
+  .hero-copy > .display-xl { order: 2; }
+  .hero-copy > .hero-jp { order: 3; }
+  .hero-copy > .lead { order: 4; }
+  .hero-visual { order: 5; max-width: 400px; margin-inline: auto; width: 100%; margin-block: 8px 22px; }
+  .hero-copy > .hero-actions { order: 6; }
+  .hero-copy > .stat-row { order: 7; }
   .split, .split.reverse .split-media { grid-template-columns: 1fr; order: 0; }
   .cols-4 { grid-template-columns: repeat(2, 1fr); }
   .cols-5 { grid-template-columns: repeat(2, 1fr); }
