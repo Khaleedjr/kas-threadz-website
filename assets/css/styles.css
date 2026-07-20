@@ -825,6 +825,21 @@ html[data-theme="dark"] .explore-row a:hover .x-label { color: #d9a2a9; }
   body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
   body.nav-open .nav-toggle span:nth-child(3) { width: 26px; transform: translateY(-7px) rotate(-45deg); }
   /* --- readability on small screens --- */
+  /* Justified body copy, hyphenated so the word gaps stay tight instead
+     of opening into rivers. Applied only to left-aligned prose — centred
+     intros, quotes and label text are left alone. */
+  .hero-copy .lead,
+  .split > div > p,
+  .svc-card p,
+  .fab-row .lead,
+  .process-step p,
+  .info-card p {
+    text-align: justify;
+    text-justify: inter-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    hyphenate-limit-chars: 7 3 3;
+  }
   body { line-height: 1.65; }
   .display-xl { line-height: 1.06; letter-spacing: -0.02em; }
   .display-lg, .display-md { line-height: 1.14; }
