@@ -3,8 +3,8 @@
    Pure SVG-string builder used by the hero and the live customiser.
    window.KASGarment.build(state) -> "<svg>…</svg>"
    Silhouettes modelled on real Nigerian menswear references:
-   kaftan (round neck, placket + chest pocket), senator (crisp
-   placket panel), agbada (winged robe), custom shirt.
+   kaftan (round neck, placket + chest pocket), jallab (tasselled
+   pointed placket, scrollwork), agbada (winged robe), custom shirt.
    ============================================================ */
 window.KASGarment = (function () {
   "use strict";
@@ -15,6 +15,8 @@ window.KASGarment = (function () {
 
   /* Old fabric ids from earlier saves keep working */
   const FABRIC_ALIAS = { guinea: "shadda", brocade: "shadda", linen: "cashmere" };
+  /* Old garment ids from earlier saves keep working */
+  const TYPE_ALIAS = { senator: "jallab" };
   /* Old embroidery ids from earlier saves keep working */
   const EMB_ALIAS = { neck: "flap", afterflap: "full" };
 
@@ -23,9 +25,9 @@ window.KASGarment = (function () {
     kaftan: { shoulderHalf: 97, neckW: 24, neckDrop: 16, chestHalf: 84, waistHalf: 82,
               hemHalf: 95, hemShort: 468, hemLong: 566, sleeveFlare: 16,
               collar: "kaftan", buttons: 3, pocket: true },
-    senator:{ shoulderHalf: 101, neckW: 23, neckDrop: 15, chestHalf: 88, waistHalf: 86,
-              hemHalf: 97, hemShort: 442, hemLong: 546, sleeveFlare: 20,
-              collar: "senator", buttons: 0 },
+    jallab: { shoulderHalf: 99, neckW: 23, neckDrop: 15, chestHalf: 86, waistHalf: 84,
+              hemHalf: 96, hemShort: 460, hemLong: 566, sleeveFlare: 16,
+              collar: "jallab", buttons: 0 },
     shirt:  { shoulderHalf: 95, neckW: 21, neckDrop: 20, chestHalf: 80, waistHalf: 78,
               hemHalf: 91, hemShort: 428, hemLong: 512, sleeveFlare: 14,
               collar: "shirt", buttons: 6 },
@@ -268,6 +270,7 @@ window.KASGarment = (function () {
         length: "regular", embroidery: "neck", embColor: "#cabfb1" },
       state || {}
     );
+    s.type = TYPE_ALIAS[s.type] || s.type;
     s.fabric = FABRIC_ALIAS[s.fabric] || s.fabric;
     s.embroidery = EMB_ALIAS[s.embroidery] || s.embroidery;
     const isBack = s.view === "back";                   // rear view: plain back, no front details
@@ -397,13 +400,26 @@ window.KASGarment = (function () {
         details += `<rect x="${CX + 28}" y="${SY + 86}" width="48" height="60" rx="2"
           fill="${f.dark}" fill-opacity="0.10" stroke="${seam}" stroke-opacity="0.45" stroke-width="1.2"/>`;
       }
-    } else if (base.collar === "senator") {
-      /* crisp rectangular placket panel — the Stychies signature look */
-      const pTop = neckY, pBot = SY + 238;
-      details += `<rect x="${CX - 11}" y="${pTop}" width="22" height="${pBot - pTop}"
-        fill="${f.dark}" fill-opacity="0.10" stroke="${seam}" stroke-opacity="0.5" stroke-width="1.4"/>`;
-      details += `<line x1="${CX - 11}" y1="${pBot - 14}" x2="${CX + 11}" y2="${pBot - 14}"
-        stroke="${seam}" stroke-opacity="0.35" stroke-width="1"/>`;
+    } else if (base.collar === "jallab") {
+      /* narrow placket ending in a point, with a gold cord tassel */
+      const pTop = neckY + 2, pBot = SY + 200, tip = pBot + 24;
+      details += `<path d="M ${CX - 8} ${pTop} L ${CX + 8} ${pTop} L ${CX + 8} ${pBot} L ${CX} ${tip} L ${CX - 8} ${pBot} Z"
+        fill="${f.dark}" fill-opacity="0.12" stroke="${seam}" stroke-opacity="0.5" stroke-width="1.3"/>`;
+      details += `<line x1="${CX}" y1="${pTop + 4}" x2="${CX}" y2="${pBot}"
+        stroke="${seam}" stroke-opacity="0.3" stroke-width="1"/>`;
+      if (!isBack) {
+        const gold = "#c9a45c", goldDark = "#a8843f";
+        const cordEnd = tip + 26;
+        details += `<path d="M ${CX} ${tip} q 3 ${(cordEnd - tip) / 2} 0 ${cordEnd - tip}"
+          fill="none" stroke="${goldDark}" stroke-width="2"/>`;
+        details += `<ellipse cx="${CX}" cy="${cordEnd + 6}" rx="4.6" ry="6.5" fill="${gold}" stroke="${goldDark}" stroke-width="1"/>`;
+        details += `<path d="M ${CX - 5.5} ${cordEnd + 10} L ${CX - 8} ${cordEnd + 44} Q ${CX} ${cordEnd + 50} ${CX + 8} ${cordEnd + 44} L ${CX + 5.5} ${cordEnd + 10} Z"
+          fill="${gold}" stroke="${goldDark}" stroke-width="1"/>`;
+        for (let i = -1; i <= 1; i++) {
+          details += `<line x1="${CX + i * 4}" y1="${cordEnd + 14}" x2="${CX + i * 5.4}" y2="${cordEnd + 42}"
+            stroke="${goldDark}" stroke-opacity="0.5" stroke-width="0.8"/>`;
+        }
+      }
     } else if (base.collar === "shirt") {
       details += `<path d="M ${CX} ${SY + 6} L ${CX - o.neckW - 12} ${SY + 4} L ${CX - 6} ${SY + 34} Z"
         fill="${f.dark}" stroke="${seam}" stroke-opacity="0.4"/>`;
@@ -480,18 +496,47 @@ window.KASGarment = (function () {
           emb += stitchLine(CX - (o.shoulderHalf + o.sleeveFlare * 0.8) + 4, cy2, CX - o.chestHalf - 5, cy2, ec, 1.3);
           emb += stitchLine(CX + o.chestHalf + 5, cy2, CX + (o.shoulderHalf + o.sleeveFlare * 0.8) - 4, cy2, ec, 1.3);
         }
-      } else if (base.collar === "senator") {
-        /* senator stays crisp: stitched panel outline, ring, subtle accents */
-        emb += `<rect x="${CX - 13}" y="${neckY - 2}" width="26" height="${SY + 242 - neckY}"
-          fill="none" stroke="${ec}" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.9"/>`;
-        emb += `<path d="M ${CX - o.neckW + 2} ${SY + 4} Q ${CX} ${neckY + 9} ${CX + o.neckW - 2} ${SY + 4}"
-          fill="none" stroke="${ec}" stroke-width="1.6" opacity="0.9"/>`;
+      } else if (base.collar === "jallab") {
+        /* jallab: mirrored arabesque scroll chains from the shoulders down
+           around the pointed placket, like the studio's tasselled robes */
+        /* arabesque scroll chain: a running line that curls back on itself,
+           the way the studio's tasselled robes are stitched */
+        const scroll = (x1, y1, x2, y2, n, w, curl) => {
+          const dx = (x2 - x1) / n, dy = (y2 - y1) / n;
+          const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+          const px = -(y2 - y1) / len, py = (x2 - x1) / len;
+          let d = `M ${r2(x1)} ${r2(y1)}`;
+          for (let i = 0; i < n; i++) {
+            const sg = i % 2 ? 1 : -1;
+            const bx = x1 + dx * i, by = y1 + dy * i;
+            /* control points thrown well past the segment so the curve
+               loops into a curl instead of a shallow wave */
+            const c1x = bx + dx * 0.1 + px * curl * sg, c1y = by + dy * 0.1 + py * curl * sg;
+            const c2x = bx + dx * 0.9 + px * curl * sg, c2y = by + dy * 0.9 + py * curl * sg;
+            d += ` C ${r2(c1x)} ${r2(c1y)} ${r2(c2x)} ${r2(c2y)} ${r2(bx + dx)} ${r2(by + dy)}`;
+          }
+          return `<path d="${d}" fill="none" stroke="${ec}" stroke-width="${w}" opacity="0.95"
+            stroke-linecap="round" stroke-linejoin="round"/>`;
+        };
+        [-1, 1].forEach((sd) => {
+          /* chain running from the shoulder down beside the placket */
+          emb += scroll(CX + sd * 54, SY + 10, CX + sd * 15, SY + 194, 6, 1.7, 15);
+          /* finer companion line just inside it */
+          emb += scroll(CX + sd * 43, SY + 22, CX + sd * 11, SY + 180, 6, 1.05, -9);
+          /* seed dots in the gaps between curls */
+          for (let i = 1; i <= 4; i++) {
+            const t = i / 5;
+            const x = CX + sd * (54 - 39 * t + 12), y = SY + 10 + 184 * t;
+            emb += `<circle cx="${r2(x)}" cy="${r2(y)}" r="1.5" fill="${ec}" opacity="0.85"/>`;
+          }
+        });
+        emb += `<path d="M ${CX - o.neckW - 4} ${SY + 4} Q ${CX} ${neckY + 10} ${CX + o.neckW + 4} ${SY + 4}"
+          fill="none" stroke="${ec}" stroke-width="1.5" opacity="0.9"/>`;
         if (withSleeves) {
-          emb += diamondMotif(CX, SY + 274, 0.72, ec);
-          emb += stitchLine(CX - o.hemHalf + 16, o.hemY - 9, CX + o.hemHalf - 16, o.hemY - 9, ec, 1.4);
-          const cy2 = o.sleeveEndY - 9;
-          emb += stitchLine(CX - (o.shoulderHalf + o.sleeveFlare * 0.8) + 4, cy2, CX - o.chestHalf - 5, cy2, ec, 1.3);
-          emb += stitchLine(CX + o.chestHalf + 5, cy2, CX + (o.shoulderHalf + o.sleeveFlare * 0.8) - 4, cy2, ec, 1.3);
+          const cy2 = o.sleeveEndY - 12;
+          const outer = o.shoulderHalf + o.sleeveFlare * 0.8;
+          emb += scroll(CX - outer + 8, cy2, CX - o.chestHalf - 6, cy2, 3, 1.4, 11);
+          emb += scroll(CX + o.chestHalf + 6, cy2, CX + outer - 8, cy2, 3, 1.4, 11);
         }
       } else if (base.collar === "agbada") {
         emb += agbadaPanel(CX, SY + 52, ec);
@@ -585,6 +630,7 @@ window.KASGarment = (function () {
      ------------------------------------------------------------ */
   function anchors(state) {
     const s = Object.assign({ type: "kaftan", sleeve: "long", length: "short" }, state || {});
+    s.type = TYPE_ALIAS[s.type] || s.type;
     const base = PRESET[s.type] || PRESET.kaftan;
     const hemY = s.length === "long" ? base.hemLong : base.hemShort;
     const sleeveEndY = SLEEVE_END[s.sleeve] || SLEEVE_END.long;

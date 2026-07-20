@@ -12,7 +12,7 @@ Built as a fast, self-contained static site (HTML, CSS, vanilla JS) — no build
 | File | Page | What it does |
 |------|------|--------------|
 | `index.html` | Home | Hero, brand story, specialities, fabrics, signature designs, live-studio teaser, process, testimonials |
-| `gallery.html` | Designs | Filterable portfolio (Kaftans / Agbada / Senator / Custom) |
+| `gallery.html` | Designs | Filterable portfolio (Kaftans / Agbada / Jallabs / Custom) |
 | `customize.html` | **Design Studio** | The live customiser — a garment on a stand that updates in real time as the customer picks garment, fabric, colour, sleeve length, garment length (Short / Long) and embroidery (None / Flap & Pocket). Builds an order and sends it to you on WhatsApp or email |
 | `embroidery.html` | **Embroidery Only** | Order embroidery on the customer's own material — browse the design library, pick a design, choose material + placement + thread colour, and send the order |
 | `about.html` | About | Vision, mission, values and brand identity |
@@ -56,7 +56,7 @@ stripe/weave character in the chosen colour.
 Garment base prices and the other add-ons are in **`assets/js/customizer.js`**:
 
 ```js
-const BASE    = { kaftan: 35000, agbada: 120000, senator: 45000, shirt: 25000 };
+const BASE    = { kaftan: 35000, agbada: 120000, jallab: 45000, shirt: 25000 };
 const EMB_ADD = { none: 0, flap: 15000 };
 const LEN_ADD = { short: 0, long: 6000 };
 ```

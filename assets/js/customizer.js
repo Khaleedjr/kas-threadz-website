@@ -10,7 +10,7 @@
   const TYPES = [
     { id: "kaftan",  t: "Kaftan",  d: "Flowing traditional top" },
     { id: "agbada",  t: "Agbada",  d: "Grand ceremonial robe" },
-    { id: "senator", t: "Senator", d: "Tailored formal set" },
+    { id: "jallab",  t: "Jallab",  d: "Tasselled formal robe" },
     { id: "shirt",   t: "Custom Shirt", d: "Any material, any style" }
   ];
 
@@ -73,7 +73,7 @@
   const dImg = (name) => "assets/img/designs/" + name + ".png";
 
   /* ---------- pricing (₦) ---------- */
-  const BASE = { kaftan: 35000, agbada: 120000, senator: 45000, shirt: 25000 };
+  const BASE = { kaftan: 35000, agbada: 120000, jallab: 45000, shirt: 25000 };
   const EMB_ADD = { none: 0, flap: 15000 };
   const LEN_ADD = { short: 0, long: 6000 };
 
@@ -181,6 +181,11 @@
   function togglePicker() {
     const wrap = document.getElementById("design-picker");
     if (wrap) wrap.style.display = state.embroidery === "none" ? "none" : "";
+    /* the jallab wears its own scrollwork rather than a library design */
+    const lib = document.getElementById("design-library");
+    const note = document.getElementById("jallab-note");
+    if (lib) lib.style.display = state.type === "jallab" ? "none" : "";
+    if (note) note.hidden = state.type !== "jallab";
   }
 
   /* ---------- selection handlers ---------- */
@@ -344,7 +349,7 @@
   function render() {
     /* when a library design is chosen, suppress the generic motifs and
        overlay the real design at the flap/pocket */
-    const d = state.embroidery !== "none" ? designById(state.design) : null;
+    const d = state.embroidery !== "none" && state.type !== "jallab" ? designById(state.design) : null;
     const buildState = Object.assign({}, state, d ? { embroidery: "none" } : {});
     let overlays = "";
     if (d) {
