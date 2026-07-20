@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pdftotext \"KAZ Threadz Brand Guidelines.pdf\" -)",
+      "Bash(pdftocairo -h)",
+      "Bash(python -c \"import fitz; print\\('pymupdf', fitz.__doc__[:30]\\)\")",
+      "Bash(python -c \"import pdf2image; print\\('pdf2image ok'\\)\")",
+      "Bash(python -c \"import PIL; print\\('PIL ok'\\)\")",
+      "Bash(pip install *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(python -c \"import fitz; print\\('pymupdf ready', fitz.VersionBind\\)\")",
+      "Bash(mkdir -p assets/img assets/css assets/js)",
+      "Bash(python -)",
+      "WebFetch(domain:www.stychies.com)",
+      "Bash([ -f \"$MEM\" ])",
+      "Read(//c/Users/KHALJR/.claude/projects/C--Users-KHALJR-Downloads-NEW-WEBSITE/memory/**)",
+      "Bash(python -c \"import pyembroidery; print\\('pyembroidery', pyembroidery.__version__ if hasattr\\(pyembroidery,'__version__'\\) else 'ok'\\)\")",
+      "Bash(python -c \"import matplotlib; print\\('matplotlib', matplotlib.__version__\\)\")",
+      "Bash(mkdir -p \"/c/Users/KHALJR/AppData/Local/Temp/claude/C--Users-KHALJR-Downloads-NEW-WEBSITE/488490ae-47fa-4811-a389-aae4d0391b91/scratchpad/thumbs\")"
+    ]
+  }
+}

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<script>try{var t=localStorage.getItem("kas-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Designs — KAS THREADZ</title>
+<meta name="description" content="A portfolio of KAS THREADZ embroidery and tailoring — kaftans, agbada sets, jallabs and custom monogram work." />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+<link rel="apple-touch-icon" href="assets/img/favicon-180.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/styles.css?v=10" />
+<style>
+  .filter-bar { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:40px; }
+  .filter-btn {
+    padding:0.6em 1.3em; font-size:0.72rem; font-weight:700; letter-spacing:0.14em;
+    text-transform:uppercase; border:1.5px solid var(--line); background:var(--white);
+    border-radius:40px; color:var(--ink-soft); transition:all .3s var(--ease);
+  }
+  .filter-btn:hover { border-color:var(--taupe-dark); }
+  .filter-btn.active { background:var(--burgundy); border-color:var(--burgundy); color:var(--cream); }
+  /* ============ Card-stack gallery ============ */
+  .stack-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:clamp(34px, 4vw, 52px) clamp(24px, 3vw, 36px);
+  }
+  .stack { margin:0; cursor:pointer; position:relative; }
+  .stack.hide { display:none; }
+
+  .stack-cards { position:relative; aspect-ratio:3/4; }
+  /* decorative backing sheets so every pile reads as card stock */
+  .stack-cards::before,
+  .stack-cards::after {
+    content:""; position:absolute; inset:0;
+    background:var(--white); border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 14px 30px -18px rgba(20,16,17,.45);
+    transition:transform .45s var(--ease);
+  }
+  .stack-cards::before { transform:rotate(3.2deg) translate(7px, 3px); }
+  .stack-cards::after  { transform:rotate(-2.4deg) translate(-6px, 5px); }
+
+  .stack-cards .card {
+    position:absolute; inset:0; z-index:2;
+    background:var(--white); border:1px solid var(--line); border-radius:10px;
+    padding:9px; overflow:hidden;
+    box-shadow:0 18px 40px -20px rgba(20,16,17,.5);
+    transition:transform .45s var(--ease), box-shadow .45s var(--ease);
+    transform:rotate(-0.6deg);
+  }
+  /* extra real photos sit rotated in the pile beneath the top card */
+  .stack-cards .card:nth-child(2) { z-index:1; transform:rotate(4deg) translate(10px, 2px); }
+  .stack-cards .card:nth-child(3) { z-index:0; transform:rotate(-4deg) translate(-9px, 4px); }
+  .stack-cards .card img { width:100%; height:100%; object-fit:cover; object-position:top center; display:block; border-radius:5px; }
+  .stack-cards .card .g-visual { width:100%; height:100%; border-radius:5px; display:grid; place-items:center; overflow:hidden; }
+  .g-visual.dark { background:linear-gradient(160deg,#2a2021,#141011); }
+  .g-visual.taupe { background:linear-gradient(160deg,#e9e2d6,#cabfb1); }
+  .g-visual .garment-svg { width:82%; height:100%; }
+
+  .stack:hover .stack-cards .card:first-child { transform:rotate(-2.4deg) translateY(-10px); box-shadow:0 30px 55px -22px rgba(20,16,17,.6); }
+  .stack:hover .stack-cards::before { transform:rotate(5deg) translate(12px, 4px); }
+  .stack:hover .stack-cards::after  { transform:rotate(-4.6deg) translate(-11px, 7px); }
+
+  .stack .count {
+    position:absolute; top:16px; right:14px; z-index:3;
+    background:rgba(58,12,17,.85); color:var(--cream);
+    font-size:0.64rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase;
+    padding:5px 11px; border-radius:40px; pointer-events:none;
+  }
+  .stack figcaption { margin-top:20px; text-align:center; }
+  .stack figcaption h4 { font-size:1.25rem; margin:0 0 2px; }
+  .stack figcaption p { color:var(--muted); font-size:0.8rem; margin:0; letter-spacing:0.05em; }
+  .stack figcaption .tap { display:block; font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--burgundy); margin-top:7px; opacity:0; transition:opacity .3s; }
+  .stack:hover figcaption .tap { opacity:1; }
+
+  /* ---- expanded lightbox ---- */
+  .gx-lightbox {
+    position:fixed; inset:0; z-index:2000;
+    background:rgba(16,11,12,.94);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding:5vh 4vw;
+  }
+  .gx-lightbox.open { display:flex; }
+  .gx-track {
+    display:flex; gap:clamp(16px, 3vw, 34px);
+    max-width:100%; overflow-x:auto; padding:26px 8px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .gx-card {
+    flex:none; background:#fff; border-radius:10px; padding:10px;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.8);
+    opacity:0; transform:translateY(36px) rotate(4deg) scale(.92);
+    transition:transform .55s var(--ease), opacity .55s var(--ease);
+  }
+  .gx-lightbox.anim .gx-card { opacity:1; transform:none; }
+  .gx-lightbox.anim .gx-card:nth-child(2) { transition-delay:.08s; }
+  .gx-lightbox.anim .gx-card:nth-child(3) { transition-delay:.16s; }
+  .gx-card img { display:block; max-height:72vh; max-width:82vw; width:auto; border-radius:5px; }
+  .gx-card .g-visual { height:72vh; aspect-ratio:3/4; border-radius:5px; display:grid; place-items:center; }
+  .gx-cap { color:var(--taupe); font-family:var(--serif); font-style:italic; font-size:1.2rem; margin-top:6px; text-align:center; }
+  .gx-close {
+    position:absolute; top:20px; right:26px;
+    width:46px; height:46px; border-radius:50%;
+    background:rgba(255,255,255,.08); border:1px solid rgba(202,191,177,.4);
+    color:var(--cream); font-size:1.35rem;
+    display:grid; place-items:center; transition:all .25s var(--ease);
+  }
+  .gx-close:hover { background:var(--burgundy); border-color:var(--burgundy); }
+
+  /* dark theme for the scoped bits */
+  html[data-theme="dark"] .stack-cards .card,
+  html[data-theme="dark"] .stack-cards::before,
+  html[data-theme="dark"] .stack-cards::after { background:#221a1c; border-color:#382e31; }
+  html[data-theme="dark"] .stack figcaption .tap { color:#d9a2a9; }
+
+  @media (max-width:620px) {
+    .stack-grid { grid-template-columns:repeat(2, 1fr); gap:34px 20px; }
+    .stack figcaption h4 { font-size:1.05rem; }
+    .gx-card img { max-width:86vw; max-height:64vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header solid">
+  <div class="container nav-inner">
+    <a class="brand-logo" href="index.html" aria-label="KAS THREADZ home">
+      <img class="logo-light" src="assets/img/logo-cream.png" alt="KAS THREADZ" />
+      <img class="logo-dark" src="assets/img/logo-burgundy.png" alt="KAS THREADZ" />
+    </a>
+    <button class="nav-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="gallery.html" class="active">Designs</a>
+      <a href="customize.html">Customize</a>
+      <a href="embroidery.html">Embroidery</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a class="btn btn-taupe nav-cta" href="customize.html">Start an Order</a>
+      <button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    </nav>
+  </div>
+</header>
+
+<!-- BANNER -->
+<section class="page-banner">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">Home</a> &nbsp;/&nbsp; Designs</div>
+    <h1 class="display-lg">Our Work</h1>
+    <p>A glimpse of what leaves our studio — traditional formalwear, monograms and custom embroidery, each finished by hand.</p>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="section bg-cream">
+  <div class="container">
+    <div class="filter-bar" data-reveal>
+      <button class="filter-btn active" data-filter="all">All Work</button>
+      <button class="filter-btn" data-filter="kaftan">Kaftans</button>
+      <button class="filter-btn" data-filter="agbada">Agbada</button>
+      <button class="filter-btn" data-filter="jallab">Jallabs</button>
+      <button class="filter-btn" data-filter="custom">Custom &amp; Monogram</button>
+    </div>
+
+    <div class="stack-grid" id="gallery">
+      <figure class="stack" data-cat="agbada" data-reveal data-title="The Trader Agbada">
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/agbada-maroon.jpg" alt="Maroon agbada with candlestick chart embroidery" loading="lazy"></div>
+        </div>
+        <figcaption><h4>The Trader Agbada</h4><p>Candlestick chart motif · Maroon stripe</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="agbada" data-reveal data-title="Royal Blue Agbada">
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/agbada-blue.jpg" alt="Royal blue agbada with tonal chest embroidery" loading="lazy"></div>
+        </div>
+        <figcaption><h4>Royal Blue Agbada</h4><p>Tonal chest panel with stone detailing</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="kaftan" data-reveal data-title="Onyx &amp; Gold Kaftan">
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/kaftan-black.jpg" alt="Black kaftan with gold placket embroidery" loading="lazy"></div>
+        </div>
+        <figcaption><h4>Onyx &amp; Gold Kaftan</h4><p>Gold placket · Crystal point detail</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="kaftan" data-reveal data-title="Slate Chain Kaftan">
+        <span class="count">2 looks</span>
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/kaftan-grey.jpg" alt="Grey kaftan with chain-link placket embroidery" loading="lazy"></div>
+          <div class="card"><img src="assets/img/work/kaftan-grey-side.jpg" alt="Grey kaftan side profile with chain-link embroidery" loading="lazy"></div>
+        </div>
+        <figcaption><h4>Slate Chain Kaftan</h4><p>Chain-link placket &amp; pocket trim</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="kaftan" data-reveal data-title="Ivory Heritage Kaftan">
+        <span class="count">2 looks</span>
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/kaftan-cream.jpg" alt="Cream kaftan with brown cross-stitch accents" loading="lazy"></div>
+          <div class="card"><img src="assets/img/work/kaftan-cream-detail.jpg" alt="Close-up of cream kaftan cross-stitch embroidery" loading="lazy"></div>
+        </div>
+        <figcaption><h4>Ivory Heritage Kaftan</h4><p>Cross-stitch placket &amp; pocket frame</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="kaftan" data-reveal data-title="Sky Blue Kaftan">
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/kaftan-blue.jpg" alt="Sky blue kaftan with two-tone geometric embroidery" loading="lazy"></div>
+        </div>
+        <figcaption><h4>Sky Blue Kaftan</h4><p>Two-tone geometric placket</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="jallab" data-reveal data-title="Maroon Tassel Jallab">
+        <div class="stack-cards">
+          <div class="card"><img src="assets/img/work/jallab-maroon.jpg" alt="Maroon jallab with cream scrollwork and gold tassel" loading="lazy"></div>
+        </div>
+        <figcaption><h4>Maroon Tassel Jallab</h4><p>Cream scrollwork · Gold tassel</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="custom" data-reveal data-title="Monogrammed Shirt">
+        <div class="stack-cards">
+          <div class="card"><div class="g-visual dark" data-garment='{"type":"shirt","color":"#f3efe9","fabric":"cotton","sleeve":"long","length":"regular","embroidery":"neck","embColor":"#521218"}'></div></div>
+        </div>
+        <figcaption><h4>Monogrammed Shirt</h4><p>Corporate crest · Cotton</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+
+      <figure class="stack" data-cat="custom" data-reveal data-title="Ankara Statement Piece">
+        <div class="stack-cards">
+          <div class="card"><div class="g-visual taupe" data-garment='{"type":"shirt","color":"#3a6ea5","fabric":"ankara","sleeve":"short","length":"regular","embroidery":"full","embColor":"#e9e2d6"}'></div></div>
+        </div>
+        <figcaption><h4>Ankara Statement Piece</h4><p>Custom print · Full embroidery</p><span class="tap">Click to expand</span></figcaption>
+      </figure>
+    </div>
+
+    <!-- expanded view -->
+    <div class="gx-lightbox" id="gx-lightbox" role="dialog" aria-modal="true" aria-label="Expanded gallery view">
+      <button class="gx-close" aria-label="Close">✕</button>
+      <div class="gx-track" id="gx-track"></div>
+      <div class="gx-cap" id="gx-cap"></div>
+    </div>
+
+    <div class="center mt-3" data-reveal>
+      <p class="lead narrow">Every piece here can be recreated and personalised for you.</p>
+      <a class="btn btn-primary btn-lg mt-2" href="customize.html">Design Yours in the Studio</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-sm bg-cream">
+  <div class="container">
+    <div class="cta-band" data-reveal>
+      <h2 class="display-md">Have a reference in mind?</h2>
+      <p class="lead narrow" style="color:#e7ddd2">Send us a photo or sketch on WhatsApp and we'll bring it to life.</p>
+      <div class="hero-actions mt-2"><a class="btn btn-taupe btn-lg" data-wa="Hello KAS THREADZ! I have a design reference I'd like to discuss.">Share Your Idea</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="foot-grid">
+      <div>
+        <img class="foot-logo" src="assets/img/logo-cream.png" alt="KAS THREADZ" />
+        <p>Luxury embroidery, monogram &amp; bespoke tailoring. Art in every stitch — precision craftsmanship for kaftans, agbada and custom pieces on any material.</p>
+        <div class="foot-social">
+          <a data-social="instagram" aria-label="Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a data-social="tiktok" aria-label="TikTok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4c.3 2.1 1.7 3.7 3.8 4v2.5c-1.4 0-2.7-.4-3.8-1.1V15a5.5 5.5 0 1 1-5.5-5.5c.3 0 .6 0 .9.1v2.6a3 3 0 1 0 2.1 2.8V4z"/></svg></a>
+          <a data-social="facebook" aria-label="Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V7c0-1 .3-1.5 1.6-1.5H17V2.5h-2.6C11.5 2.5 10 4.2 10 6.8V9H8v3h2v9h3.5v-9H16l.5-3z"/></svg></a>
+          <a data-social="x" aria-label="X" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 3h3l-6.6 7.6L21.5 21h-5.9l-4.2-5.3L6.4 21H3.4l7-8-6.9-10h6l3.8 4.9L17.5 3z"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <div class="foot-links">
+          <a href="index.html">Home</a><a href="gallery.html">Designs</a>
+          <a href="customize.html">Customize</a><a href="embroidery.html">Embroidery</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+        </div>
+      </div>
+      <div>
+        <h4>Services</h4>
+        <div class="foot-links">
+          <a href="customize.html">Kaftan Embroidery</a><a href="customize.html">Agbada Sets</a>
+          <a href="customize.html">Bespoke Tailoring</a><a href="customize.html">Monogramming</a>
+          <a href="contact.html">Corporate Orders</a>
+        </div>
+      </div>
+      <div>
+        <h4>Get In Touch</h4>
+        <p data-fill="address">Abuja, Nigeria</p>
+        <p><a data-mail="Enquiry — KAS THREADZ" data-fill="email">orders@kasthreadz.com</a></p>
+        <p><span data-fill="phone">+234 800 000 0000</span></p>
+        <a class="btn btn-taupe mt-1" data-wa="Hello KAS THREADZ! I'd like to place an order.">WhatsApp Us</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span data-year>2026</span> KAS THREADZ. All rights reserved.</span>
+      <span class="foot-tagline">Ippari Ippri ni Yadoru Geijutsu — Art in Every Stitch</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/garment.js?v=10"></script>
+<script>
+  document.querySelectorAll("[data-garment]").forEach(function (el) {
+    try { el.innerHTML = window.KASGarment.build(JSON.parse(el.getAttribute("data-garment"))); }
+    catch (e) {}
+  });
+
+  // gallery filtering
+  var btns = document.querySelectorAll(".filter-btn");
+  var items = document.querySelectorAll("#gallery .stack");
+  btns.forEach(function (b) {
+    b.addEventListener("click", function () {
+      btns.forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      var f = b.dataset.filter;
+      items.forEach(function (it) {
+        it.classList.toggle("hide", f !== "all" && it.dataset.cat !== f);
+      });
+    });
+  });
+
+  // card stack expand
+  var lb = document.getElementById("gx-lightbox");
+  var track = document.getElementById("gx-track");
+  var cap = document.getElementById("gx-cap");
+
+  function closeLb() {
+    lb.classList.remove("open", "anim");
+    document.body.style.overflow = "";
+    setTimeout(function () { track.innerHTML = ""; }, 250);
+  }
+
+  items.forEach(function (stack) {
+    stack.addEventListener("click", function () {
+      track.innerHTML = "";
+      stack.querySelectorAll(".stack-cards .card").forEach(function (card) {
+        var c = document.createElement("div");
+        c.className = "gx-card";
+        c.innerHTML = card.innerHTML;
+        track.appendChild(c);
+      });
+      cap.textContent = (stack.dataset.title || "") +
+        (track.children.length > 1 ? " — " + track.children.length + " looks" : "");
+      document.body.style.overflow = "hidden";
+      lb.classList.add("open");
+      // force reflow so the fan-out transition plays
+      void track.offsetWidth;
+      lb.classList.add("anim");
+    });
+  });
+
+  lb.addEventListener("click", function (e) {
+    if (e.target === lb || e.target.closest(".gx-close")) closeLb();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && lb.classList.contains("open")) closeLb();
+  });
+</script>
+<script src="assets/js/main.js?v=10"></script>
+</body>
+</html>
