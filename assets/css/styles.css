@@ -559,6 +559,48 @@ body.nav-open { overflow: hidden; }
 .svc-price { font-family: var(--display); color: var(--burgundy); font-size: 1.05rem; margin-top: 14px; }
 .svc-price span { font-family: var(--body); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); display: block; }
 
+/* Explore row — sends the homepage on to the pages in the nav */
+.explore-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: clamp(34px, 4vw, 54px);
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.explore-row a {
+  background: var(--white);
+  padding: clamp(20px, 2.4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: background 0.3s var(--ease);
+}
+.explore-row a:hover { background: var(--bg-warm, #f2ece4); }
+.explore-row .x-label {
+  font-family: var(--display);
+  font-size: 1.18rem;
+  color: var(--ink);
+}
+.explore-row a:hover .x-label { color: var(--burgundy); }
+.explore-row .x-label::after {
+  content: " →";
+  color: var(--burgundy);
+  font-family: var(--body);
+  font-size: 0.9rem;
+}
+.explore-row .x-desc { font-size: 0.88rem; color: var(--muted); }
+html[data-theme="dark"] .explore-row a { background: #221b1d; }
+html[data-theme="dark"] .explore-row a:hover { background: #2b2224; }
+html[data-theme="dark"] .explore-row .x-label { color: var(--text); }
+html[data-theme="dark"] .explore-row .x-label::after,
+html[data-theme="dark"] .explore-row a:hover .x-label { color: #d9a2a9; }
+@media (max-width: 760px) {
+  .explore-row { grid-template-columns: 1fr; }
+}
+
 /* Fabric card */
 .fabric-card { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--white); border: 1px solid var(--line); }
 .fabric-swatch { aspect-ratio: 4/3; position: relative; }

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/css/styles.css?v=22" />
+<link rel="stylesheet" href="assets/css/styles.css?v=23" />
 </head>
 <body>
 
@@ -26,6 +26,7 @@
     <nav class="nav-links">
       <a href="index.html">Home</a>
       <a href="gallery.html">Designs</a>
+      <a href="fabrics.html">Fabrics</a>
       <a href="customize.html">Customize</a>
       <a href="embroidery.html">Embroidery</a>
       <a href="about.html" class="active">About</a>
@@ -126,6 +127,27 @@
   </div>
 </section>
 
+<!-- PROCESS -->
+<section class="section bg-warm">
+  <div class="container">
+    <div class="split" style="align-items:start">
+      <div data-reveal>
+        <p class="eyebrow">How It Works</p>
+        <h2 class="display-lg">Five steps from idea to icon.</h2>
+        <p class="lead">A considered process that keeps you involved at every stage — no surprises, only the piece you imagined, refined.</p>
+        <a class="btn btn-primary mt-3" href="customize.html">Begin Your Order</a>
+      </div>
+      <div data-reveal style="--delay:.12s">
+        <div class="process-step"><div class="process-num">01</div><div><h3>Consultation</h3><p>We discuss your vision, occasion and the look you're after.</p></div></div>
+        <div class="process-step"><div class="process-num">02</div><div><h3>Fabric Selection</h3><p>Choose from our curated materials — or bring your own.</p></div></div>
+        <div class="process-step"><div class="process-num">03</div><div><h3>Design &amp; Measurements</h3><p>We set the embroidery, style and precise fit in the studio.</p></div></div>
+        <div class="process-step"><div class="process-num">04</div><div><h3>Crafting</h3><p>Artisans cut, tailor and embroider your piece by hand.</p></div></div>
+        <div class="process-step"><div class="process-num">05</div><div><h3>Final Fitting</h3><p>We perfect the details and deliver, immaculately finished.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="section-sm bg-cream">
   <div class="container">
@@ -158,7 +180,7 @@
         <h4>Explore</h4>
         <div class="foot-links">
           <a href="index.html">Home</a><a href="gallery.html">Designs</a>
-          <a href="customize.html">Customize</a><a href="embroidery.html">Embroidery</a><a href="about.html">About</a><a href="contact.html">Contact</a>
+          <a href="fabrics.html">Fabrics</a><a href="customize.html">Customize</a><a href="embroidery.html">Embroidery</a><a href="about.html">About</a><a href="contact.html">Contact</a>
         </div>
       </div>
       <div>
@@ -184,13 +206,13 @@
   </div>
 </footer>
 
-<script src="assets/js/garment.js?v=22"></script>
+<script src="assets/js/garment.js?v=23"></script>
 <script>
   document.querySelectorAll("[data-garment]").forEach(function (el) {
     try { el.innerHTML = window.KASGarment.build(JSON.parse(el.getAttribute("data-garment"))); }
     catch (e) {}
   });
 </script>
-<script src="assets/js/main.js?v=22"></script>
+<script src="assets/js/main.js?v=23"></script>
 </body>
 </html>
