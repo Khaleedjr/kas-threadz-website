@@ -556,6 +556,7 @@ body.nav-open { overflow: hidden; }
 /* Fabric card */
 .fabric-card { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--white); border: 1px solid var(--line); }
 .fabric-swatch { aspect-ratio: 4/3; position: relative; }
+.fabric-swatch svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .fabric-body { padding: 22px 24px 26px; }
 .fabric-body h3 { font-size: 1.4rem; margin-bottom: 0.2em; }
 .fabric-tag {
