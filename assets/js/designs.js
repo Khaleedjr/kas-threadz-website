@@ -3,11 +3,27 @@
    Extracted from the studio's own Wilcom/DST files in
    Downloads\EMB DESIGNS. Images: assets/img/designs/<img>.png
 
-   sets   — LD flap & pocket PAIRS (LD<n>F goes on the flap,
-            LD<n>P on the pocket — always sold together)
-   agbada — full agbada chest panels
+   sets      — LD flap & pocket PAIRS (LD<n>F goes on the flap,
+               LD<n>P on the pocket — always sold together)
+   agbada    — full agbada chest panels
+   afterflap — AF neckline runs for the jallab: the embroidery follows
+               the neck opening and continues down the placket
    ============================================================ */
 window.KAS_DESIGNS = {
+
+  afterflap: [
+    { id: "af63",  name: "AF 63",  img: "af63"  },
+    { id: "af46",  name: "AF 46",  img: "af46"  },
+    { id: "af47c", name: "AF 47C", img: "af47c" },
+    { id: "af47f", name: "AF 47F", img: "af47f" },
+    { id: "af48f", name: "AF 48F", img: "af48f" },
+    { id: "af54f", name: "AF 54F", img: "af54f" },
+    { id: "af56f", name: "AF 56F", img: "af56f" },
+    { id: "af58",  name: "AF 58",  img: "af58"  },
+    { id: "af59",  name: "AF 59",  img: "af59"  },
+    { id: "af61",  name: "AF 61",  img: "af61"  },
+    { id: "af62",  name: "AF 62",  img: "af62"  }
+  ],
 
   sets: [
     { id: "ld51",  name: "LD 51",  flap: "ld51f",  pocket: "ld51p"  },

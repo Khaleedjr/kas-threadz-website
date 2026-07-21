@@ -66,9 +66,11 @@
 
   /* studio design library (assets/js/designs.js)
      agbada garment -> agbada panels; else LD flap+pocket sets */
-  const DESIGN_LIB = window.KAS_DESIGNS || { sets: [], agbada: [] };
+  const DESIGN_LIB = window.KAS_DESIGNS || { sets: [], agbada: [], afterflap: [] };
   const designList = () =>
-    state.type === "agbada" ? (DESIGN_LIB.agbada || []) : (DESIGN_LIB.sets || []);
+    state.type === "agbada" ? (DESIGN_LIB.agbada || [])
+      : state.type === "jallab" ? (DESIGN_LIB.afterflap || [])
+      : (DESIGN_LIB.sets || []);
   const designById = (id) => designList().find((d) => d.id === id) || null;
   const dImg = (name) => "assets/img/designs/" + name + ".png";
 
@@ -181,11 +183,12 @@
   function togglePicker() {
     const wrap = document.getElementById("design-picker");
     if (wrap) wrap.style.display = state.embroidery === "none" ? "none" : "";
-    /* the jallab wears its own scrollwork rather than a library design */
-    const lib = document.getElementById("design-library");
+    /* the jallab picks from the afterflap neckline runs */
+    const isJallab = state.type === "jallab";
     const note = document.getElementById("jallab-note");
-    if (lib) lib.style.display = state.type === "jallab" ? "none" : "";
-    if (note) note.hidden = state.type !== "jallab";
+    const libNote = document.getElementById("library-note");
+    if (note) note.hidden = !isJallab;
+    if (libNote) libNote.hidden = isJallab;
   }
 
   /* ---------- selection handlers ---------- */
@@ -349,7 +352,7 @@
   function render() {
     /* when a library design is chosen, suppress the generic motifs and
        overlay the real design at the flap/pocket */
-    const d = state.embroidery !== "none" && state.type !== "jallab" ? designById(state.design) : null;
+    const d = state.embroidery !== "none" ? designById(state.design) : null;
     const buildState = Object.assign({}, state, d ? { embroidery: "none" } : {});
     let overlays = "";
     if (d) {
@@ -359,18 +362,24 @@
       const flapImg = d.flap || d.img;
       const pocketImg = d.pocket || flapImg;
 
-      /* aspect-aware placement:
-         wide bands rotate to run down the placket; square yoke/rosette
-         designs sit on the wider chest anchor instead of the thin flap slot */
-      const fAR = AR[flapImg] || 0.4;
-      if (state.type === "agbada" || fAR <= 0.75) {
-        overlays += K.overlay(a.flap, dImg(flapImg), state.embColor);
-      } else if (fAR >= 1.35) {
-        overlays += K.overlay(a.flap, dImg(flapImg), state.embColor, true);
+      if (state.type === "jallab") {
+        /* afterflap runs are drawn to sit around the neck opening already —
+           place them whole, upright, and skip the pocket slot */
+        overlays += K.overlay(a.afterflap, dImg(flapImg), state.embColor);
       } else {
-        overlays += K.overlay(a.chest, dImg(flapImg), state.embColor);
+        /* aspect-aware placement:
+           wide bands rotate to run down the placket; square yoke/rosette
+           designs sit on the wider chest anchor instead of the thin flap slot */
+        const fAR = AR[flapImg] || 0.4;
+        if (state.type === "agbada" || fAR <= 0.75) {
+          overlays += K.overlay(a.flap, dImg(flapImg), state.embColor);
+        } else if (fAR >= 1.35) {
+          overlays += K.overlay(a.flap, dImg(flapImg), state.embColor, true);
+        } else {
+          overlays += K.overlay(a.chest, dImg(flapImg), state.embColor);
+        }
+        if (a.pocket) overlays += K.overlay(a.pocket, dImg(pocketImg), state.embColor);
       }
-      if (a.pocket) overlays += K.overlay(a.pocket, dImg(pocketImg), state.embColor);
     }
     /* 3D turntable: front face (details + design) and plain back face */
     const frontHtml = '<div class="garment-stage">' + window.KASGarment.build(buildState) + overlays + "</div>";
