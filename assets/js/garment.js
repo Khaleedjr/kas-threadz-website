@@ -31,13 +31,39 @@ window.KASGarment = (function () {
     shirt:  { shoulderHalf: 95, neckW: 21, neckDrop: 20, chestHalf: 80, waistHalf: 78,
               hemHalf: 91, hemShort: 428, hemLong: 512, sleeveFlare: 14,
               collar: "shirt", buttons: 6 },
+    /* the agbada body falls well below the wing drape, as it does on the stand */
     agbada: { shoulderHalf: 152, neckW: 26, neckDrop: 30, chestHalf: 150, waistHalf: 172,
-              hemHalf: 180, hemShort: 540, hemLong: 616, sleeveFlare: 0,
+              hemHalf: 186, hemShort: 620, hemLong: 726, sleeveFlare: 0,
               collar: "agbada", buttons: 0, robe: true, drapeHalf: 212 }
   };
 
   const SLEEVE_END = { short: 268, elbow: 324, long: 432 };
   const ARMHOLE_Y = 96;           // depth of armhole below shoulder line
+
+  /* ------------------------------------------------------------
+     frame(base, o) — the crop the garment is photographed in.
+     Tight to the silhouette so the piece fills the frame like a
+     product shot, then padded out to a fixed 500:660 ratio so the
+     stage element and the design overlays keep lining up.
+     ------------------------------------------------------------ */
+  const FRAME_RATIO = 500 / 660;
+  function frame(base, o) {
+    const halfW = base.robe
+      ? base.drapeHalf
+      : Math.max(base.shoulderHalf + base.sleeveFlare * 0.8, base.hemHalf);
+    const top = SY - 52;                       // just above the collar
+    const bottom = o.hemY + 22;
+    let w = (halfW + 16) * 2;
+    let h = bottom - top;
+    if (w / h > FRAME_RATIO) h = w / FRAME_RATIO;
+    else w = h * FRAME_RATIO;
+    return {
+      x: CX - w / 2,
+      y: top - (h - (bottom - top)) / 2,
+      w: w,
+      h: h
+    };
+  }
 
   /* ---- fabric surface treatments ---- */
   function fabricDefs(fabric, color, id) {
@@ -280,6 +306,7 @@ window.KASGarment = (function () {
     o.hemY = s.length === "long" ? base.hemLong : base.hemShort;
     o.sleeveEndY = SLEEVE_END[s.sleeve] || SLEEVE_END.long;
     if (isBack) o.neckDrop = Math.min(o.neckDrop, 10);  // back neckline sits higher
+    const fr = frame(base, o);
 
     const id = Math.random().toString(36).slice(2, 7);
     const f = fabricDefs(s.fabric, s.color, id);
@@ -313,50 +340,27 @@ window.KASGarment = (function () {
     /* sleeves — base fabric + cylinder volume shading */
     let sleeves = "";
     if (!isRobe) {
-      [["-1", "scl"], ["1", "scr"]].forEach(([sd, cl]) => {
-        const sp = sleevePath(parseInt(sd, 10), o);
-        sleeves += `<path d="${sp}" fill="${fillRef}" stroke="${f.darker}" stroke-opacity="0.4" stroke-width="1"/>`;
+      [-1, 1].forEach((sd) => {
+        const sp = sleevePath(sd, o);
+        sleeves += `<path d="${sp}" fill="${fillRef}" stroke="${f.darker}" stroke-opacity="0.45" stroke-width="1.1"/>`;
         sleeves += `<path d="${sp}" fill="url(#shc${id})"/>`;
-        /* shadow along the inner (body-side) edge of the sleeve */
-        const inX = CX + parseInt(sd, 10) * (o.chestHalf - 2);
-        sleeves += `<path d="M ${inX} ${armY + 4} L ${inX} ${o.sleeveEndY - 12}" clip-path="url(#${cl}${id})"
-          stroke="#000" stroke-opacity="0.16" stroke-width="16" filter="url(#ao${id})" stroke-linecap="round"/>`;
+        /* crisp armhole seam instead of a blurred shadow */
+        const inX = CX + sd * (o.chestHalf - 1);
+        sleeves += `<line x1="${inX}" y1="${armY + 2}" x2="${inX}" y2="${o.sleeveEndY - 14}"
+          stroke="${f.darker}" stroke-opacity="0.3" stroke-width="1"/>`;
       });
     }
 
     /* texture + sheen + volume shading overlays clipped to torso */
     let overlays = "";
     if (!photo && f.patternRef && s.fabric !== "ankara") {
-      overlays += `<rect x="0" y="120" width="500" height="540" fill="url(#${f.patternRef})" clip-path="url(#${clipId})"/>`;
+      overlays += `<rect x="${r2(fr.x)}" y="${r2(fr.y)}" width="${r2(fr.w)}" height="${r2(fr.h)}" fill="url(#${f.patternRef})" clip-path="url(#${clipId})"/>`;
     }
-    /* cylindrical (edge-dark, centre-lit) + top-down volume */
+    /* A whisper of edge shading so the silhouette reads as cloth, not a
+       paper cut-out. Deliberately light — the chosen colour stays true. */
     overlays += `<path d="${body}" fill="url(#shc${id})" clip-path="url(#${clipId})"/>`;
-    overlays += `<path d="${body}" fill="url(#shv${id})" clip-path="url(#${clipId})"/>`;
-    /* soft vertical drape folds */
-    if (!isRobe) {
-      let folds = "";
-      [-1, 1].forEach((sd) => {
-        [34, 82].forEach((off, i) => {
-          const x = CX + sd * off;
-          folds += `<path d="M ${x} ${SY + 74} C ${x - sd * 5} ${(SY + o.hemY) / 2} ${x + sd * 4} ${(SY + o.hemY) / 2} ${x} ${o.hemY - 26}"
-            fill="none" stroke="#000" stroke-opacity="${i ? 0.05 : 0.08}" stroke-width="${i ? 9 : 13}" stroke-linecap="round" filter="url(#ao${id})"/>`;
-          folds += `<path d="M ${x - sd * 6} ${SY + 90} C ${x - sd * 10} ${(SY + o.hemY) / 2} ${x - sd * 3} ${(SY + o.hemY) / 2} ${x - sd * 5} ${o.hemY - 30}"
-            fill="none" stroke="#fff" stroke-opacity="0.05" stroke-width="7" stroke-linecap="round" filter="url(#ao${id})"/>`;
-        });
-      });
-      overlays += `<g clip-path="url(#${clipId})">${folds}</g>`;
-    }
-    /* ambient occlusion: shadow cast under the collar onto the chest, and armpits */
-    overlays += `<ellipse cx="${CX}" cy="${SY + 34}" rx="${o.chestHalf * 0.66}" ry="24" fill="#000" opacity="0.14"
-      filter="url(#ao${id})" clip-path="url(#${clipId})"/>`;
-    if (!isRobe) {
-      [-1, 1].forEach((sd) => {
-        overlays += `<ellipse cx="${CX + sd * (o.chestHalf - 10)}" cy="${armY + 4}" rx="20" ry="30" fill="#000" opacity="0.14"
-          filter="url(#ao${id})" clip-path="url(#${clipId})"/>`;
-      });
-    }
     if (f.sheen) {
-      overlays += `<rect x="0" y="120" width="500" height="540" fill="url(#sheen${id})" clip-path="url(#${clipId})"/>`;
+      overlays += `<rect x="${r2(fr.x)}" y="${r2(fr.y)}" width="${r2(fr.w)}" height="${r2(fr.h)}" fill="url(#sheen${id})" clip-path="url(#${clipId})"/>`;
     }
     overlays += `<path d="${body}" fill="none" stroke="${f.darker}" stroke-opacity="0.4" stroke-width="1.2"/>`;
 
@@ -556,15 +560,11 @@ window.KASGarment = (function () {
       }
     }
 
-    /* mannequin stand + shadow */
-    const stand = `
-      <ellipse cx="${CX}" cy="632" rx="132" ry="17" fill="#000" opacity="0.09"/>
-      <ellipse cx="${CX}" cy="628" rx="70" ry="12" fill="none" stroke="#b9ab99" stroke-width="3" opacity="0.55"/>
-      <rect x="${CX - 4}" y="${o.hemY - 6}" width="8" height="${628 - (o.hemY - 6)}" rx="4" fill="#c7b9a7" opacity="0.5"/>
-    `;
-    const hangerBar = isRobe ? "" :
-      `<path d="M ${CX} ${SY - 30} q -2 -12 -14 -12 M ${CX - o.shoulderHalf - 6} ${SY + 4} L ${CX} ${SY - 22} L ${CX + o.shoulderHalf + 6} ${SY + 4}"
-        fill="none" stroke="#c7b9a7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>`;
+    /* Ghost-mannequin product shot: no hanger, no stand, no figure —
+       just the garment holding its own shape over a soft contact shadow. */
+    const ground = `
+      <ellipse cx="${CX}" cy="${o.hemY + 6}" rx="${o.hemHalf * 0.92}" ry="13"
+        fill="#000" opacity="0.20" filter="url(#ao${id})"/>`;
 
     /* mandarin-style collar band with light top / shadow underside (front only) */
     let collar = "";
@@ -575,31 +575,24 @@ window.KASGarment = (function () {
            L ${nR + 3} ${SY - 9} Q ${CX} ${neckY - 12} ${nL - 3} ${SY - 9} Z"
            fill="url(#collar${id})" stroke="${f.darker}" stroke-opacity="0.45" stroke-width="1.1"/>` +
         `<path d="M ${nL} ${SY + 3} Q ${CX} ${neckY + 7} ${nR} ${SY + 3}"
-           fill="none" stroke="#000" stroke-opacity="0.18" stroke-width="3" filter="url(#ao${id})"/>`;
+           fill="none" stroke="${f.darker}" stroke-opacity="0.35" stroke-width="1.4"/>`;
     }
 
     const shadeDefs = `
       <linearGradient id="shc${id}" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#000" stop-opacity="0.42"/>
-        <stop offset="0.13" stop-color="#000" stop-opacity="0.13"/>
-        <stop offset="0.37" stop-color="#fff" stop-opacity="0.13"/>
-        <stop offset="0.52" stop-color="#fff" stop-opacity="0"/>
-        <stop offset="0.72" stop-color="#000" stop-opacity="0.07"/>
-        <stop offset="0.89" stop-color="#000" stop-opacity="0.24"/>
-        <stop offset="1" stop-color="#000" stop-opacity="0.44"/>
-      </linearGradient>
-      <linearGradient id="shv${id}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#fff" stop-opacity="0.13"/>
-        <stop offset="0.09" stop-color="#fff" stop-opacity="0"/>
-        <stop offset="0.72" stop-color="#000" stop-opacity="0"/>
-        <stop offset="1" stop-color="#000" stop-opacity="0.22"/>
+        <stop offset="0" stop-color="#000" stop-opacity="0.13"/>
+        <stop offset="0.10" stop-color="#000" stop-opacity="0.04"/>
+        <stop offset="0.5" stop-color="#fff" stop-opacity="0.02"/>
+        <stop offset="0.90" stop-color="#000" stop-opacity="0.04"/>
+        <stop offset="1" stop-color="#000" stop-opacity="0.13"/>
       </linearGradient>
       <linearGradient id="collar${id}" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${f.light}"/>
         <stop offset="1" stop-color="${f.dark}"/>
       </linearGradient>`;
 
-    return `<svg class="garment-svg" viewBox="0 0 500 660" xmlns="http://www.w3.org/2000/svg" role="img"
+    return `<svg class="garment-svg" viewBox="${r2(fr.x)} ${r2(fr.y)} ${r2(fr.w)} ${r2(fr.h)}"
+      xmlns="http://www.w3.org/2000/svg" role="img"
       aria-label="${s.type} preview">
       <defs>${f.defs}${shadeDefs}${imgDefs}${clip}${sleeveClips}
         <filter id="soft${id}" x="-25%" y="-25%" width="150%" height="150%">
@@ -609,8 +602,7 @@ window.KASGarment = (function () {
           <feGaussianBlur stdDeviation="7"/>
         </filter>
       </defs>
-      ${stand}
-      ${hangerBar}
+      ${ground}
       <g filter="url(#soft${id})">
         ${sleeves}
         <path d="${body}" fill="${fillRef}" stroke="${f.darker}" stroke-opacity="0.4" stroke-width="1.2"/>
@@ -634,20 +626,24 @@ window.KASGarment = (function () {
     const base = PRESET[s.type] || PRESET.kaftan;
     const hemY = s.length === "long" ? base.hemLong : base.hemShort;
     const sleeveEndY = SLEEVE_END[s.sleeve] || SLEEVE_END.long;
-    const px = (v) => (v / 500) * 100;
-    const py = (v) => (v / 660) * 100;
+    /* percentages are relative to the same crop build() renders into */
+    const fr = frame(base, { hemY: hemY });
+    const px = (v) => ((v - fr.x) / fr.w) * 100;   // horizontal position
+    const py = (v) => ((v - fr.y) / fr.h) * 100;   // vertical position
+    const pw = (v) => (v / fr.w) * 100;            // width
+    const ph = (v) => (v / fr.h) * 100;            // height
     const neckY = SY + base.neckDrop;
 
     if (base.robe) {
       /* agbada: one grand chest panel over the front opening */
       return {
         robe: true,
-        flap:   { x: 50, y: py(SY + 126), w: px(112), h: py(188) },
+        flap:   { x: 50, y: py(SY + 126), w: pw(112), h: ph(188) },
         pocket: null,
-        chest:  { x: 50, y: py(SY + 126), w: px(112), h: py(188) },
-        full:   { x: 50, y: py(SY + 168), w: px(126), h: py(280) },
-        neck:   { x: 50, y: py(neckY + 10), w: px(120), h: py(46) },
-        back:   { x: 50, y: py((SY + hemY) / 2), w: px(210), h: py(280) },
+        chest:  { x: 50, y: py(SY + 126), w: pw(112), h: ph(188) },
+        full:   { x: 50, y: py(SY + 168), w: pw(126), h: ph(280) },
+        neck:   { x: 50, y: py(neckY + 10), w: pw(120), h: ph(46) },
+        back:   { x: 50, y: py((SY + hemY) / 2), w: pw(210), h: ph(280) },
         cuffs:  []
       };
     }
@@ -656,15 +652,18 @@ window.KASGarment = (function () {
     return {
       robe: false,
       /* flap strip runs down the placket from under the neckline */
-      flap:   { x: 50, y: py(neckY + 108), w: px(64), h: py(196) },
-      pocket: base.pocket ? { x: px(250 + 52), y: py(SY + 116), w: px(40), h: py(48) }
-                          : { x: px(250 + 52), y: py(SY + 112), w: px(40), h: py(48) },
-      chest:  { x: 50, y: py(SY + 130), w: px(110), h: py(150) },
-      neck:   { x: 50, y: py(neckY + 12), w: px(96), h: py(36) },
-      back:   { x: 50, y: py((SY + hemY) / 2), w: px(130), h: py(220) },
+      flap:   { x: 50, y: py(neckY + 108), w: pw(64), h: ph(196) },
+      /* Afterflap runs are drawn to span the whole placket, from the neck
+         opening to the point. Sized so a wide V/Y design reaches the
+         shoulder seams while narrow bands still run the full placket. */
+      afterflap: { x: 50, y: py(neckY + 90), w: pw(200), h: ph(186) },
+      pocket: { x: px(CX + 52), y: py(SY + (base.pocket ? 116 : 112)), w: pw(40), h: ph(48) },
+      chest:  { x: 50, y: py(SY + 130), w: pw(110), h: ph(150) },
+      neck:   { x: 50, y: py(neckY + 12), w: pw(96), h: ph(36) },
+      back:   { x: 50, y: py((SY + hemY) / 2), w: pw(130), h: ph(220) },
       cuffs: [
-        { x: 50 - px(cuffMidX), y: py(cuffY), w: px(52), h: py(30) },
-        { x: 50 + px(cuffMidX), y: py(cuffY), w: px(52), h: py(30) }
+        { x: px(CX - cuffMidX), y: py(cuffY), w: pw(52), h: ph(30) },
+        { x: px(CX + cuffMidX), y: py(cuffY), w: pw(52), h: ph(30) }
       ]
     };
   }
