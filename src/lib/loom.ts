@@ -31,18 +31,75 @@ export type Measurements = {
 export type Fabric = {
   id: string;
   name: string;
+  /** the mill's own name for the line */
   house: string;
+  /** one line, for the Loom where space is tight */
   character: string;
+  /** the longer read, for the fabrics page */
+  note: string;
+  bestFor: string;
   add: number;
   swatch: string;
+  /** photographs of the same cloth in the colours the studio stocks */
+  colourways: string[];
 };
 
 export const FABRICS: Fabric[] = [
-  { id: "sevenstar", name: "Seven Star", house: "Florence · Wool Premium", character: "Smooth solid wool. The one to pick when the embroidery is the point.", add: 18000, swatch: "/img/fabrics/seven-royal.jpg" },
-  { id: "focus", name: "Focus", house: "Florence · Wool Premium", character: "Tonal satin stripe that catches light rather than colour.", add: 15000, swatch: "/img/fabrics/focus-navy.jpg" },
-  { id: "properstripes", name: "Proper Stripes", house: "Premium Stripe", character: "Bold pinstripe with real spacing. Carries a room on its own.", add: 14000, swatch: "/img/fabrics/proper-charcoal.jpg" },
-  { id: "express", name: "Express", house: "Noble Thinker", character: "Fine pinstripe with a dry, crisp hand.", add: 12000, swatch: "/img/fabrics/express-beige.jpg" },
-  { id: "noblethinker", name: "Noble Thinker", house: "Elegance Beyond Time", character: "Everyday fine stripe. Drapes easily, resists creasing.", add: 10000, swatch: "/img/fabrics/noble-tan.jpg" },
+  {
+    id: "sevenstar",
+    name: "Seven Star",
+    house: "Florence · Wool Premium",
+    character: "Smooth solid wool. The one to pick when the embroidery is the point.",
+    note: "Our smoothest cloth, with only a whisper of twill in the weave. No pattern to compete with the thread, which is why heavy chest panels go on this one.",
+    bestFor: "Heavy embroidery",
+    add: 18000,
+    swatch: "/img/fabrics/seven-royal.jpg",
+    colourways: ["/img/fabrics/seven-royal.jpg", "/img/fabrics/seven-navy.jpg", "/img/fabrics/seven-charcoal.jpg"],
+  },
+  {
+    id: "focus",
+    name: "Focus",
+    house: "Florence · Wool Premium",
+    character: "Tonal satin stripe that catches light rather than colour.",
+    note: "The stripe catches light rather than colour, so the cloth shifts between matte and sheen as you move. It is the reason this one photographs so well at evening events.",
+    bestFor: "Occasions",
+    add: 15000,
+    swatch: "/img/fabrics/focus-navy.jpg",
+    colourways: ["/img/fabrics/focus-navy.jpg", "/img/fabrics/focus-maroon.jpg", "/img/fabrics/focus-teal.jpg"],
+  },
+  {
+    id: "properstripes",
+    name: "Proper Stripes",
+    house: "Premium Stripe",
+    character: "Bold pinstripe with real spacing. Carries a room on its own.",
+    note: "A confident pinstripe with real distance between the lines. It carries a room by itself, so we usually pair it with restrained work: a neckline and cuffs rather than a full front.",
+    bestFor: "Statements",
+    add: 14000,
+    swatch: "/img/fabrics/proper-charcoal.jpg",
+    colourways: ["/img/fabrics/proper-charcoal.jpg", "/img/fabrics/proper-navy.jpg", "/img/fabrics/proper-teal.jpg"],
+  },
+  {
+    id: "express",
+    name: "Express",
+    house: "Noble Thinker",
+    character: "Fine pinstripe with a dry, crisp hand.",
+    note: "The stripe is subtle enough for daywear but holds a sharp line, so it suits a fitted kaftan and anything meant to read as tailored rather than flowing.",
+    bestFor: "Fitted kaftans",
+    add: 12000,
+    swatch: "/img/fabrics/express-beige.jpg",
+    colourways: ["/img/fabrics/express-beige.jpg", "/img/fabrics/express-sky.jpg"],
+  },
+  {
+    id: "noblethinker",
+    name: "Noble Thinker",
+    house: "Elegance Beyond Time",
+    character: "Everyday fine stripe. Drapes easily, resists creasing.",
+    note: "The most forgiving cloth in the library. It drapes easily, resists creasing and takes colour beautifully. The one most clients come back for.",
+    bestFor: "Everyday",
+    add: 10000,
+    swatch: "/img/fabrics/noble-tan.jpg",
+    colourways: ["/img/fabrics/noble-tan.jpg", "/img/fabrics/noble-grey.jpg", "/img/fabrics/noble-teal.jpg"],
+  },
 ];
 
 export const COLOURS: Array<{ hex: string; name: string }> = [

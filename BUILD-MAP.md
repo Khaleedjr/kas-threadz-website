@@ -26,8 +26,10 @@ Phase 1 is built and running. Seven routes, all responding, typecheck clean, ver
 
 1. **Order logging.** The Loom hands off to WhatsApp; it must write the order server-side first so nothing exists only in a chat thread. Needs the database.
 2. **Real copy for the Atelier**, and a decision on the inherited stats and testimonials.
-3. **Photography reshoot.** The nine existing images are the ceiling on how good this can look.
+3. **Photography reshoot**, garments and fabrics both. The fabric crops are 420px wide and up to 508 tall, too small to show large, which is why the fabrics page presents them as bands.
 4. **Logo vector**, for a sharper mark and the needle-settles-into-place moment.
+
+**Known and accepted:** the Loom shows a kaftan photograph when Senator is selected, because no senator has been shot. Fix it when the photography lands, either with a real frame or by dropping the option.
 
 ## The proofs (keep: they are the spec for how things move)
 

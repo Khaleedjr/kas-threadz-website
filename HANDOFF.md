@@ -94,7 +94,9 @@ These are not code problems. They are the difference between a good site and a c
 
 ### Blocking, in order of impact
 
-1. **Photographs.** There are nine images and they are the ceiling on how good this can look. What is needed: every piece front and back on a plain ground, a few on a person, and close-ups of the stitching. The embroidery detail matters most, because nobody else's close-ups look like yours.
+1. **Photographs.** There are nine garment images and they are the ceiling on how good this can look. What is needed: every piece front and back on a plain ground, a few on a person, and close-ups of the stitching. The embroidery detail matters most, because nobody else's close-ups look like yours.
+
+   **The fabric photographs need redoing too.** The fourteen we have are small crops, 420 pixels wide and anywhere from 66 to 508 tall, so they cannot be shown large without going soft. The fabrics page presents them as narrow bands, which is honest and looks deliberate, but a proper set would let the cloth fill the page. Shoot each material flat, evenly lit, square on, at least 2000 pixels wide, one frame per colourway.
 2. **The EMB and DST files** from `Downloads\EMB DESIGNS`. These unlock two things nobody in this market has: pressing play on a design and watching its real needle path run, and pricing embroidery by its true stitch count (`AGD 26 · 41,208 stitches · ₦18,400`).
 3. **The logo's original file** (`.ai`, `.svg` or `.eps`), not the PNG. Sharper at every size, and it lets the needle in the logo become the needle that does the sewing.
 

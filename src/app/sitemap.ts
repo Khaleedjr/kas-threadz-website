@@ -3,7 +3,7 @@ import { PIECES } from "@/lib/catalogue";
 import { SITE } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = ["", "/collection", "/library", "/loom", "/atelier"];
+  const pages = ["", "/collection", "/fabrics", "/library", "/loom", "/atelier"];
 
   return [
     ...pages.map((path) => ({
