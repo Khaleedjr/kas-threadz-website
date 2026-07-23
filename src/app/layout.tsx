@@ -58,6 +58,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${syne.variable} ${jost.variable} ${jetbrains.variable} h-full antialiased`}
+      // the ceremony guard below adds kas-sew-pending before hydration, so the
+      // class list on this element is expected to differ from the server HTML
+      suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: CEREMONY_GUARD }} />
