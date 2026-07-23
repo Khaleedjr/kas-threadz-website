@@ -32,10 +32,11 @@ These rules are binding. Most of them exist because breaking them already cost r
 - **The register decides everything.** A page sets `data-register="cloth"` or `data-register="paper"` and every child reads the right ground, rules, accent and action colour. Do not hardcode a colour that a token already provides.
 - **Browser chrome is brand surface.** Scrollbars, selection, focus rings, form fields and number spinners are styled in `globals.css`. Do not leave a new control looking like an OS widget.
 
-## Two traps that have already bitten
+## Three traps that have already bitten
 
 1. **`filter`, `backdrop-filter`, `transform` and a stray `position: relative` all make an element the containing block for `position: fixed` descendants.** This silently broke the reveal nav, then the mobile menu. Full-screen panels are siblings of the header, never children. Full-bleed grounds paint their layers on the element itself, never via an overlay pseudo-element that needs its siblings repositioned.
 2. **Never animate a dashed line's `stroke-dashoffset` to fake sewing.** It grows as a solid line and then snaps into dashes, which reads as a seam. Running stitches are discrete elements revealed one at a time, the needle surfacing at the far end of each.
+3. **When a client effect replaces server-rendered content that a class is hiding, commit the replacement with `flushSync` before removing the class.** A plain `setState` lands on a later task, so the class comes off while the server's markup is still in the DOM and the browser paints a frame of it. That is what made the finished mark flash before the ceremony. Measured at the instant of reveal, the first path still carried 4,098 characters of the completed stitch run; forcing the commit first brought it to 20, which is one stitch.
 
 ## Motion
 

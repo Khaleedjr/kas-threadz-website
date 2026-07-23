@@ -78,6 +78,8 @@ The script decodes the PNG, reads it row by row, and turns every run of ink into
 
 Because it ships as data, the finished mark is in the server HTML and paints with the rest of the page. On a first visit an inline script hides it before paint and the component sews it stitch by stitch; after that, `sessionStorage` remembers and the mark is simply there. Without JavaScript it renders finished.
 
+That server-first arrangement is also why the component empties the paths with `flushSync` on its first frame, before it lifts the hiding class. See trap 3 under Conventions.
+
 ## Conventions
 
 - **Prices** use the `.price` class: mono, weight 500, tabular figures, full contrast. Money is never dimmed into secondary text.
@@ -87,10 +89,11 @@ Because it ships as data, the finished mark is in the server HTML and paints wit
 - **A screen fits on every screen.** Sizes are expressed against the viewport (`min-h-dvh`, `clamp()`, `dvh` caps), and verified at a tall window, a short one and a narrow one.
 - **No em dashes**, in code comments or in copy.
 
-Two traps worth knowing, because both have already cost time:
+Three traps worth knowing, because all of them have already cost time:
 
 1. `filter`, `backdrop-filter`, `transform` and a stray `position: relative` all make an element the containing block for `position: fixed` descendants. Full-screen panels are siblings of the header, never children.
 2. Never animate a dashed line's `stroke-dashoffset` to fake sewing. It grows as a solid line and then snaps into dashes. Running stitches are discrete elements revealed one at a time.
+3. When a client effect replaces server-rendered content that a class is hiding, commit the replacement with `flushSync` before removing the class. A plain `setState` is applied on a later task, so the class comes off while the server's markup is still in the DOM and the browser can paint a frame of it. This is what made the finished mark flash before the ceremony.
 
 ## Ordering
 
