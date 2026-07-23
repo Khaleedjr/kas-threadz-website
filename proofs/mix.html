@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — specimen plate 001</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400..600&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #0c0a09;
+    overflow: hidden;
+    font-family: "Instrument Sans", system-ui, sans-serif;
+    display: grid; place-items: center;
+  }
+  .cloth {
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(120% 90% at 50% 30%, rgba(46,38,32,.55), rgba(12,10,9,0) 60%),
+      repeating-linear-gradient(63deg, rgba(236,229,218,.016) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(-63deg, rgba(0,0,0,.14) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #171310, #100d0b 55%, #0b0908);
+    opacity: 0; transition: opacity 1.4s ease;
+  }
+  .cloth.on { opacity: 1; }
+  .cloth::after {
+    content: ""; position: absolute; inset: 0; opacity: .05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  .vignette { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(115% 95% at 50% 45%, transparent 55%, rgba(0,0,0,.5) 100%); }
+  /* the lamp: cloth responds to your hand */
+  .lamp { position: fixed; left: 0; top: 0; width: 520px; height: 520px; pointer-events: none;
+    border-radius: 50%; mix-blend-mode: soft-light; opacity: .9;
+    background: radial-gradient(circle, rgba(240,220,190,.55), rgba(240,220,190,0) 62%);
+    transform: translate(-50%, -50%); transition: opacity .6s; }
+
+  .stagebox { position: relative; width: min(95vw, 128vh); z-index: 2; }
+  svg.canvas { display: block; width: 100%; height: auto; }
+
+  .stitch { fill: none; stroke: url(#thread); stroke-width: 8.6; opacity: 0; stroke-linecap: round; }
+  .stitch.fine { stroke-width: 4.6; }
+  .chalk { fill: none; stroke: #e8e0d2; stroke-width: 2; stroke-dasharray: 5 9;
+    opacity: 0; transition: opacity .5s ease; stroke-linecap: round; }
+  .chalk.on { opacity: .15; }
+  .jump { fill: none; stroke: #dfba82; stroke-width: 1.2; opacity: 0; }
+  .hairline { fill: none; stroke: #8f8578; stroke-width: 1.1; opacity: 0; stroke-linecap: round; }
+  .regmark { fill: none; stroke: #8f8578; stroke-width: 1.1; opacity: 0; transition: opacity .5s ease; }
+  .regmark.on { opacity: .5; }
+
+  text { user-select: none; }
+  .eyebrow-t { font-size: 12.5px; font-weight: 600; letter-spacing: .42em; fill: #a89a86; }
+  .word-t { font-size: 31px; font-weight: 500; letter-spacing: .12em; fill: #ece5da; }
+  .serif-t { font-family: "Fraunces"; font-style: italic; font-size: 27px; fill: #cbb891; }
+  .nav-t { font-size: 11.5px; font-weight: 600; letter-spacing: .26em; fill: #b6ab9c; }
+  .cta-t { font-size: 12.5px; font-weight: 600; letter-spacing: .3em; fill: #ece5da; transition: fill .3s; }
+  .codes-t { font-family: "IBM Plex Mono"; font-size: 10.5px; letter-spacing: .3em; fill: #6e675e; }
+  .anno-t { font-family: "IBM Plex Mono"; font-size: 10.5px; letter-spacing: .14em; fill: #93897b; }
+  .anno-t.dim { fill: #6e675e; }
+  .plate-t { font-family: "IBM Plex Mono"; font-size: 11px; letter-spacing: .2em; fill: #a89a86; }
+
+  .fades { opacity: 0; transition: opacity .9s ease, transform .9s cubic-bezier(.22,1,.36,1); transform: translateY(8px); }
+  .fades.on { opacity: 1; transform: none; }
+  .perletter { opacity: 0; transition: opacity .34s ease; }
+  .perletter.on { opacity: 1; }
+
+  #wordgroup { transform-origin: 590px 410px; }
+  #wordgroup.settle { animation: settle .32s cubic-bezier(.34,1.4,.5,1) both; }
+  @keyframes settle { 0% { transform: scale(1.014); } 100% { transform: scale(1); } }
+
+  #needle { opacity: 0; transition: opacity .4s ease; }
+  #needle.on { opacity: 1; }
+
+  #ctagroup { transform-origin: 600px 726px; }
+  #ctagroup.press { animation: press .28s cubic-bezier(.34,1.3,.5,1); }
+  @keyframes press { 40% { transform: scale(.985); } 100% { transform: scale(1); } }
+  #ctahit { cursor: pointer; }
+  #ctahit:hover ~ #ctarect-stitch, #ctagroup:hover #ctarect-stitch { stroke-width: 6; }
+  #ctagroup:hover .cta-t { fill: #fff6e6; }
+
+  .chrome { position: fixed; z-index: 5; font-size: 10px; letter-spacing: .22em;
+    text-transform: uppercase; color: #6e675e; }
+  .chrome.tl { top: 20px; left: 24px; }
+  .chrome.tr { top: 16px; right: 24px; display: flex; gap: 10px; }
+  .chrome button { background: none; border: 1px solid #33302b; color: #a89a86;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .chrome button:hover { border-color: #6e675e; color: #ece5da; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01s !important; animation-duration: .01s !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="cloth" id="cloth"></div>
+  <div class="lamp" id="lamp" style="opacity:0"></div>
+  <div class="vignette"></div>
+  <p class="chrome tl">Proof piece 02 · needle × archive × cloth</p>
+  <div class="chrome tr"><button id="skip">Skip</button><button id="replay">Run it again</button></div>
+
+  <div class="stagebox">
+  <svg class="canvas" viewBox="0 0 1200 820" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="thread" x1="0" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#c9a06b"/>
+        <stop offset="0.45" stop-color="#eed3a4"/>
+        <stop offset="0.62" stop-color="#d9b982"/>
+        <stop offset="1" stop-color="#b9925e"/>
+      </linearGradient>
+      <filter id="threadshadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1.4" stdDeviation="0.7" flood-color="#000" flood-opacity="0.55"/>
+      </filter>
+      <filter id="glow" x="-200%" y="-200%" width="500%" height="500%">
+        <feGaussianBlur stdDeviation="2.6"/>
+      </filter>
+    </defs>
+
+    <!-- nav -->
+    <text class="nav-t fades" id="nav0" x="80" y="74">EST · ABUJA</text>
+    <text class="nav-t perletter" x="640" y="74">COLLECTION</text>
+    <text class="nav-t perletter" x="780" y="74">LIBRARY</text>
+    <text class="nav-t perletter" x="888" y="74">THE LOOM</text>
+    <text class="nav-t perletter" x="1010" y="74">ATELIER</text>
+    <path class="stitch fine" id="navrule" d="M 80 92 L 1120 92" stroke-dasharray="9 7"/>
+
+    <!-- plate header (the archive layer) -->
+    <text class="plate-t" id="plate1" x="1120" y="132" text-anchor="end" data-full="PLATE Nº 001 — WORDMARK"></text>
+    <text class="anno-t dim" id="plate2" x="1120" y="152" text-anchor="end" data-full="KAS-01.DST · 412 STITCHES · RUN 6.2S"></text>
+
+    <!-- registration marks -->
+    <path class="regmark" d="M 70 130 h 16 M 78 122 v 16"/>
+    <path class="regmark" d="M 70 770 h 16 M 78 762 v 16"/>
+    <path class="regmark" d="M 1114 770 h 16 M 1122 762 v 16"/>
+    <path class="regmark" d="M 1114 182 h 16 M 1122 174 v 16"/>
+
+    <!-- eyebrow -->
+    <text class="eyebrow-t fades" id="eyebrow" x="600" y="256" text-anchor="middle">BESPOKE EMBROIDERY · THE HOUSE OF KAS</text>
+
+    <!-- chalk guides -->
+    <g id="chalkgroup">
+      <path class="chalk" d="M 350 300 L 350 520"/>
+      <path class="chalk" d="M 455 300 L 352 415"/>
+      <path class="chalk" d="M 352 415 L 460 520"/>
+      <path class="chalk" d="M 540 520 L 610 300"/>
+      <path class="chalk" d="M 610 300 L 680 520"/>
+      <path class="chalk" d="M 565 448 L 655 448"/>
+      <path class="chalk" d="M 830 330 C 815 302 735 300 733 348 C 731 396 827 402 825 452 C 823 500 733 502 720 472"/>
+    </g>
+
+    <!-- wordmark -->
+    <g id="wordgroup" filter="url(#threadshadow)">
+      <path class="stitch" data-seq="1" d="M 350 300 L 350 520" stroke-dasharray="13 9"/>
+      <path class="stitch" data-seq="2" d="M 455 300 L 352 415" stroke-dasharray="12.5 8.6"/>
+      <path class="stitch" data-seq="3" d="M 352 415 L 460 520" stroke-dasharray="13.4 9.2"/>
+      <path class="stitch" data-seq="4" d="M 540 520 L 610 300" stroke-dasharray="13 8.8"/>
+      <path class="stitch" data-seq="5" d="M 610 300 L 680 520" stroke-dasharray="12.6 9.3"/>
+      <path class="stitch" data-seq="6" d="M 565 448 L 655 448" stroke-dasharray="12 8.4"/>
+      <path class="stitch" data-seq="7" d="M 830 330 C 815 302 735 300 733 348 C 731 396 827 402 825 452 C 823 500 733 502 720 472" stroke-dasharray="13 9"/>
+    </g>
+
+    <!-- annotation: dimension line (left) -->
+    <path class="hairline" id="dimline" d="M 306 300 L 306 520 M 300 300 L 312 300 M 300 520 L 312 520"/>
+    <text class="anno-t dim" id="dimlabel" x="292" y="416" text-anchor="middle" transform="rotate(-90 292 416)" data-full="220 U"></text>
+
+    <!-- annotation: leaders -->
+    <path class="hairline" id="lead1" d="M 828 372 L 902 340 L 946 340"/>
+    <text class="anno-t" id="lead1a" x="954" y="336" data-full="STITCH: RUNNING"></text>
+    <text class="anno-t dim" id="lead1b" x="954" y="354" data-full="PITCH 13.0 · GOLD 40WT"></text>
+    <path class="hairline" id="lead2" d="M 352 336 L 262 306 L 218 306"/>
+    <text class="anno-t" id="lead2a" x="210" y="302" text-anchor="end" data-full="7 STROKES"></text>
+    <text class="anno-t dim" id="lead2b" x="210" y="320" text-anchor="end" data-full="2 JUMPS · TRIMMED"></text>
+    <path class="hairline" id="lead3" d="M 462 700 L 396 738 L 352 738"/>
+    <text class="anno-t dim" id="lead3a" x="344" y="742" text-anchor="end" data-full="TIE-OFF · KNOT"></text>
+
+    <!-- THREADZ -->
+    <g id="threadz">
+      <text class="word-t perletter" x="436" y="592">T</text>
+      <text class="word-t perletter" x="491" y="592">H</text>
+      <text class="word-t perletter" x="548" y="592">R</text>
+      <text class="word-t perletter" x="604" y="592">E</text>
+      <text class="word-t perletter" x="658" y="592">A</text>
+      <text class="word-t perletter" x="714" y="592">D</text>
+      <text class="word-t perletter" x="770" y="592">Z</text>
+    </g>
+    <path class="stitch fine" id="underline" d="M 420 616 L 792 616" stroke-dasharray="8.4 6.6"/>
+
+    <text class="serif-t fades" id="serifline" x="600" y="668" text-anchor="middle">Art in every stitch.</text>
+
+    <!-- CTA -->
+    <g id="ctagroup">
+      <path class="stitch fine" id="ctarect-stitch" d="M 478 700 L 722 700 L 722 752 L 478 752 Z" stroke-dasharray="8.2 6.4"/>
+      <text class="cta-t fades" id="ctalabel" x="600" y="731" text-anchor="middle">COMMISSION A PIECE</text>
+      <rect id="ctahit" x="478" y="700" width="244" height="52" fill="transparent"/>
+    </g>
+
+    <g id="knot" filter="url(#threadshadow)">
+      <path class="stitch fine" id="knot1" d="M 474 696 C 466 688 456 694 462 702 C 468 710 478 704 471 695" stroke-dasharray="5 3.6"/>
+    </g>
+
+    <text class="codes-t fades" id="codes" x="600" y="800" text-anchor="middle">LD 51 · LD 115 · LD 184 · AF 63 · AGD 26 — 55 MACHINE FILES</text>
+
+    <g id="jumps"></g>
+
+    <g id="needle">
+      <circle r="9" fill="none" stroke="#f0d3a2" stroke-width="1.4" opacity="0.32" filter="url(#glow)"/>
+      <line x1="4" y1="-26" x2="1" y2="-7" stroke="#d7d9da" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="3.4" cy="-21" r="1.5" fill="none" stroke="#d7d9da" stroke-width="1"/>
+      <circle r="3.2" fill="#f4e2c0"/>
+    </g>
+  </svg>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  const svg = document.querySelector("svg.canvas");
+  const needle = document.getElementById("needle");
+  const jumps = document.getElementById("jumps");
+  const cloth = document.getElementById("cloth");
+  const lamp = document.getElementById("lamp");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let skipped = false;
+
+  /* masks (userSpaceOnUse — straight lines have zero-area bboxes) */
+  const masked = [...svg.querySelectorAll(".stitch, .hairline")];
+  const defs = svg.querySelector("defs");
+  masked.forEach((p, i) => {
+    const id = "rv" + i;
+    const mask = document.createElementNS(svg.namespaceURI, "mask");
+    mask.setAttribute("id", id);
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("x", "0"); mask.setAttribute("y", "0");
+    mask.setAttribute("width", "1200"); mask.setAttribute("height", "820");
+    const rp = document.createElementNS(svg.namespaceURI, "path");
+    rp.setAttribute("d", p.getAttribute("d"));
+    rp.setAttribute("fill", "none");
+    rp.setAttribute("stroke", "#fff");
+    rp.setAttribute("stroke-width", parseFloat(getComputedStyle(p).strokeWidth) + 8);
+    rp.setAttribute("stroke-linecap", "round");
+    mask.appendChild(rp);
+    defs.appendChild(mask);
+    p.setAttribute("mask", `url(#${id})`);
+    p.__reveal = rp;
+    p.__len = p.getTotalLength();
+  });
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, skipped ? 0 : ms));
+  const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  function setNeedle(x, y) { needle.setAttribute("transform", `translate(${x},${y})`); }
+
+  function draw(p, dur, onFrame, moveNeedle = true) {
+    return new Promise((res) => {
+      const L = p.__len, rp = p.__reveal;
+      rp.style.strokeDasharray = L;
+      rp.style.strokeDashoffset = L;
+      p.style.opacity = 1;
+      if (skipped || reduced) {
+        rp.style.strokeDashoffset = 0;
+        onFrame && onFrame(p.getPointAtLength(L), 1);
+        return res();
+      }
+      const t0 = performance.now();
+      let done = false;
+      const step = () => {
+        if (done) return;
+        const raw = Math.min(1, (performance.now() - t0) / dur);
+        const e = ease(raw);
+        rp.style.strokeDashoffset = L * (1 - e);
+        const pt = p.getPointAtLength(L * e);
+        if (moveNeedle) setNeedle(pt.x, pt.y);
+        onFrame && onFrame(pt, e);
+        if (raw < 1) requestAnimationFrame(step);
+        else { done = true; clearInterval(tick); res(); }
+      };
+      const tick = setInterval(step, 120);
+      requestAnimationFrame(step);
+    });
+  }
+
+  function travel(x1, y1, x2, y2, dur, withThread) {
+    return new Promise((res) => {
+      let jp = null;
+      if (withThread) {
+        jp = document.createElementNS(svg.namespaceURI, "path");
+        jp.setAttribute("class", "jump");
+        jumps.appendChild(jp);
+      }
+      if (skipped || reduced) { setNeedle(x2, y2); return res(); }
+      const t0 = performance.now();
+      let done = false;
+      const step = () => {
+        if (done) return;
+        const raw = Math.min(1, (performance.now() - t0) / dur);
+        const e = ease(raw);
+        setNeedle(x1 + (x2 - x1) * e, y1 + (y2 - y1) * e);
+        if (jp) { jp.style.opacity = 0.28 * e; jp.setAttribute("d", `M ${x1} ${y1} L ${x1 + (x2 - x1) * e} ${y1 + (y2 - y1) * e}`); }
+        if (raw < 1) requestAnimationFrame(step);
+        else {
+          done = true; clearInterval(tick);
+          if (jp) setTimeout(() => { jp.style.transition = "opacity .8s"; jp.style.opacity = 0; }, 600);
+          res();
+        }
+      };
+      const tick = setInterval(step, 120);
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* typewriter for the archive labels */
+  function typeIn(el, dur) {
+    return new Promise((res) => {
+      const full = el.dataset.full || "";
+      if (skipped || reduced) { el.textContent = full; return res(); }
+      const t0 = performance.now();
+      let done = false;
+      const step = () => {
+        if (done) return;
+        const raw = Math.min(1, (performance.now() - t0) / dur);
+        el.textContent = full.slice(0, Math.round(full.length * raw));
+        if (raw < 1) requestAnimationFrame(step);
+        else { done = true; clearInterval(tick); res(); }
+      };
+      const tick = setInterval(step, 90);
+      requestAnimationFrame(step);
+    });
+  }
+
+  const on = (sel) => document.querySelectorAll(sel).forEach((el) => el.classList.add("on"));
+  const speed = (p) => Math.max(240, (p.__len / 0.72));
+
+  const byseq = {};
+  svg.querySelectorAll(".stitch[data-seq]").forEach((p) => (byseq[p.dataset.seq] = p));
+  const $ = (id) => document.getElementById(id);
+  const navItems = [...svg.querySelectorAll(".nav-t.perletter")];
+  const zletters = [...svg.querySelectorAll("#threadz .perletter")];
+
+  async function run() {
+    cloth.classList.add("on");
+    await sleep(500);
+    const chalks = [...svg.querySelectorAll(".chalk")];
+    for (const c of chalks) { c.classList.add("on"); await sleep(85); }
+    await sleep(420);
+
+    setNeedle(350, 300);
+    needle.classList.add("on");
+    await sleep(320);
+
+    for (const key of ["1", "2", "3", "4", "5", "6", "7"]) {
+      const p = byseq[key];
+      const start = p.getPointAtLength(0);
+      const m = needle.transform.baseVal.getItem(0).matrix;
+      if (Math.hypot(start.x - m.e, start.y - m.f) > 4) {
+        await travel(m.e, m.f, start.x, start.y, 190, true);
+      }
+      await draw(p, speed(p));
+    }
+    $("wordgroup").classList.add("settle");
+    await sleep(360);
+    on("#eyebrow");
+
+    await travel(720, 472, 420, 616, 260, false);
+    await draw($("underline"), 620, (pt) => {
+      zletters.forEach((t) => { if (+t.getAttribute("x") < pt.x - 6) t.classList.add("on"); });
+    });
+    zletters.forEach((t) => t.classList.add("on"));
+
+    await travel(792, 616, 80, 92, 300, false);
+    on("#nav0");
+    await draw($("navrule"), 900, (pt) => {
+      navItems.forEach((t) => { if (+t.getAttribute("x") < pt.x - 10) t.classList.add("on"); });
+    });
+    navItems.forEach((t) => t.classList.add("on"));
+
+    await travel(1120, 92, 478, 700, 320, false);
+    await draw($("ctarect-stitch"), 760);
+    on("#ctalabel");
+    await draw($("knot1"), 300);
+    on("#serifline");
+    await travel(471, 695, 1290, 640, 500, false);
+    needle.classList.remove("on");
+    on("#codes");
+
+    /* ---- the archive annotates the plate ---- */
+    await sleep(300);
+    on(".regmark");
+    await typeIn($("plate1"), 500);
+    typeIn($("plate2"), 550);
+    await draw($("dimline"), 380, null, false);
+    typeIn($("dimlabel"), 300);
+    await draw($("lead1"), 340, null, false);
+    typeIn($("lead1a"), 380);
+    await typeIn($("lead1b"), 420);
+    await draw($("lead2"), 340, null, false);
+    typeIn($("lead2a"), 320);
+    await typeIn($("lead2b"), 380);
+    await draw($("lead3"), 320, null, false);
+    await typeIn($("lead3a"), 320);
+
+    lamp.style.opacity = "1";
+  }
+
+  function finalState() {
+    skipped = true;
+    masked.forEach((p) => { p.style.opacity = 1; p.__reveal.style.strokeDasharray = "none"; p.__reveal.style.strokeDashoffset = 0; });
+    document.querySelectorAll(".fades, .perletter, .chalk, .regmark").forEach((el) => el.classList.add("on"));
+    document.querySelectorAll("[data-full]").forEach((el) => (el.textContent = el.dataset.full));
+    cloth.classList.add("on");
+    needle.classList.remove("on");
+    lamp.style.opacity = "1";
+  }
+
+  document.getElementById("skip").addEventListener("click", finalState);
+  document.getElementById("replay").addEventListener("click", () => location.reload());
+  addEventListener("pointermove", (e) => { lamp.style.left = e.clientX + "px"; lamp.style.top = e.clientY + "px"; });
+  $("ctahit").addEventListener("click", () => {
+    const g = $("ctagroup");
+    g.classList.remove("press"); void g.getBoundingClientRect(); g.classList.add("press");
+  });
+
+  if (reduced) finalState();
+  else run();
+})();
+</script>
+</body>
+</html>

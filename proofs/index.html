@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — identity, take two</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  :root { font-family: system-ui, "Segoe UI", sans-serif; }
+  html[data-theme="dark"] body { background:#0a0809; color:#efe9e3; }
+  html[data-theme="light"] body { background:#efe9e1; color:#171314; }
+  body { transition: background .25s; }
+  .topbar { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px);
+    background: color-mix(in oklch, currentColor 7%, transparent);
+    border-bottom: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+    padding: 13px 26px; display: flex; justify-content: space-between; align-items: center; }
+  .topbar h1 { font-size: 13px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+  .topbar p { font-size: 11.5px; opacity: .55; margin-top: 3px; }
+  .toggle { border: 1px solid color-mix(in oklch, currentColor 20%, transparent); background: none;
+    color: inherit; padding: 7px 16px; border-radius: 999px; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 40px 26px 90px; display: grid; gap: 64px; }
+  .cand-tag { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; padding-left: 2px; }
+  .cand-tag .num { font-family: Georgia, serif; font-size: 26px; opacity: .38; }
+  .cand-name { font-size: 15px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  .cand-vibe { font-size: 11.5px; opacity: .5; letter-spacing: .06em; }
+  .mock { background: var(--bg); color: var(--fg); border-radius: 4px; overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 24px 70px rgba(0,0,0,.18); transition: background .25s; }
+  .mnav { display: flex; align-items: center; justify-content: space-between; gap: 18px;
+    padding: 16px 30px; border-bottom: 1px solid var(--border); }
+  .mlogo img { height: 30px; width: auto; }
+  .mlinks { display: flex; gap: 26px; font-size: 10px; font-weight: 600; letter-spacing: .22em;
+    text-transform: uppercase; opacity: .8; }
+  .mnav-cta { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+    border: 1px solid var(--primary); color: var(--primary); padding: 9px 18px; border-radius: 2px; }
+  .hero { display: grid; grid-template-columns: 1.02fr .98fr; min-height: 470px;
+    background: radial-gradient(120% 130% at 85% -10%, color-mix(in oklch, var(--primary) 9%, transparent), transparent 55%); }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+  .hero-copy { padding: 56px 20px 48px 30px; display: flex; flex-direction: column; justify-content: center; }
+  .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .34em; text-transform: uppercase;
+    color: color-mix(in oklch, var(--primary) 78%, var(--fg)); margin-bottom: 20px; }
+  .display { font-family: Georgia, "Times New Roman", serif; font-weight: 500; font-size: clamp(38px, 4.6vw, 54px);
+    line-height: 1.06; letter-spacing: -0.012em; margin-bottom: 18px; max-width: 9.5ch; }
+  .display em { font-style: italic; color: color-mix(in oklch, var(--primary) 82%, var(--fg)); }
+  .lede { font-size: 13.5px; line-height: 1.65; opacity: .78; max-width: 40ch; margin-bottom: 26px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .btn-p { background: var(--primary); color: var(--primary-fg); border: none; font-family: inherit;
+    font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+    padding: 15px 26px; border-radius: 2px; cursor: pointer; }
+  .btn-g { background: none; color: var(--fg); border: 1px solid var(--border); font-family: inherit;
+    font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+    padding: 15px 24px; border-radius: 2px; cursor: pointer; }
+  .btn-g:hover { background: var(--muted); }
+  .meta { font-size: 11px; letter-spacing: .08em; color: var(--muted-fg); }
+  .hero-media { position: relative; min-height: 470px; }
+  .hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .hero-media figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 22px 14px;
+    font-family: Georgia, serif; font-style: italic; font-size: 13.5px; color: #f2ece4;
+    background: linear-gradient(transparent, rgba(10,6,7,.72)); }
+  .strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 15px 30px; border-top: 1px solid var(--border); }
+  .chip { font-size: 9.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+    border: 1px solid var(--border); border-radius: 999px; padding: 6px 13px; opacity: .85; }
+  .strip-status { margin-left: auto; display: flex; align-items: center; gap: 12px;
+    font-size: 11px; letter-spacing: .05em; color: var(--muted-fg); }
+  .bar { width: 90px; height: 2.5px; border-radius: 2px; background: var(--muted); overflow: hidden; display: inline-block; }
+  .bar i { display: block; height: 100%; background: var(--primary); }
+  .specs { display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 13px 30px; background: var(--card); border-top: 1px solid var(--border);
+    font-size: 10.5px; color: var(--muted-fg); font-family: ui-monospace, Menlo, monospace; }
+  .dots { display: inline-flex; gap: 6px; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; display: inline-block;
+    box-shadow: inset 0 0 0 1px rgba(128,128,128,.35); }
+  .spec-aa { margin-left: auto; }
+  .foot { text-align: center; font-size: 13.5px; opacity: .7; line-height: 1.9; }
+  .foot code { font-family: ui-monospace, Menlo, monospace;
+    background: color-mix(in oklch, currentColor 10%, transparent); padding: 2px 7px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><h1>KAS THREADZ · identity, take three</h1><p>Neutral grounds, six accent stories, zero red · the logo carries the burgundy · toggle both modes</p></div>
+    <button class="toggle" id="tg">Switch to Light</button>
+  </div>
+  <div class="wrap">
+    
+  <section class="cand" id="c1">
+    <div class="cand-tag"><span class="num">01</span><span class="cand-name">Forest & Brass</span><span class="cand-vibe">old money · deep green on bone · brass at night</span></div>
+    <article class="mock" data-dark="--bg:oklch(0.130 0.012 160.0);--fg:oklch(0.965 0.006 120.0);--card:oklch(0.172 0.016 160.0);--primary:oklch(0.820 0.100 88.0);--primary-fg:oklch(0.130 0.030 88.0);--accent:oklch(0.620 0.090 160.0);--muted:oklch(0.197 0.016 160.0);--muted-fg:oklch(0.695 0.014 120.0);--border:oklch(0.257 0.016 160.0);--logo-cream:block;--logo-burg:none;" data-light="--bg:oklch(0.973 0.007 90.0);--fg:oklch(0.190 0.015 160.0);--card:oklch(1.000 0.000 0.0);--primary:oklch(0.380 0.090 160.0);--primary-fg:oklch(0.978 0.004 160.0);--accent:oklch(0.550 0.090 85.0);--muted:oklch(0.945 0.007 90.0);--muted-fg:oklch(0.440 0.015 160.0);--border:oklch(0.888 0.007 90.0);--logo-cream:none;--logo-burg:block;"
+      data-hexdark='["#040906","#0a120d","#dfc176","#519773","#f3f4f0"]' data-hexlight='["#f8f6f1","#ffffff","#005031","#8a6d2c","#0e1611"]' style="--bg:oklch(0.130 0.012 160.0);--fg:oklch(0.965 0.006 120.0);--card:oklch(0.172 0.016 160.0);--primary:oklch(0.820 0.100 88.0);--primary-fg:oklch(0.130 0.030 88.0);--accent:oklch(0.620 0.090 160.0);--muted:oklch(0.197 0.016 160.0);--muted-fg:oklch(0.695 0.014 120.0);--border:oklch(0.257 0.016 160.0);--logo-cream:block;--logo-burg:none;">
+      <nav class="mnav">
+        <span class="mlogo">
+          <img src="../public/img/brand/logo-cream.png" style="display:var(--logo-cream)" alt="KAS THREADZ"/>
+          <img src="../public/img/brand/logo-burgundy.png" style="display:var(--logo-burg)" alt="KAS THREADZ"/>
+        </span>
+        <span class="mlinks"><span>Collection</span><span>Fabrics</span><span>Design Library</span><span>Atelier</span></span>
+        <span class="mnav-cta">Commission</span>
+      </nav>
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bespoke embroidery · Abuja</p>
+          <h3 class="display">Art in <em>every</em> stitch.</h3>
+          <p class="lede">Precision embroidery and hand-finished tailoring. Kaftan, agbada, jallabiya: designed with you, stitched from the house library.</p>
+          <div class="cta-row">
+            <button class="btn-p">Commission a piece</button>
+            <button class="btn-g">Explore the library</button>
+          </div>
+          <p class="meta">55 house designs · 14-day standard · 72h fast-track</p>
+        </div>
+        <figure class="hero-media">
+          <img src="../public/img/work/kaftan-cream.jpg" alt=""/>
+          <figcaption>Ivory Heritage Kaftan · LD 115 · ₦47,000</figcaption>
+        </figure>
+      </div>
+      <div class="strip">
+        <span class="chip">LD 115</span><span class="chip">AF 63</span><span class="chip">AGD 26</span>
+        <span class="strip-status">Order № 0114 · embroidery running<span class="bar"><i style="width:62%"></i></span></span>
+      </div>
+      <footer class="specs">
+        <span class="dots"><i class="dot" style="background:#040906" title="#040906"></i><i class="dot" style="background:#0a120d" title="#0a120d"></i><i class="dot" style="background:#dfc176" title="#dfc176"></i><i class="dot" style="background:#519773" title="#519773"></i><i class="dot" style="background:#f3f4f0" title="#f3f4f0"></i></span>
+        <span class="spec-hex">#040906 · #0a120d · #dfc176 · #519773 · #f3f4f0</span>
+        <span class="spec-aa">AA · body 17.0 · CTA 8.8 · on-CTA 9.0 · muted 7.1</span>
+      </footer>
+    </article>
+  </section>
+  <section class="cand" id="c2">
+    <div class="cand-tag"><span class="num">02</span><span class="cand-name">Midnight & Gold</span><span class="cand-vibe">deep navy · gold thread · regal restraint</span></div>
+    <article class="mock" data-dark="--bg:oklch(0.140 0.028 255.0);--fg:oklch(0.965 0.008 255.0);--card:oklch(0.182 0.034 255.0);--primary:oklch(0.820 0.110 88.0);--primary-fg:oklch(0.130 0.030 88.0);--accent:oklch(0.680 0.080 255.0);--muted:oklch(0.207 0.034 255.0);--muted-fg:oklch(0.695 0.016 255.0);--border:oklch(0.267 0.034 255.0);--logo-cream:block;--logo-burg:none;" data-light="--bg:oklch(0.976 0.005 250.0);--fg:oklch(0.190 0.020 255.0);--card:oklch(1.000 0.000 0.0);--primary:oklch(0.320 0.070 255.0);--primary-fg:oklch(0.978 0.004 255.0);--accent:oklch(0.550 0.090 85.0);--muted:oklch(0.948 0.005 250.0);--muted-fg:oklch(0.440 0.020 255.0);--border:oklch(0.891 0.005 250.0);--logo-cream:none;--logo-burg:block;"
+      data-hexdark='["#030914","#071221","#e2c06d","#779bc9","#f0f4f9"]' data-hexlight='["#f5f7fa","#ffffff","#183356","#8a6d2c","#0e141d"]' style="--bg:oklch(0.140 0.028 255.0);--fg:oklch(0.965 0.008 255.0);--card:oklch(0.182 0.034 255.0);--primary:oklch(0.820 0.110 88.0);--primary-fg:oklch(0.130 0.030 88.0);--accent:oklch(0.680 0.080 255.0);--muted:oklch(0.207 0.034 255.0);--muted-fg:oklch(0.695 0.016 255.0);--border:oklch(0.267 0.034 255.0);--logo-cream:block;--logo-burg:none;">
+      <nav class="mnav">
+        <span class="mlogo">
+          <img src="../public/img/brand/logo-cream.png" style="display:var(--logo-cream)" alt="KAS THREADZ"/>
+          <img src="../public/img/brand/logo-burgundy.png" style="display:var(--logo-burg)" alt="KAS THREADZ"/>
+        </span>
+        <span class="mlinks"><span>Collection</span><span>Fabrics</span><span>Design Library</span><span>Atelier</span></span>
+        <span class="mnav-cta">Commission</span>
+      </nav>
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bespoke embroidery · Abuja</p>
+          <h3 class="display">Art in <em>every</em> stitch.</h3>
+          <p class="lede">Precision embroidery and hand-finished tailoring. Kaftan, agbada, jallabiya: designed with you, stitched from the house library.</p>
+          <div class="cta-row">
+            <button class="btn-p">Commission a piece</button>
+            <button class="btn-g">Explore the library</button>
+          </div>
+          <p class="meta">55 house designs · 14-day standard · 72h fast-track</p>
+        </div>
+        <figure class="hero-media">
+          <img src="../public/img/work/agbada-blue.jpg" alt=""/>
+          <figcaption>Royal Blue Agbada · AGD 12 · ₦120,000</figcaption>
+        </figure>
+      </div>
+      <div class="strip">
+        <span class="chip">LD 115</span><span class="chip">AF 63</span><span class="chip">AGD 26</span>
+        <span class="strip-status">Order № 0114 · embroidery running<span class="bar"><i style="width:62%"></i></span></span>
+      </div>
+      <footer class="specs">
+        <span class="dots"><i class="dot" style="background:#030914" title="#030914"></i><i class="dot" style="background:#071221" title="#071221"></i><i class="dot" style="background:#e2c06d" title="#e2c06d"></i><i class="dot" style="background:#779bc9" title="#779bc9"></i><i class="dot" style="background:#f0f4f9" title="#f0f4f9"></i></span>
+        <span class="spec-hex">#030914 · #071221 · #e2c06d · #779bc9 · #f0f4f9</span>
+        <span class="spec-aa">AA · body 17.2 · CTA 11.4 · on-CTA 11.5 · muted 7.2</span>
+      </footer>
+    </article>
+  </section>
+  <section class="cand" id="c3">
+    <div class="cand-tag"><span class="num">03</span><span class="cand-name">Charcoal & Amber</span><span class="cand-vibe">warm graphite · amber light · workshop heat</span></div>
+    <article class="mock" data-dark="--bg:oklch(0.128 0.006 60.0);--fg:oklch(0.966 0.005 70.0);--card:oklch(0.168 0.008 60.0);--primary:oklch(0.780 0.130 65.0);--primary-fg:oklch(0.130 0.030 65.0);--accent:oklch(0.850 0.060 85.0);--muted:oklch(0.193 0.008 60.0);--muted-fg:oklch(0.696 0.013 70.0);--border:oklch(0.253 0.008 60.0);--logo-cream:block;--logo-burg:none;" data-light="--bg:oklch(0.974 0.006 80.0);--fg:oklch(0.180 0.008 60.0);--card:oklch(1.000 0.000 0.0);--primary:oklch(0.240 0.015 60.0);--primary-fg:oklch(0.978 0.004 60.0);--accent:oklch(0.600 0.120 60.0);--muted:oklch(0.946 0.006 80.0);--muted-fg:oklch(0.430 0.008 60.0);--border:oklch(0.889 0.006 80.0);--logo-cream:none;--logo-burg:block;"
+      data-hexdark='["#090705","#120e0c","#f0a556","#e0cba1","#f6f3f0"]' data-hexlight='["#f9f6f2","#ffffff","#251e18","#b36d2a","#14110e"]' style="--bg:oklch(0.128 0.006 60.0);--fg:oklch(0.966 0.005 70.0);--card:oklch(0.168 0.008 60.0);--primary:oklch(0.780 0.130 65.0);--primary-fg:oklch(0.130 0.030 65.0);--accent:oklch(0.850 0.060 85.0);--muted:oklch(0.193 0.008 60.0);--muted-fg:oklch(0.696 0.013 70.0);--border:oklch(0.253 0.008 60.0);--logo-cream:block;--logo-burg:none;">
+      <nav class="mnav">
+        <span class="mlogo">
+          <img src="../public/img/brand/logo-cream.png" style="display:var(--logo-cream)" alt="KAS THREADZ"/>
+          <img src="../public/img/brand/logo-burgundy.png" style="display:var(--logo-burg)" alt="KAS THREADZ"/>
+        </span>
+        <span class="mlinks"><span>Collection</span><span>Fabrics</span><span>Design Library</span><span>Atelier</span></span>
+        <span class="mnav-cta">Commission</span>
+      </nav>
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bespoke embroidery · Abuja</p>
+          <h3 class="display">Art in <em>every</em> stitch.</h3>
+          <p class="lede">Precision embroidery and hand-finished tailoring. Kaftan, agbada, jallabiya: designed with you, stitched from the house library.</p>
+          <div class="cta-row">
+            <button class="btn-p">Commission a piece</button>
+            <button class="btn-g">Explore the library</button>
+          </div>
+          <p class="meta">55 house designs · 14-day standard · 72h fast-track</p>
+        </div>
+        <figure class="hero-media">
+          <img src="../public/img/work/kaftan-black.jpg" alt=""/>
+          <figcaption>Onyx & Gold Kaftan · LD 184 · ₦53,000</figcaption>
+        </figure>
+      </div>
+      <div class="strip">
+        <span class="chip">LD 115</span><span class="chip">AF 63</span><span class="chip">AGD 26</span>
+        <span class="strip-status">Order № 0114 · embroidery running<span class="bar"><i style="width:62%"></i></span></span>
+      </div>
+      <footer class="specs">
+        <span class="dots"><i class="dot" style="background:#090705" title="#090705"></i><i class="dot" style="background:#120e0c" title="#120e0c"></i><i class="dot" style="background:#f0a556" title="#f0a556"></i><i class="dot" style="background:#e0cba1" title="#e0cba1"></i><i class="dot" style="background:#f6f3f0" title="#f6f3f0"></i></span>
+        <span class="spec-hex">#090705 · #120e0c · #f0a556 · #e0cba1 · #f6f3f0</span>
+        <span class="spec-aa">AA · body 17.5 · CTA 9.8 · on-CTA 9.8 · muted 7.4</span>
+      </footer>
+    </article>
+  </section>
+  <section class="cand" id="c4">
+    <div class="cand-tag"><span class="num">04</span><span class="cand-name">Olive & Bronze</span><span class="cand-vibe">earth luxury · safari after dark</span></div>
+    <article class="mock" data-dark="--bg:oklch(0.138 0.014 110.0);--fg:oklch(0.965 0.007 100.0);--card:oklch(0.178 0.017 110.0);--primary:oklch(0.800 0.090 105.0);--primary-fg:oklch(0.130 0.030 105.0);--accent:oklch(0.700 0.070 60.0);--muted:oklch(0.203 0.017 110.0);--muted-fg:oklch(0.695 0.015 100.0);--border:oklch(0.263 0.017 110.0);--logo-cream:block;--logo-burg:none;" data-light="--bg:oklch(0.972 0.008 100.0);--fg:oklch(0.200 0.015 110.0);--card:oklch(1.000 0.000 0.0);--primary:oklch(0.420 0.075 115.0);--primary-fg:oklch(0.978 0.004 115.0);--accent:oklch(0.520 0.080 70.0);--muted:oklch(0.944 0.008 100.0);--muted-fg:oklch(0.450 0.015 110.0);--border:oklch(0.887 0.008 100.0);--logo-cream:none;--logo-burg:block;"
+      data-hexdark='["#090904","#111209","#c6c17c","#bf9572","#f4f4ee"]' data-hexlight='["#f7f6f0","#ffffff","#4c521d","#866032","#16170f"]' style="--bg:oklch(0.138 0.014 110.0);--fg:oklch(0.965 0.007 100.0);--card:oklch(0.178 0.017 110.0);--primary:oklch(0.800 0.090 105.0);--primary-fg:oklch(0.130 0.030 105.0);--accent:oklch(0.700 0.070 60.0);--muted:oklch(0.203 0.017 110.0);--muted-fg:oklch(0.695 0.015 100.0);--border:oklch(0.263 0.017 110.0);--logo-cream:block;--logo-burg:none;">
+      <nav class="mnav">
+        <span class="mlogo">
+          <img src="../public/img/brand/logo-cream.png" style="display:var(--logo-cream)" alt="KAS THREADZ"/>
+          <img src="../public/img/brand/logo-burgundy.png" style="display:var(--logo-burg)" alt="KAS THREADZ"/>
+        </span>
+        <span class="mlinks"><span>Collection</span><span>Fabrics</span><span>Design Library</span><span>Atelier</span></span>
+        <span class="mnav-cta">Commission</span>
+      </nav>
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bespoke embroidery · Abuja</p>
+          <h3 class="display">Art in <em>every</em> stitch.</h3>
+          <p class="lede">Precision embroidery and hand-finished tailoring. Kaftan, agbada, jallabiya: designed with you, stitched from the house library.</p>
+          <div class="cta-row">
+            <button class="btn-p">Commission a piece</button>
+            <button class="btn-g">Explore the library</button>
+          </div>
+          <p class="meta">55 house designs · 14-day standard · 72h fast-track</p>
+        </div>
+        <figure class="hero-media">
+          <img src="../public/img/work/kaftan-grey.jpg" alt=""/>
+          <figcaption>Slate Chain Kaftan · LD 108 · ₦49,000</figcaption>
+        </figure>
+      </div>
+      <div class="strip">
+        <span class="chip">LD 115</span><span class="chip">AF 63</span><span class="chip">AGD 26</span>
+        <span class="strip-status">Order № 0114 · embroidery running<span class="bar"><i style="width:62%"></i></span></span>
+      </div>
+      <footer class="specs">
+        <span class="dots"><i class="dot" style="background:#090904" title="#090904"></i><i class="dot" style="background:#111209" title="#111209"></i><i class="dot" style="background:#c6c17c" title="#c6c17c"></i><i class="dot" style="background:#bf9572" title="#bf9572"></i><i class="dot" style="background:#f4f4ee" title="#f4f4ee"></i></span>
+        <span class="spec-hex">#090904 · #111209 · #c6c17c · #bf9572 · #f4f4ee</span>
+        <span class="spec-aa">AA · body 16.7 · CTA 7.7 · on-CTA 7.8 · muted 6.8</span>
+      </footer>
+    </article>
+  </section>
+  <section class="cand" id="c5">
+    <div class="cand-tag"><span class="num">05</span><span class="cand-name">Absolute Mono</span><span class="cand-vibe">no colour at all · the garments carry it</span></div>
+    <article class="mock" data-dark="--bg:oklch(0.115 0.000 0.0);--fg:oklch(0.970 0.000 0.0);--card:oklch(0.155 0.000 0.0);--primary:oklch(0.960 0.000 0.0);--primary-fg:oklch(0.130 0.000 0.0);--accent:oklch(0.700 0.000 0.0);--muted:oklch(0.180 0.000 0.0);--muted-fg:oklch(0.700 0.008 0.0);--border:oklch(0.240 0.000 0.0);--logo-cream:block;--logo-burg:none;" data-light="--bg:oklch(0.985 0.000 0.0);--fg:oklch(0.140 0.000 0.0);--card:oklch(1.000 0.000 0.0);--primary:oklch(0.170 0.000 0.0);--primary-fg:oklch(0.978 0.004 0.0);--accent:oklch(0.450 0.000 0.0);--muted:oklch(0.957 0.000 0.0);--muted-fg:oklch(0.390 0.000 0.0);--border:oklch(0.900 0.000 0.0);--logo-cream:none;--logo-burg:block;"
+      data-hexdark='["#050505","#0c0c0c","#f2f2f2","#9e9e9e","#f5f5f5"]' data-hexlight='["#fafafa","#ffffff","#0f0f0f","#555555","#090909"]' style="--bg:oklch(0.115 0.000 0.0);--fg:oklch(0.970 0.000 0.0);--card:oklch(0.155 0.000 0.0);--primary:oklch(0.960 0.000 0.0);--primary-fg:oklch(0.130 0.000 0.0);--accent:oklch(0.700 0.000 0.0);--muted:oklch(0.180 0.000 0.0);--muted-fg:oklch(0.700 0.008 0.0);--border:oklch(0.240 0.000 0.0);--logo-cream:block;--logo-burg:none;">
+      <nav class="mnav">
+        <span class="mlogo">
+          <img src="../public/img/brand/logo-cream.png" style="display:var(--logo-cream)" alt="KAS THREADZ"/>
+          <img src="../public/img/brand/logo-burgundy.png" style="display:var(--logo-burg)" alt="KAS THREADZ"/>
+        </span>
+        <span class="mlinks"><span>Collection</span><span>Fabrics</span><span>Design Library</span><span>Atelier</span></span>
+        <span class="mnav-cta">Commission</span>
+      </nav>
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bespoke embroidery · Abuja</p>
+          <h3 class="display">Art in <em>every</em> stitch.</h3>
+          <p class="lede">Precision embroidery and hand-finished tailoring. Kaftan, agbada, jallabiya: designed with you, stitched from the house library.</p>
+          <div class="cta-row">
+            <button class="btn-p">Commission a piece</button>
+            <button class="btn-g">Explore the library</button>
+          </div>
+          <p class="meta">55 house designs · 14-day standard · 72h fast-track</p>
+        </div>
+        <figure class="hero-media">
+          <img src="../public/img/work/jallab-maroon.jpg" alt=""/>
+          <figcaption>Maroon Tassel Jallab · AF 63 · ₦51,000</figcaption>
+        </figure>
+      </div>
+      <div class="strip">
+        <span class="chip">LD 115</span><span class="chip">AF 63</span><span class="chip">AGD 26</span>
+        <span class="strip-status">Order № 0114 · embroidery running<span class="bar"><i style="width:62%"></i></span></span>
+      </div>
+      <footer class="specs">
+        <span class="dots"><i class="dot" style="background:#050505" title="#050505"></i><i class="dot" style="background:#0c0c0c" title="#0c0c0c"></i><i class="dot" style="background:#f2f2f2" title="#f2f2f2"></i><i class="dot" style="background:#9e9e9e" title="#9e9e9e"></i><i class="dot" style="background:#f5f5f5" title="#f5f5f5"></i></span>
+        <span class="spec-hex">#050505 · #0c0c0c · #f2f2f2 · #9e9e9e · #f5f5f5</span>
+        <span class="spec-aa">AA · body 18.7 · CTA 18.1 · on-CTA 17.9 · muted 7.6</span>
+      </footer>
+    </article>
+  </section>
+  <section class="cand" id="c6">
+    <div class="cand-tag"><span class="num">06</span><span class="cand-name">Teal & Copper</span><span class="cand-vibe">cool depth · copper warmth · unexpected</span></div>
+    <article class="mock" data-dark="--bg:oklch(0.132 0.016 200.0);--fg:oklch(0.965 0.007 200.0);--card:oklch(0.172 0.020 200.0);--primary:oklch(0.760 0.100 50.0);--primary-fg:oklch(0.130 0.030 50.0);--accent:oklch(0.680 0.080 195.0);--muted:oklch(0.197 0.020 200.0);--muted-fg:oklch(0.695 0.015 200.0);--border:oklch(0.257 0.020 200.0);--logo-cream:block;--logo-burg:none;" data-light="--bg:oklch(0.975 0.005 200.0);--fg:oklch(0.190 0.015 200.0);--card:oklch(1.000 0.000 0.0);--primary:oklch(0.400 0.080 195.0);--primary-fg:oklch(0.978 0.004 195.0);--accent:oklch(0.550 0.100 50.0);--muted:oklch(0.947 0.005 200.0);--muted-fg:oklch(0.440 0.015 200.0);--border:oklch(0.890 0.005 200.0);--logo-cream:none;--logo-burg:block;"
+      data-hexdark='["#02090a","#051213","#e59e77","#56a8a7","#eef5f5"]' data-hexlight='["#f3f8f8","#ffffff","#005455","#a05f38","#0c1616"]' style="--bg:oklch(0.132 0.016 200.0);--fg:oklch(0.965 0.007 200.0);--card:oklch(0.172 0.020 200.0);--primary:oklch(0.760 0.100 50.0);--primary-fg:oklch(0.130 0.030 50.0);--accent:oklch(0.680 0.080 195.0);--muted:oklch(0.197 0.020 200.0);--muted-fg:oklch(0.695 0.015 200.0);--border:oklch(0.257 0.020 200.0);--logo-cream:block;--logo-burg:none;">
+      <nav class="mnav">
+        <span class="mlogo">
+          <img src="../public/img/brand/logo-cream.png" style="display:var(--logo-cream)" alt="KAS THREADZ"/>
+          <img src="../public/img/brand/logo-burgundy.png" style="display:var(--logo-burg)" alt="KAS THREADZ"/>
+        </span>
+        <span class="mlinks"><span>Collection</span><span>Fabrics</span><span>Design Library</span><span>Atelier</span></span>
+        <span class="mnav-cta">Commission</span>
+      </nav>
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Bespoke embroidery · Abuja</p>
+          <h3 class="display">Art in <em>every</em> stitch.</h3>
+          <p class="lede">Precision embroidery and hand-finished tailoring. Kaftan, agbada, jallabiya: designed with you, stitched from the house library.</p>
+          <div class="cta-row">
+            <button class="btn-p">Commission a piece</button>
+            <button class="btn-g">Explore the library</button>
+          </div>
+          <p class="meta">55 house designs · 14-day standard · 72h fast-track</p>
+        </div>
+        <figure class="hero-media">
+          <img src="../public/img/work/kaftan-blue.jpg" alt=""/>
+          <figcaption>Sky Blue Kaftan · two-tone geometric</figcaption>
+        </figure>
+      </div>
+      <div class="strip">
+        <span class="chip">LD 115</span><span class="chip">AF 63</span><span class="chip">AGD 26</span>
+        <span class="strip-status">Order № 0114 · embroidery running<span class="bar"><i style="width:62%"></i></span></span>
+      </div>
+      <footer class="specs">
+        <span class="dots"><i class="dot" style="background:#02090a" title="#02090a"></i><i class="dot" style="background:#051213" title="#051213"></i><i class="dot" style="background:#e59e77" title="#e59e77"></i><i class="dot" style="background:#56a8a7" title="#56a8a7"></i><i class="dot" style="background:#eef5f5" title="#eef5f5"></i></span>
+        <span class="spec-hex">#02090a · #051213 · #e59e77 · #56a8a7 · #eef5f5</span>
+        <span class="spec-aa">AA · body 17.2 · CTA 8.1 · on-CTA 8.2 · muted 7.2</span>
+      </footer>
+    </article>
+  </section>
+    <p class="foot">Pick: <code>1</code>–<code>6</code> · steer: <code>3 but darker</code>, <code>mix 1 and 3</code> · or <code>none</code>.</p>
+  </div>
+  <script>
+    const tg = document.getElementById("tg");
+    tg.addEventListener("click", () => {
+      const r = document.documentElement;
+      const next = r.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      r.setAttribute("data-theme", next);
+      tg.textContent = next === "dark" ? "Switch to Light" : "Switch to Dark";
+      document.querySelectorAll(".mock").forEach((el) => {
+        el.setAttribute("style", next === "dark" ? el.dataset.dark : el.dataset.light);
+        const hx = JSON.parse(next === "dark" ? el.dataset.hexdark : el.dataset.hexlight);
+        el.querySelectorAll(".dot").forEach((d, i) => { d.style.background = hx[i]; d.title = hx[i]; });
+        const sh = el.querySelector(".spec-hex"); if (sh) sh.textContent = hx.join(" · ");
+      });
+    });
+  </script>
+</body>
+</html>

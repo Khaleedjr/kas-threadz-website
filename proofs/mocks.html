@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — page mocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  :root {
+    --cloth: #14181f; --cloth-2: #0b0e13; --cloth-el: #1b212b;
+    --thread: #f4efe3; --thread-d: #cbc2ad; --thread-dim: #8d8button;
+    --paper: #f2eee5; --paper-2: #e7e1d3; --ink: #232a33; --ink-soft: #5d6673;
+    --cut: #9d3b2c; --pin: #3a6079;
+    --disp: "Syne", system-ui, sans-serif;
+    --body: "Jost", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  body { background: #07090c; color: var(--thread); font-family: var(--body); }
+  .top { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(14px);
+    background: rgba(7,9,12,.86); border-bottom: 1px solid rgba(244,239,227,.08);
+    padding: 12px 26px; display: flex; justify-content: space-between; align-items: baseline; gap: 18px; }
+  .top h1 { font-family: var(--disp); font-size: 12px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; }
+  .top p { font-family: var(--mono); font-size: 10.5px; color: #7b8492; letter-spacing: .06em; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 38px 24px 100px; display: grid; gap: 60px; grid-template-columns: 100%; }
+  .wrap > section { min-width: 0; }
+  .tag { display: flex; align-items: baseline; gap: 13px; margin-bottom: 13px; }
+  .tag .n { font-family: var(--mono); font-size: 11px; color: #7b8492; letter-spacing: .18em; }
+  .tag .nm { font-family: var(--disp); font-size: 14px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  .tag .reg { font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+    border: 1px solid currentColor; border-radius: 999px; padding: 3px 9px; }
+  .tag .reg.cl { color: #9aa3b1; } .tag .reg.pa { color: #b8a98c; }
+  .tag .vb { font-size: 12px; color: #7b8492; }
+
+  .screen { border-radius: 4px; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
+  .cloth { background: radial-gradient(120% 95% at 50% 12%, #1b212b, var(--cloth) 46%, var(--cloth-2)); color: var(--thread);
+    position: relative; }
+  .cloth::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background: repeating-linear-gradient(64deg, rgba(244,239,227,.016) 0 1px, transparent 1px 5px),
+                repeating-linear-gradient(-64deg, rgba(0,0,0,.17) 0 1px, transparent 1px 5px); }
+  .paper { background: var(--paper); color: var(--ink); position: relative; }
+  .paper::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background: repeating-linear-gradient(0deg, rgba(58,96,121,.055) 0 1px, transparent 1px 38px),
+                repeating-linear-gradient(90deg, rgba(58,96,121,.055) 0 1px, transparent 1px 38px); }
+  .screen > * { position: relative; }
+
+  /* nav */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 17px 30px; }
+  .nav .mk { font-family: var(--disp); font-weight: 800; font-size: 17px; letter-spacing: .1em; }
+  .nav .mk small { display: block; font-family: var(--body); font-weight: 400;
+    font-size: 8px; letter-spacing: .52em; opacity: .62; margin-top: 1px; }
+  .nav .lk { display: flex; gap: 24px; font-size: 10px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; opacity: .84; }
+  .nav .cta { font-family: var(--body); font-size: 10px; font-weight: 500; letter-spacing: .2em;
+    text-transform: uppercase; padding: 10px 18px; border-radius: 2px; }
+  .cloth .nav { border-bottom: 1px solid rgba(244,239,227,.1); }
+  .cloth .nav .cta { background: var(--thread); color: var(--cloth-2); }
+  .paper .nav { border-bottom: 1px solid rgba(35,42,51,.14); }
+  .paper .nav .cta { background: var(--ink); color: var(--paper); }
+
+  h2, h3 { font-family: var(--disp); font-weight: 700; letter-spacing: -.005em; line-height: 1.1; }
+  .eyebrow { font-family: var(--mono); font-size: 9.5px; letter-spacing: .28em; text-transform: uppercase; }
+  .cloth .eyebrow { color: var(--thread-d); } .paper .eyebrow { color: var(--cut); }
+  .lead { font-size: 14px; line-height: 1.72; font-weight: 300; }
+  .cloth .lead { color: #a9b2be; } .paper .lead { color: var(--ink-soft); }
+  .code { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; }
+
+  /* ---- home ---- */
+  .hero { padding: 52px 30px 26px; text-align: center; }
+  .hero svg { display: block; width: min(620px, 84%); height: auto; margin: 0 auto; }
+  .hero .thr { font-size: 13px; letter-spacing: .58em; color: var(--thread-d); margin-top: 4px; }
+  .hero .sub { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: #7b8492; margin-top: 20px; }
+  .heroctas { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+  .btn { font-family: var(--body); font-size: 10.5px; font-weight: 500; letter-spacing: .2em;
+    text-transform: uppercase; padding: 14px 24px; border-radius: 2px; border: 1px solid transparent; cursor: pointer; }
+  .btn-solid { background: var(--thread); color: var(--cloth-2); }
+  .btn-line { background: none; color: var(--thread); border-color: rgba(244,239,227,.32); }
+  .paper .btn-solid { background: var(--ink); color: var(--paper); }
+  .paper .btn-line { color: var(--ink); border-color: rgba(35,42,51,.28); }
+
+  .stitchrule { width: 100%; height: 14px; display: block; }
+  .rail { padding: 30px 30px 34px; }
+  .rail .hd { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .rail .hd h3 { font-size: 19px; }
+  .rail .hd a { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--thread-d); }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .gc { position: relative; aspect-ratio: 3/4; overflow: hidden; border-radius: 2px; background: #10141a; }
+  .gc img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .gc .ov { position: absolute; inset: auto 0 0 0; padding: 36px 14px 12px;
+    background: linear-gradient(transparent, rgba(8,11,15,.86)); display: flex; justify-content: space-between; align-items: flex-end; }
+  .gc .t { font-family: var(--disp); font-weight: 600; font-size: 14px; }
+  .gc .c { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: var(--thread-d); margin-top: 2px; }
+  .gc .p { font-size: 11px; color: #97a0ad; }
+
+  .teaser { display: grid; grid-template-columns: .85fr 1.15fr; border-top: 1px solid rgba(244,239,227,.1); }
+  .teaser .vis { min-height: 250px; position: relative; }
+  .teaser .vis img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .teaser .tx { padding: 34px 30px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+  .teaser h3 { font-size: 25px; margin: 8px 0 10px; }
+  .mini { display: flex; gap: 7px; flex-wrap: wrap; margin: 14px 0 18px; }
+  .mini span { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+    border: 1px solid rgba(244,239,227,.2); border-radius: 999px; padding: 5px 10px; color: #97a0ad; }
+  .mini span.on { border-color: var(--thread-d); color: var(--thread); }
+
+  .foot { padding: 26px 30px; border-top: 1px solid rgba(244,239,227,.1);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; color: #7b8492; }
+
+  /* ---- collection stage ---- */
+  .stage { min-height: 470px; display: grid; place-items: center; text-align: center; padding: 44px 20px 52px; position: relative;
+    background: radial-gradient(52% 46% at 50% 40%, #222935 0%, transparent 74%); }
+  .stage img { height: 330px; width: auto; border-radius: 2px; box-shadow: 0 44px 80px -38px rgba(0,0,0,.85); }
+  .stage .no { position: absolute; top: 26px; left: 0; right: 0; font-family: var(--mono);
+    font-size: 9.5px; letter-spacing: .34em; color: #7b8492; }
+  .stage .t1 { font-family: var(--disp); font-weight: 700; font-size: 22px; margin-top: 22px; }
+  .stage .t2 { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--thread-d); margin-top: 7px; }
+  .stage .t3 { font-size: 12px; color: #97a0ad; margin-top: 5px; }
+  .stage .arrows { position: absolute; bottom: 22px; left: 0; right: 0; display: flex; justify-content: center; gap: 26px;
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .22em; color: #7b8492; }
+
+  /* ---- library ledger ---- */
+  .lib { display: grid; grid-template-columns: 1.4fr .6fr; min-height: 430px; }
+  .lib .list { border-right: 1px solid rgba(35,42,51,.14); padding-top: 20px; }
+  .lib .lh { padding: 0 26px 14px; display: flex; justify-content: space-between; align-items: baseline; }
+  .lib .lh h3 { font-size: 17px; }
+  .lib .lh span { font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; color: var(--ink-soft); }
+  .lrow { display: grid; grid-template-columns: 86px 1fr 104px 82px; gap: 12px; align-items: center;
+    padding: 10px 26px; border-top: 1px dashed rgba(35,42,51,.2); font-size: 12px; }
+  .lrow:hover { background: rgba(35,42,51,.045); }
+  .lrow.sel { background: rgba(157,59,44,.07); }
+  .lrow .cd { font-family: var(--mono); font-size: 11.5px; }
+  .lrow .fm, .lrow .pl { color: var(--ink-soft); font-size: 11px; }
+  .lrow .pl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; }
+  .lrow .st { font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase;
+    border: 1px solid rgba(35,42,51,.28); border-radius: 999px; padding: 3px 8px; text-align: center; color: var(--ink-soft); }
+  .lrow.sel .st { border-color: var(--cut); color: var(--cut); }
+  .lib .view { padding: 26px 24px; display: flex; flex-direction: column; }
+  .lib .mask { flex: 1; min-height: 200px; background: var(--ink);
+    -webkit-mask: url("../public/img/designs/ld115f.png") center / contain no-repeat;
+    mask: url("../public/img/designs/ld115f.png") center / contain no-repeat; }
+  .lib .c1 { font-family: var(--mono); font-size: 12px; margin-top: 16px; }
+  .lib .c2 { font-size: 11.5px; color: var(--ink-soft); line-height: 1.6; margin-top: 6px; font-weight: 300; }
+  .lib .play { margin-top: 14px; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--cut);
+    border: 1px solid var(--cut); border-radius: 999px; padding: 7px 13px; }
+
+  /* ---- loom ---- */
+  .loom { display: grid; grid-template-columns: .9fr 1.1fr; min-height: 470px; }
+  .loom .prev { position: relative; border-right: 1px solid rgba(35,42,51,.14); display: grid; place-items: center; padding: 32px; }
+  .loom .prev img { max-height: 360px; border-radius: 2px; }
+  .loom .pin { position: absolute; top: 16px; left: 22px; font-family: var(--mono);
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
+  .loom .pinhead { position: absolute; width: 9px; height: 9px; border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,.35); }
+  .loom .steps { padding: 30px 30px; position: relative; }
+  .loom .steps::before { content:""; position:absolute; left:30px; top:44px; bottom:104px; width:1px;
+    background: repeating-linear-gradient(180deg, var(--ink-soft) 0 5px, transparent 5px 11px); opacity:.5; }
+  .lstep { position: relative; padding: 0 0 24px 26px; }
+  .lstep .dm { position: absolute; left: -4px; top: 3px; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--paper); border: 1.4px solid var(--ink-soft); }
+  .lstep.act .dm { background: var(--cut); border-color: var(--cut); }
+  .lstep h4 { font-family: var(--mono); font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink-soft); }
+  .lstep.act h4 { color: var(--cut); }
+  .lstep .t { font-family: var(--disp); font-weight: 600; font-size: 17px; margin: 5px 0 9px; }
+  .sw { width: 36px; height: 36px; border-radius: 2px; background-size: cover; display: inline-block; margin-right: 6px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+  .sw.on { box-shadow: 0 0 0 1.5px var(--cut); }
+  .dot { width: 22px; height: 22px; border-radius: 50%; display: inline-block; margin-right: 6px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); }
+  .dm2 { width: 34px; height: 50px; background: var(--ink); display: inline-block; margin-right: 9px; }
+  .price { border-top: 1px dashed rgba(35,42,51,.28); margin-top: 4px; padding-top: 16px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .price .amt { font-family: var(--disp); font-weight: 700; font-size: 24px; }
+  .price .nt { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; color: var(--ink-soft); }
+
+  /* ---- atelier ---- */
+  .atel { display: grid; grid-template-columns: 1fr 1fr; }
+  .atel .tx { padding: 44px 30px; }
+  .atel h3 { font-size: 27px; margin: 10px 0 12px; }
+  .atel .ph { position: relative; min-height: 340px; }
+  .atel .ph img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+  .pstep { display: flex; gap: 16px; padding: 13px 0; border-top: 1px solid rgba(244,239,227,.12); }
+  .pstep .n { font-family: var(--mono); font-size: 11px; color: var(--thread-d); min-width: 26px; }
+  .pstep h5 { font-family: var(--disp); font-weight: 600; font-size: 13.5px; margin-bottom: 2px; }
+  .pstep p { font-size: 11.5px; color: #97a0ad; font-weight: 300; }
+
+  /* ---- track ---- */
+  .track { padding: 40px 30px; display: grid; place-items: center; }
+  .tcard { width: min(560px, 100%); border: 1px dashed rgba(35,42,51,.3); border-radius: 3px; padding: 24px; background: rgba(255,255,255,.42); }
+  .tcard .oh { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px;
+    letter-spacing: .14em; color: var(--ink-soft); }
+  .tcard h3 { font-size: 19px; margin: 6px 0 16px; }
+  .trow { display: flex; gap: 13px; align-items: center; padding: 9px 0; border-top: 1px dashed rgba(35,42,51,.2); }
+  .trow .td { width: 8px; height: 8px; border-radius: 50%; border: 1.4px solid var(--ink-soft); flex: none; }
+  .trow.done .td { background: var(--ink); border-color: var(--ink); }
+  .trow.cur .td { background: var(--cut); border-color: var(--cut); }
+  .trow .tt { font-size: 12.5px; } .trow.cur .tt { color: var(--cut); font-weight: 500; }
+  .trow .ts { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--ink-soft); }
+  .tph { margin-top: 14px; border-radius: 2px; overflow: hidden; aspect-ratio: 5/2.4; }
+  .tph img { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
+  .tnote { margin-top: 10px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; color: var(--ink-soft); }
+
+  .note { font-family: var(--mono); font-size: 11px; color: #7b8492; letter-spacing: .06em;
+    line-height: 1.9; text-align: center; }
+  @media (max-width: 860px) {
+    .cards { grid-template-columns: 1fr; }
+    .teaser, .lib, .loom, .atel { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <div><h1>KAS THREADZ · page mocks</h1>
+  <p>SYNE / JOST / JETBRAINS MONO · INK &amp; BONE · CLOTH = BROWSE &amp; COMMIT, PAPER = PLAN &amp; SPEC</p></div>
+</div>
+
+<div class="wrap">
+
+<!-- 01 HOME -->
+<section>
+  <div class="tag"><span class="n">01</span><span class="nm">Home</span><span class="reg cl">Cloth</span>
+    <span class="vb">stitched mark · running-stitch rules · collection rail · loom teaser</span></div>
+  <div class="screen cloth">
+    <div class="nav">
+      <span class="mk">KAS<small>THREADZ</small></span>
+      <span class="lk"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></span>
+      <span class="cta">Commission</span>
+    </div>
+    <div class="hero">
+      <svg id="heromark" viewBox="0 0 700 190"></svg>
+      <p class="thr">T H R E A D Z</p>
+      <svg class="stitchrule" data-rule="620" viewBox="0 0 620 14" preserveAspectRatio="none"></svg>
+      <p class="sub">BESPOKE EMBROIDERY · ABUJA · 55 MACHINE FILES</p>
+      <div class="heroctas">
+        <button class="btn btn-solid">Commission a piece</button>
+        <button class="btn btn-line">Open the Loom</button>
+      </div>
+    </div>
+    <div class="rail">
+      <div class="hd"><h3>The Collection</h3><a>ALL PIECES →</a></div>
+      <div class="cards">
+        <div class="gc"><img src="../public/img/work/kaftan-black.jpg" alt=""/>
+          <div class="ov"><div><div class="t">Onyx &amp; Gold</div><div class="c">LD 184</div></div><div class="p">₦53,000</div></div></div>
+        <div class="gc"><img src="../public/img/work/jallab-maroon.jpg" alt=""/>
+          <div class="ov"><div><div class="t">Maroon Tassel</div><div class="c">AF 63</div></div><div class="p">₦51,000</div></div></div>
+        <div class="gc"><img src="../public/img/work/agbada-maroon.jpg" alt=""/>
+          <div class="ov"><div><div class="t">The Trader</div><div class="c">AGD 26</div></div><div class="p">₦120,000</div></div></div>
+      </div>
+    </div>
+    <div class="teaser">
+      <div class="vis"><img src="../public/img/work/kaftan-grey-side.jpg" alt=""/></div>
+      <div class="tx">
+        <p class="eyebrow">The Loom</p>
+        <h3>Build it before we cut it.</h3>
+        <p class="lead">Fabric, colour, embroidery, measurements. The piece updates as you choose and the estimate never hides.</p>
+        <div class="mini"><span class="on">01 Fabric</span><span>02 Colour</span><span>03 Embroidery</span><span>04 Measure</span><span>05 Send</span></div>
+        <button class="btn btn-solid">Open the Loom</button>
+      </div>
+    </div>
+    <div class="foot"><span>© 2026 KAS THREADZ · ABUJA</span><span>WHATSAPP +234 912 194 2684</span><span>ART IN EVERY STITCH</span></div>
+  </div>
+</section>
+
+<!-- 02 COLLECTION -->
+<section>
+  <div class="tag"><span class="n">02</span><span class="nm">Collection</span><span class="reg cl">Cloth</span>
+    <span class="vb">one piece at a time, on the dark stage</span></div>
+  <div class="screen cloth">
+    <div class="nav"><span class="mk">KAS<small>THREADZ</small></span>
+      <span class="lk"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></span>
+      <span class="cta">Commission</span></div>
+    <div class="stage">
+      <p class="no">Nº 03 / 09</p>
+      <div>
+        <img src="../public/img/work/jallab-maroon.jpg" alt=""/>
+        <div class="t1">Maroon Tassel Jallab</div>
+        <div class="t2">AF 63 · NECKLINE RUN · CREAM 40WT</div>
+        <div class="t3">Gold cord tassel, matched cuffs · from ₦51,000 · 14 days</div>
+        <div class="heroctas"><button class="btn btn-solid">Commission this piece</button>
+          <button class="btn btn-line">See it stitched</button></div>
+      </div>
+      <div class="arrows"><span>← ONYX &amp; GOLD</span><span>ROYAL BLUE →</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 LIBRARY -->
+<section>
+  <div class="tag"><span class="n">03</span><span class="nm">Design Library</span><span class="reg pa">Paper</span>
+    <span class="vb">the ledger · every row is a real machine file</span></div>
+  <div class="screen paper">
+    <div class="nav"><span class="mk">KAS<small>THREADZ</small></span>
+      <span class="lk"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></span>
+      <span class="cta">Commission</span></div>
+    <div class="lib">
+      <div class="list">
+        <div class="lh"><h3>The Design Library</h3><span>55 FILES · LD · AF · AGD</span></div>
+        <div class="lrow"><span class="cd">LD 51</span><span class="fm">Flap &amp; pocket set</span><span class="pl">Kaftan</span><span class="st">In library</span></div>
+        <div class="lrow"><span class="cd">LD 84</span><span class="fm">Flap &amp; pocket set</span><span class="pl">Kaftan</span><span class="st">In library</span></div>
+        <div class="lrow sel"><span class="cd">LD 115</span><span class="fm">Flap &amp; pocket set</span><span class="pl">Kaftan</span><span class="st">Selected</span></div>
+        <div class="lrow"><span class="cd">LD 184</span><span class="fm">Flap &amp; pocket set</span><span class="pl">Kaftan</span><span class="st">In library</span></div>
+        <div class="lrow"><span class="cd">AF 63</span><span class="fm">Neckline run</span><span class="pl">Jallabiya</span><span class="st">In library</span></div>
+        <div class="lrow"><span class="cd">AGD 12</span><span class="fm">Chest panel</span><span class="pl">Agbada</span><span class="st">In library</span></div>
+        <div class="lrow"><span class="cd">AGD 26</span><span class="fm">Chest panel</span><span class="pl">Agbada</span><span class="st">In library</span></div>
+      </div>
+      <div class="view">
+        <div class="mask"></div>
+        <p class="c1">LD 115 · FLAP</p>
+        <p class="c2">Sold as a pair with pocket LD 115P. What you pick here is the file the needle runs.</p>
+        <span class="play">▶ Play the stitch path</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 LOOM -->
+<section>
+  <div class="tag"><span class="n">04</span><span class="nm">The Loom</span><span class="reg pa">Paper</span>
+    <span class="vb">the configurator as a drafting sheet · pinned preview · estimate always visible</span></div>
+  <div class="screen paper">
+    <div class="nav"><span class="mk">KAS<small>THREADZ</small></span>
+      <span class="lk"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></span>
+      <span class="cta">Commission</span></div>
+    <div class="loom">
+      <div class="prev">
+        <span class="pin">Live preview · pinned</span>
+        <span class="pinhead" style="background:var(--cut); top:44px; left:38px"></span>
+        <span class="pinhead" style="background:var(--pin); bottom:38px; right:44px"></span>
+        <img src="../public/img/work/kaftan-grey-side.jpg" alt=""/>
+      </div>
+      <div class="steps">
+        <div class="lstep act"><span class="dm"></span><h4>Step 01 · Fabric</h4>
+          <p class="t">Seven Star · smooth solid wool</p>
+          <span class="sw on" style="background-image:url('../public/img/fabrics/seven-royal.jpg')"></span>
+          <span class="sw" style="background-image:url('../public/img/fabrics/focus-navy.jpg')"></span>
+          <span class="sw" style="background-image:url('../public/img/fabrics/proper-charcoal.jpg')"></span>
+          <span class="sw" style="background-image:url('../public/img/fabrics/noble-tan.jpg')"></span></div>
+        <div class="lstep"><span class="dm"></span><h4>Step 02 · Colour</h4>
+          <span class="dot" style="background:#20364f"></span><span class="dot" style="background:#2f4a3d"></span>
+          <span class="dot" style="background:#4a3728"></span><span class="dot" style="background:#1a1518"></span>
+          <span class="dot" style="background:#e9e2d6"></span></div>
+        <div class="lstep"><span class="dm"></span><h4>Step 03 · Embroidery</h4>
+          <span class="dm2" style="-webkit-mask:url('../public/img/designs/ld115f.png') center/contain no-repeat;mask:url('../public/img/designs/ld115f.png') center/contain no-repeat"></span>
+          <span class="dm2" style="-webkit-mask:url('../public/img/designs/ld184f.png') center/contain no-repeat;mask:url('../public/img/designs/ld184f.png') center/contain no-repeat"></span>
+          <span class="dm2" style="width:46px;-webkit-mask:url('../public/img/designs/af63.png') center/contain no-repeat;mask:url('../public/img/designs/af63.png') center/contain no-repeat"></span></div>
+        <div class="lstep"><span class="dm"></span><h4>Step 04 · Measurements</h4>
+          <p class="t" style="font-size:13px; font-family:var(--mono); font-weight:400">CHEST 40" · SHOULDER 18" · LENGTH 44"</p></div>
+        <div class="price"><span class="amt">₦53,000</span>
+          <button class="btn btn-solid">Send to the studio</button>
+          <span class="nt">50% DEPOSIT · 14 DAYS · 72H FAST-TRACK</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 ATELIER -->
+<section>
+  <div class="tag"><span class="n">05</span><span class="nm">Atelier</span><span class="reg cl">Cloth</span>
+    <span class="vb">the story · studio photography and film go here</span></div>
+  <div class="screen cloth">
+    <div class="nav"><span class="mk">KAS<small>THREADZ</small></span>
+      <span class="lk"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></span>
+      <span class="cta">Commission</span></div>
+    <div class="atel">
+      <div class="tx">
+        <p class="eyebrow">The Atelier · Abuja</p>
+        <h3>Machine precision.<br/>Hand finish.</h3>
+        <p class="lead">Every piece starts as cloth on the table and a file in the library. The head runs the code; everything after that is hands.</p>
+        <div style="margin-top:18px">
+          <div class="pstep"><span class="n">01</span><div><h5>Consultation</h5><p>Occasion, references, budget.</p></div></div>
+          <div class="pstep"><span class="n">02</span><div><h5>Fabric &amp; colour</h5><p>Five house materials, or bring your own cloth.</p></div></div>
+          <div class="pstep"><span class="n">03</span><div><h5>Design &amp; measurements</h5><p>From the library, or a custom digitisation.</p></div></div>
+          <div class="pstep"><span class="n">04</span><div><h5>The make</h5><p>Cut, stitch, embroider, finish. Photos at every stage.</p></div></div>
+          <div class="pstep"><span class="n">05</span><div><h5>Fitting &amp; delivery</h5><p>Abuja in studio. Nationwide and diaspora by courier.</p></div></div>
+        </div>
+      </div>
+      <div class="ph"><img src="../public/img/work/kaftan-cream-detail.jpg" alt=""/></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 TRACK -->
+<section>
+  <div class="tag"><span class="n">06</span><span class="nm">Track an order</span><span class="reg pa">Paper</span>
+    <span class="vb">the trust engine · a photo at every stage · zero ceremony, highest intent</span></div>
+  <div class="screen paper">
+    <div class="nav"><span class="mk">KAS<small>THREADZ</small></span>
+      <span class="lk"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></span>
+      <span class="cta">Commission</span></div>
+    <div class="track">
+      <div class="tcard">
+        <div class="oh"><span>ORDER Nº 0114</span><span>EST. AUG 4</span></div>
+        <h3>Onyx &amp; Gold Kaftan · LD 184</h3>
+        <div class="trow done"><span class="td"></span><span class="tt">Deposit received</span><span class="ts">JUL 21</span></div>
+        <div class="trow done"><span class="td"></span><span class="tt">Fabric cut</span><span class="ts">JUL 22</span></div>
+        <div class="trow cur"><span class="td"></span><span class="tt">Embroidery running · LD 184</span><span class="ts">NOW</span></div>
+        <div class="trow"><span class="td"></span><span class="tt">Hand finishing</span><span class="ts">—</span></div>
+        <div class="trow"><span class="td"></span><span class="tt">Ready for fitting</span><span class="ts">—</span></div>
+        <div class="tph"><img src="../public/img/work/kaftan-black.jpg" alt=""/></div>
+        <p class="tnote">EACH STAGE LANDS WITH A PHOTO — HERE AND ON YOUR WHATSAPP.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<p class="note">Six pages, one system. Name a page and a section to change anything.<br/>
+Approve and the build starts on this blueprint.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  let seed = 21;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff - 0.5);
+
+  /* the wordmark, satin-stitched: rasterise the glyphs, then lay one discrete
+     stitch per run of ink so the thread ends where the letterform ends */
+  function stitchMark(svgEl, word, font, size, baseline, t1, t2) {
+    const W = 700, H = 190, S = 2, ROW = 3.4, MAX = 40, OVER = 1.2;
+    const cv = document.createElement("canvas");
+    cv.width = W * S; cv.height = H * S;
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    ctx.scale(S, S);
+    ctx.font = font; ctx.textAlign = "center"; ctx.letterSpacing = "2px";
+    ctx.fillStyle = "#fff";
+    ctx.fillText(word, W / 2, baseline);
+    const d = ctx.getImageData(0, 0, W * S, H * S).data;
+    const ink = (x, y) => d[((y * S | 0) * W * S + (x * S | 0)) * 4 + 3] > 128;
+
+    const uid = "m" + Math.abs(Math.random() * 1e9 | 0);
+    svgEl.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svgEl.innerHTML =
+      `<defs><linearGradient id="g${uid}" x1="0" y1="20" x2="0" y2="${H - 30}" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="${t1}"/><stop offset="0.4" stop-color="${t2}"/>
+        <stop offset="0.72" stop-color="${t1}"/><stop offset="1" stop-color="${t2}"/></linearGradient>
+       <filter id="s${uid}" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="1" stdDeviation="0.7" flood-color="#000" flood-opacity="0.6"/></filter></defs>`;
+
+    const colInk = new Array(W).fill(false);
+    let top = H, bot = 0;
+    for (let x = 0; x < W; x++) for (let y = 6; y < H - 6; y++)
+      if (ink(x, y)) { colInk[x] = true; if (y < top) top = y; if (y > bot) bot = y; }
+    const bands = []; let st = -1;
+    for (let x = 0; x < W; x++) {
+      if (colInk[x] && st < 0) st = x;
+      if ((!colInk[x] || x === W - 1) && st >= 0) { bands.push([st, x]); st = -1; }
+    }
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("filter", `url(#s${uid})`);
+    bands.forEach((b) => {
+      let r = 0;
+      for (let y = top; y <= bot; y += ROW, r++) {
+        let x = b[0]; const spans = [];
+        while (x <= b[1]) {
+          if (ink(x, y)) { const s0 = x; while (x <= b[1] && ink(x, y)) x++; spans.push([s0, x - 1]); } else x++;
+        }
+        spans.forEach(([x0, x1]) => {
+          const w = x1 - x0; if (w < 1.2) return;
+          const n = Math.max(1, Math.ceil(w / MAX)), seg = w / n;
+          const jog = n > 1 ? ((r % 2) * seg) / 2 : 0;
+          for (let k = 0; k < n; k++) {
+            let a = x0 + k * seg - (k > 0 ? jog : 0), bb = x0 + (k + 1) * seg - (k < n - 1 ? jog : 0);
+            if (k === 0) a -= OVER; if (k === n - 1) bb += OVER;
+            const yy = y + rnd() * 0.4;
+            const ln = document.createElementNS(NS, "line");
+            ln.setAttribute("x1", a.toFixed(1)); ln.setAttribute("y1", yy.toFixed(1));
+            ln.setAttribute("x2", bb.toFixed(1)); ln.setAttribute("y2", yy.toFixed(1));
+            ln.setAttribute("stroke", `url(#g${uid})`);
+            ln.setAttribute("stroke-width", (3.5 + rnd() * 0.8).toFixed(2));
+            ln.setAttribute("stroke-linecap", "round");
+            ln.setAttribute("opacity", (0.9 + Math.abs(rnd()) * 0.2).toFixed(2));
+            g.appendChild(ln);
+          }
+        });
+      }
+    });
+    svgEl.appendChild(g);
+  }
+
+  /* running-stitch rules: discrete stitches, never a drawn line */
+  function runRule(svgEl) {
+    const W = +svgEl.dataset.rule;
+    svgEl.setAttribute("viewBox", `0 0 ${W} 14`);
+    const L = 8.2, G = 5.2;
+    let out = "";
+    for (let x = 2; x + L <= W - 2; x += L + G) {
+      const y = 7 + rnd() * 0.5;
+      out += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + L).toFixed(1)}" y2="${y.toFixed(1)}"
+        stroke="#cbc2ad" stroke-width="${(2.4 + rnd() * 0.5).toFixed(2)}" stroke-linecap="round" opacity="${(0.75 + Math.abs(rnd()) * 0.3).toFixed(2)}"/>`;
+    }
+    svgEl.innerHTML = out;
+  }
+
+  document.fonts.load('800 118px Syne').then(() => document.fonts.ready).then(() => {
+    stitchMark(document.getElementById("heromark"), "KAS", '800 118px Syne', 118, 132, "#fffdf7", "#cbc2ad");
+    document.querySelectorAll("[data-rule]").forEach(runRule);
+  });
+})();
+</script>
+</body>
+</html>

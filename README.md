@@ -1,125 +1,106 @@
-# KAS THREADZ — Website
+# KAS THREADZ
 
-Luxury embroidery & bespoke tailoring website for **KAS THREADZ**.
-Built as a fast, self-contained static site (HTML, CSS, vanilla JS) — no build step, no database, easy to host anywhere.
+The website for KAS THREADZ, a luxury embroidery and bespoke tailoring house in Abuja. Kaftan, senator, jallabiya and agbada, cut to measure and embroidered from the studio's own machine files.
 
-*Ippari Ippri ni Yadoru Geijutsu — Art in Every Stitch.*
+This is a complete rebuild. It replaces the previous static HTML site entirely.
 
----
-
-## Pages
-
-| File | Page | What it does |
-|------|------|--------------|
-| `index.html` | Home | Hero, brand story, specialities, fabrics, signature designs, live-studio teaser, process, testimonials |
-| `gallery.html` | Designs | Filterable portfolio (Kaftans / Agbada / Jallabs / Custom) |
-| `customize.html` | **Design Studio** | The live customiser — a garment on a stand that updates in real time as the customer picks garment, fabric, colour, sleeve length, garment length (Short / Long) and embroidery (None / Flap & Pocket). Builds an order and sends it to you on WhatsApp or email |
-| `embroidery.html` | **Embroidery Only** | Order embroidery on the customer's own material — browse the design library, pick a design, choose material + placement + thread colour, and send the order |
-| `about.html` | About | Vision, mission, values and brand identity |
-| `contact.html` | Contact | Enquiry form (WhatsApp/email) + contact details |
-
----
-
-## ⚙️ IMPORTANT — set your contact details
-
-Open **`assets/js/main.js`** and edit the block at the top (`window.KAS_CONFIG`).
-This single place feeds the whole site — the footer, the contact page and every
-"Send order / WhatsApp" button.
-
-```js
-window.KAS_CONFIG = {
-  brand:     "KAS THREADZ",
-  whatsapp:  "2348000000000",          // ← your WhatsApp, digits only, with country code (234 = Nigeria)
-  email:     "orders@kasthreadz.com",  // ← your business email
-  phoneNice: "+234 800 000 0000",      // ← shown to visitors
-  address:   "Abuja, Nigeria",         // ← your studio location
-  instagram: "https://instagram.com/kasthreadz",
-  tiktok:    "https://tiktok.com/@kasthreadz",
-  facebook:  "https://facebook.com/kasthreadz",
-  x:         "https://x.com/kasthreadz"
-};
+```bash
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-> The WhatsApp number **must** be digits only with the country code and no `+`, spaces or dashes.
-> Example for Nigeria: `2348012345678`.
-
 ---
 
-## Fabrics & prices
+## What makes this site different
 
-The five materials (Express, Focus, Seven Star, Proper Stripes, Noble Thinker) live in
-**`assets/js/fabrics.js`** — each has its name, brand, photo thumbnail and a price add-on
-(`add:`). The thumbnails are real photos in `assets/img/fabrics/`. The customer picks the
-material style there and **any colour** separately — the preview draws the material's
-stripe/weave character in the chosen colour.
+Every design code on the site is a real embroidery-machine file. Choosing `LD 115` in the Loom means the embroidery head runs the file named LD 115. The codes are data, never decoration, and they are set in mono wherever they appear.
 
-Garment base prices and the other add-ons are in **`assets/js/customizer.js`**:
+The design language follows from that: **the needle draws everything.** The house mark is satin-stitched on screen by an animated needle, structural rules are running stitches, and the interface borrows the vocabulary of the workshop rather than of the web.
 
-```js
-const BASE    = { kaftan: 35000, agbada: 120000, jallab: 45000, shirt: 25000 };
-const EMB_ADD = { none: 0, flap: 15000 };
-const LEN_ADD = { short: 0, long: 6000 };
+## The two registers
+
+The site has two grounds and the visitor moves between them.
+
+| Register | What it is for | Pages |
+| --- | --- | --- |
+| **Cloth** (dark) | browsing, dreaming, committing | Home, Collection, individual pieces, Atelier |
+| **Paper** (light) | planning, specifying, tracking | The Design Library, The Loom |
+
+A page declares its world with `data-register="cloth"` or `data-register="paper"` and every child picks up the right ground, rules, accent and action colour automatically. This also solves legibility: dense functional interface and small type live on paper, and dark is reserved for large type over photography.
+
+Full design system: [`brand.md`](./brand.md). Roadmap, requirements and idea backlog: [`BUILD-MAP.md`](./BUILD-MAP.md).
+
+## Stack
+
+- **Next.js 16** (App Router) and TypeScript
+- **Tailwind v4**, with brand tokens declared in `@theme` in `src/app/globals.css`
+- **next/font** for Syne, Jost and JetBrains Mono
+- No UI library. The components here are few and specific.
+
+## Layout
+
+```
+scripts/
+  generate-mark.mjs     digitises the logo into stitch data (build-time)
+src/
+  app/
+    layout.tsx          fonts, metadata, the pre-paint ceremony guard
+    globals.css         brand tokens, register switch, browser chrome
+    page.tsx            home (cloth)
+    collection/         grid and individual piece pages (cloth)
+    library/            the design library (paper)
+    loom/               the configurator (paper)
+    atelier/            the studio story (cloth)
+    commission/         redirects into the Loom
+    icon.png            favicon, generated from the house mark
+  components/
+    site-chrome.tsx     nav, reveal nav, mobile menu, footer
+    stitched-mark.tsx   the satin-stitched house mark
+    running-rule.tsx    a rule sewn as a running stitch
+  lib/
+    catalogue.ts        pieces and the design library
+    loom.ts             configurator data, pricing, lighting
+    stitch.ts           stitch primitives
+    mark-stitches.ts    generated; do not edit by hand
+public/img/
+  brand/ designs/ fabrics/ work/
 ```
 
-The estimate = garment base + fabric add (fabrics.js) + embroidery + length. Adjust the
-numbers to your real pricing. The homepage service cards and gallery captions have their
-own text you can edit directly in the HTML.
+## The house mark
 
----
+The mark is not an image and not a font. It is 1,042 individual stitches, digitised from `public/img/brand/logo-white.png` at build time.
 
-## The embroidery design library
-
-All design entries live in **one file: `assets/js/designs.js`** — it feeds the Embroidery
-page catalogue, the design picker inside the Design Studio, and the live previews.
-The images live in `assets/img/designs/` as transparent PNGs, extracted from your own
-files in `Downloads\EMB DESIGNS` (the previews embedded inside the `.EMB` files, plus the
-`.DST` files rendered stitch-by-stitch).
-
-Two lists, matching your folders:
-- `sets:` — **LD Flap & Pocket pairs** (LD‹n›F on the flap + LD‹n›P on the pocket,
-  always shown and ordered together as one set)
-- `agbada:` — **Agbada chest panels** (AGD codes). Shown for the agbada garment, and as
-  the "Full Panel" option on the Embroidery page.
-
-The names are your real file codes, so an order saying "LD 115 set (flap LD115F + pocket
-LD115P)" maps straight to the machine files.
-
-To **add** a design: drop a transparent PNG into `assets/img/designs/` and add one line to
-the right list in `designs.js`, e.g. a new pair:
-```js
-{ id: "ld200", name: "LD 200", flap: "ld200f", pocket: "ld200p" }
+```bash
+node scripts/generate-mark.mjs   # re-run after changing the logo
 ```
-(The site can extract the preview image hidden inside any Wilcom `.EMB` file — ask Claude
-to run the extraction again when you add new EMB files to the folder.)
 
-## Adding your own photos (optional)
+The script decodes the PNG, reads it row by row, and turns every run of ink into one discrete stitch whose ends land on the shape's own edge. Runs too wide for a single satin stitch are split into a staggered tatami fill, which is what a digitiser does with a broad area. The output is grouped by thread weight and sheen into nine paths, so the mark is nine DOM nodes rather than a thousand.
 
-The garment illustrations are generated with code, so the site looks complete without photos.
-When you have real photography, you can drop images into `assets/img/` and replace any
-illustration block or gallery card with an `<img>` — the layout will adapt.
+Because it ships as data, the finished mark is in the server HTML and paints with the rest of the page. On a first visit an inline script hides it before paint and the component sews it stitch by stitch; after that, `sessionStorage` remembers and the mark is simply there. Without JavaScript it renders finished.
 
----
+## Conventions
 
-## Brand assets
+- **Prices** use the `.price` class: mono, weight 500, tabular figures, full contrast. Money is never dimmed into secondary text.
+- **Machine codes** are always mono.
+- **Micro-labels** use `.label`. Letterspacing above about `0.14em` is for labels only, never for anything read as a sentence.
+- **Labels over photography** use `.chip-over-photo`, which carries its own scrim.
+- **A screen fits on every screen.** Sizes are expressed against the viewport (`min-h-dvh`, `clamp()`, `dvh` caps), and verified at a tall window, a short one and a narrow one.
+- **No em dashes**, in code comments or in copy.
 
-- `assets/img/logo-burgundy.png` — logo for light backgrounds
-- `assets/img/logo-cream.png` — logo for dark backgrounds
-- `assets/img/logo-white.png` — plain white logo
-- `assets/img/favicon-*.png` — browser/tab icons
+Two traps worth knowing, because both have already cost time:
 
-**Colours:** Burgundy `#521218` · Taupe `#CABFB1` · Off-white `#F8F8F8` · Black `#000000`
-**Fonts:** Playfair Display (headings) + Open Sans (body), loaded from Google Fonts.
+1. `filter`, `backdrop-filter`, `transform` and a stray `position: relative` all make an element the containing block for `position: fixed` descendants. Full-screen panels are siblings of the header, never children.
+2. Never animate a dashed line's `stroke-dashoffset` to fake sewing. It grows as a solid line and then snaps into dashes. Running stitches are discrete elements revealed one at a time.
 
----
+## Ordering
 
-## Viewing / hosting
+Phase 1 ends in a structured WhatsApp handoff. The Loom composes the full commission (garment, fabric, colour, design, measurements, estimate) and hands it to `wa.me`. Server-side order logging, deposits and tracking arrive in phase 2; see `BUILD-MAP.md`.
 
-- **Preview locally:** just double-click `index.html` — it opens in your browser. (An internet
-  connection is needed only for the Google Fonts; everything else works offline.)
-- **Publish for free:** upload the whole `NEW WEBSITE` folder to any static host —
-  Netlify (drag-and-drop), Vercel, GitHub Pages, or Cloudflare Pages. No server required.
-- Point your domain (e.g. `kasthreadz.com`) at the host and you're live.
+The studio's number lives in `src/components/site-chrome.tsx` and `src/app/loom/loom.tsx`.
 
----
+## Still needed from the studio
 
-Built with care. Every stitch counts. ✦
+1. The **EMB/DST source files**, which unlock stitch playback and stitch-count pricing.
+2. The **logo's vector source** (AI, SVG or EPS), for a sharper mark at any size.
+3. A **photography reshoot**. The nine images here are the studio's existing set and will look thin beside the rest.
+4. Confirmation on senator wear as a named line, real testimonials, current fabric pricing, and whether `kasthreadz.com` exists.

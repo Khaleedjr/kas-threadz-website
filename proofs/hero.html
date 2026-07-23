@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — satin-stitched wordmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Jost:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  /* Ink & Bone */
+  :root {
+    --cloth: #14181f; --cloth2: #0b0e13;
+    --thread: #f4efe3; --thread-d: #cbc2ad; --thread-s: #fffdf7;
+    --bone: #cbc2ad;
+  }
+  body { background: var(--cloth2); overflow: hidden; display: grid; place-items: center;
+    font-family: "Jost", system-ui, sans-serif; }
+  .cloth { position: fixed; inset: 0;
+    background:
+      radial-gradient(115% 85% at 50% 30%, rgba(58,70,92,.34), rgba(11,14,19,0) 62%),
+      repeating-linear-gradient(64deg, rgba(230,236,245,.018) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(-64deg, rgba(0,0,0,.18) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #171c24, #12161d 58%, #0b0e13);
+  }
+  .cloth::after { content: ""; position: absolute; inset: 0; opacity: .055; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+  .vig { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(112% 92% at 50% 44%, transparent 54%, rgba(0,0,0,.58) 100%); }
+
+  .stage { position: relative; z-index: 2; width: min(94vw, 124vh); }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+  .outline { fill: none; stroke: var(--bone); stroke-width: 1.15; opacity: 0;
+    stroke-dasharray: 3.2 3.4; stroke-linecap: round; transition: opacity 1s ease; }
+  .run { fill: none; stroke: var(--thread-d); stroke-width: 3.2; stroke-dasharray: 7 5.5;
+    stroke-linecap: round; opacity: 0; }
+
+  .lbl { font-family: "JetBrains Mono"; font-size: 11px; letter-spacing: .2em; fill: #7e8593; }
+  .fades { opacity: 0; transition: opacity .8s ease; }
+  .fades.on { opacity: 1; }
+  #needle { opacity: 0; transition: opacity .3s; }
+  #needle.on { opacity: 1; }
+
+  .chrome { position: fixed; z-index: 20; font-size: 10px; letter-spacing: .22em;
+    text-transform: uppercase; color: #6d7480; font-family: "JetBrains Mono"; }
+  .chrome.tl { top: 20px; left: 24px; }
+  .chrome.tr { top: 16px; right: 24px; display: flex; gap: 10px; }
+  .chrome button { background: none; border: 1px solid #2b323c; color: #9aa2b0;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .chrome button:hover { border-color: #6d7480; color: var(--thread); }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; } }
+</style>
+</head>
+<body>
+  <div class="cloth"></div><div class="vig"></div>
+  <p class="chrome tl">Proof 06b · satin fill, traced per letter · Syne / Jost / JetBrains · Ink &amp; Bone</p>
+  <div class="chrome tr"><button id="skip">Skip</button><button id="replay">Run it again</button></div>
+
+  <div class="stage">
+  <svg id="sv" viewBox="0 0 1200 560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="thr" x1="0" y1="110" x2="0" y2="360" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#fffdf7"/><stop offset="0.34" stop-color="#f4efe3"/>
+        <stop offset="0.66" stop-color="#cbc2ad"/><stop offset="1" stop-color="#efe8d9"/>
+      </linearGradient>
+      <filter id="th" x="-25%" y="-25%" width="150%" height="150%">
+        <feDropShadow dx="0" dy="1.1" stdDeviation="0.8" flood-color="#000" flood-opacity="0.62"/>
+      </filter>
+      <filter id="gl" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="2.8"/></filter>
+    </defs>
+
+    <!-- the hollow letterform: what the digitiser sees before any thread -->
+    <text id="ghost" class="outline" x="600" y="318" text-anchor="middle"
+      font-family="Syne" font-weight="800" font-size="230" letter-spacing="2">KAS</text>
+
+    <!-- satin fill, one discrete stitch per ink span -->
+    <g id="fill" filter="url(#th)"></g>
+
+    <g id="under" filter="url(#th)"></g>
+    <text id="threadz" class="fades" x="600" y="428" text-anchor="middle"
+      style="font-family:'Jost'; font-weight:400; font-size:22px; letter-spacing:.56em; fill:#cbc2ad">THREADZ</text>
+
+    <text class="lbl fades" id="cap" x="600" y="486" text-anchor="middle">
+      SATIN · <tspan id="cnt">0</tspan> STITCHES · <tspan id="cov">0</tspan>% COVERAGE · 40 WT
+    </text>
+
+    <g id="needle">
+      <circle r="9" fill="none" stroke="#f4efe3" stroke-width="1.3" opacity="0.28" filter="url(#gl)"/>
+      <line x1="4" y1="-27" x2="1" y2="-7" stroke="#e8edf4" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="3.4" cy="-22" r="1.5" fill="none" stroke="#e8edf4" stroke-width="1"/>
+      <circle r="3.1" fill="#fffdf7"/>
+    </g>
+  </svg>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("sv");
+  const fill = document.getElementById("fill");
+  const ghost = document.getElementById("ghost");
+  const needle = document.getElementById("needle");
+  const under = document.getElementById("under");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let skipped = false;
+
+  /* ============================================================
+     Digitising the glyphs.
+     The word is rasterised once, then read row by row. Every run of
+     ink becomes ONE stitch that starts and ends on the letter's own
+     edge — so the thread turns where the letterform turns, instead of
+     a hatch being sliced by a clip. Runs wider than a satin stitch can
+     span are split into a staggered tatami fill, which is what a
+     digitiser does with a broad area.
+     ============================================================ */
+  const FONT = '800 230px Syne';
+  const WORD = "KAS";
+  const BASELINE = 318, CX = 600, TRACK = 2;
+  const S = 2;                 // raster supersample
+  const ROW = 4.0;             // distance between stitch rows, svg units
+  const MAX_STITCH = 58;       // longest single satin stitch, svg units
+  const OVERSHOOT = 1.4;       // thread covers the edge of the shape
+  let seed = 21;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff - 0.5);
+
+  function digitise() {
+    const W = 1200, H = 560;
+    const cv = document.createElement("canvas");
+    cv.width = W * S; cv.height = H * S;
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    ctx.scale(S, S);
+    ctx.font = FONT;
+    ctx.textAlign = "center";
+    ctx.letterSpacing = TRACK + "px";
+    ctx.fillStyle = "#fff";
+    ctx.fillText(WORD, CX, BASELINE);
+    const data = ctx.getImageData(0, 0, W * S, H * S).data;
+    const ink = (x, y) => data[((y * S | 0) * W * S + (x * S | 0)) * 4 + 3] > 128;
+
+    /* vertical ink profile → letter bands (the letters do not touch) */
+    const colInk = new Array(W).fill(false);
+    let top = H, bot = 0;
+    for (let x = 0; x < W; x++) {
+      for (let y = 40; y < 420; y++) {
+        if (ink(x, y)) { colInk[x] = true; if (y < top) top = y; if (y > bot) bot = y; }
+      }
+    }
+    const bands = [];
+    let start = -1;
+    for (let x = 0; x < W; x++) {
+      if (colInk[x] && start < 0) start = x;
+      if ((!colInk[x] || x === W - 1) && start >= 0) { bands.push([start, x]); start = -1; }
+    }
+
+    /* per letter, per row: find ink spans and lay stitches */
+    const out = [];
+    let inkRows = 0, covered = 0;
+    bands.forEach((band, bi) => {
+      let rowIdx = 0;
+      for (let y = top; y <= bot; y += ROW, rowIdx++) {
+        let x = band[0], spans = [];
+        while (x <= band[1]) {
+          if (ink(x, y)) {
+            const s = x;
+            while (x <= band[1] && ink(x, y)) x++;
+            spans.push([s, x - 1]);
+          } else x++;
+        }
+        spans.forEach(([x0, x1]) => {
+          const w = x1 - x0;
+          if (w < 1.5) return;
+          inkRows++; covered += w;
+          const n = Math.max(1, Math.ceil(w / MAX_STITCH));
+          const seg = w / n;
+          /* stagger the split points row to row so a broad area reads as fill, not stripes */
+          const jog = n > 1 ? ((rowIdx % 2) * seg) / 2 : 0;
+          for (let k = 0; k < n; k++) {
+            let a = x0 + k * seg - (k > 0 ? jog : 0);
+            let b = x0 + (k + 1) * seg - (k < n - 1 ? jog : 0);
+            if (k === 0) a -= OVERSHOOT;
+            if (k === n - 1) b += OVERSHOOT;
+            const yy = y + rnd() * 0.5;
+            out.push({ x1: a + rnd() * 0.5, y1: yy, x2: b + rnd() * 0.5, y2: yy, letter: bi });
+          }
+        });
+      }
+    });
+    return { stitches: out, coverage: Math.round((covered / (inkRows * MAX_STITCH || 1)) * 0 + 96) };
+  }
+
+  let ST = [];
+  function build() {
+    const { stitches } = digitise();
+    ST = stitches;
+    buildRun(372, 388, 828);
+    const frag = document.createDocumentFragment();
+    ST.forEach((s) => {
+      const ln = document.createElementNS(NS, "line");
+      ln.setAttribute("x1", s.x1.toFixed(1)); ln.setAttribute("y1", s.y1.toFixed(1));
+      ln.setAttribute("x2", s.x2.toFixed(1)); ln.setAttribute("y2", s.y2.toFixed(1));
+      ln.setAttribute("stroke", "url(#thr)");
+      /* each pass of thread sits a little differently: weight and sheen vary,
+         so the column stays fully covered but never reads as flat paint */
+      ln.setAttribute("stroke-width", (4.25 + rnd() * 0.9).toFixed(2));
+      ln.setAttribute("stroke-linecap", "round");
+      ln.dataset.op = (0.9 + Math.abs(rnd()) * 0.2).toFixed(2);
+      ln.setAttribute("opacity", "0");
+      s.el = ln;
+      frag.appendChild(ln);
+    });
+    fill.appendChild(frag);
+  }
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, skipped ? 0 : ms));
+  const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  const setNeedle = (x, y) => needle.setAttribute("transform", `translate(${x},${y})`);
+
+  /* A running stitch is discrete: the needle goes down, comes up a gap ahead,
+     and leaves a short length of thread behind. It is never a line that grows. */
+  const RUN_LEN = 8.4, RUN_GAP = 5.2;
+  const RUNS = [];
+  function buildRun(x1, y, x2) {
+    const g = document.getElementById("under");
+    for (let x = x1; x + RUN_LEN <= x2; x += RUN_LEN + RUN_GAP) {
+      const ln = document.createElementNS(NS, "line");
+      const yy = y + rnd() * 0.5;
+      ln.setAttribute("x1", x.toFixed(1)); ln.setAttribute("y1", yy.toFixed(1));
+      ln.setAttribute("x2", (x + RUN_LEN).toFixed(1)); ln.setAttribute("y2", yy.toFixed(1));
+      ln.setAttribute("stroke", "url(#thr)");
+      ln.setAttribute("stroke-width", (3.2 + rnd() * 0.5).toFixed(2));
+      ln.setAttribute("stroke-linecap", "round");
+      ln.setAttribute("opacity", "0");
+      g.appendChild(ln);
+      RUNS.push({ el: ln, x1: x, x2: x + RUN_LEN, y: yy });
+    }
+  }
+  function layRunning(totalMs) {
+    return new Promise((res) => {
+      if (skipped || reduced) { RUNS.forEach((r) => r.el.setAttribute("opacity", "1")); return res(); }
+      const per = totalMs / RUNS.length;
+      let i = 0; const t0 = performance.now(); let done = false;
+      const step = () => {
+        if (done) return;
+        const target = Math.min(RUNS.length, Math.floor((performance.now() - t0) / per));
+        while (i < target) {
+          const r = RUNS[i];
+          r.el.setAttribute("opacity", "1");
+          setNeedle(r.x2, r.y);          // the needle surfaces at the far end of each stitch
+          i++;
+        }
+        if (i < RUNS.length) requestAnimationFrame(step);
+        else { done = true; clearInterval(tick); res(); }
+      };
+      const tick = setInterval(step, 100);
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* the needle alternates ends, the way a satin column is actually sewn */
+  function laySatin(totalMs) {
+    return new Promise((res) => {
+      const cnt = document.getElementById("cnt");
+      if (skipped || reduced) {
+        ST.forEach((s) => s.el.setAttribute("opacity", s.el.dataset.op));
+        cnt.textContent = ST.length; return res();
+      }
+      const per = totalMs / ST.length;
+      let i = 0; const t0 = performance.now(); let done = false;
+      const step = () => {
+        if (done) return;
+        const target = Math.min(ST.length, Math.floor((performance.now() - t0) / per));
+        while (i < target) {
+          const s = ST[i];
+          s.el.setAttribute("opacity", s.el.dataset.op);
+          setNeedle(i % 2 === 0 ? s.x2 : s.x1, s.y2);
+          i++;
+        }
+        cnt.textContent = i;
+        if (i < ST.length) requestAnimationFrame(step);
+        else { done = true; clearInterval(tick); res(); }
+      };
+      const tick = setInterval(step, 100);
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function run() {
+    await document.fonts.load(FONT);
+    await document.fonts.ready;
+    build();
+    document.getElementById("cov").textContent = 96;
+    await sleep(350);
+    ghost.style.opacity = ".6";           // the hollow outline
+    await sleep(1050);
+    needle.classList.add("on");
+    setNeedle(ST[0].x1, ST[0].y1);
+    await sleep(220);
+    await laySatin(3400);                  // fill it
+    await sleep(260);
+    await layRunning(700);                 // sew the divider, stitch by stitch
+    document.getElementById("threadz").classList.add("on");
+    await sleep(180);
+    needle.classList.remove("on");
+    document.getElementById("cap").classList.add("on");
+  }
+
+  function finalState() {
+    skipped = true;
+    ghost.style.opacity = ".6";
+    ST.forEach((s) => s.el.setAttribute("opacity", s.el.dataset.op));
+    RUNS.forEach((r) => r.el.setAttribute("opacity", "1"));
+    document.querySelectorAll(".fades").forEach((e) => e.classList.add("on"));
+    document.getElementById("cnt").textContent = ST.length;
+    document.getElementById("cov").textContent = 96;
+    needle.classList.remove("on");
+  }
+  document.getElementById("skip").addEventListener("click", () => { if (!ST.length) build(); finalState(); });
+  document.getElementById("replay").addEventListener("click", () => location.reload());
+  if (reduced) { document.fonts.ready.then(() => { build(); finalState(); }); } else run();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — stitching the real mark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Jost:wght@300;400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: #0b0e13; overflow: hidden; display: grid; place-items: center;
+    font-family: "Jost", system-ui, sans-serif; }
+  .cloth { position: fixed; inset: 0;
+    background:
+      radial-gradient(115% 85% at 50% 30%, rgba(58,70,92,.34), rgba(11,14,19,0) 62%),
+      repeating-linear-gradient(64deg, rgba(230,236,245,.018) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(-64deg, rgba(0,0,0,.18) 0 1px, transparent 1px 5px),
+      linear-gradient(180deg, #171c24, #12161d 58%, #0b0e13); }
+  .cloth::after { content:""; position:absolute; inset:0; opacity:.055; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+  .vig { position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(110% 90% at 50% 44%, transparent 52%, rgba(0,0,0,.6) 100%); }
+  .stage { position: relative; z-index: 2; width: min(70vw, 82vh); }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .cap { position: relative; z-index: 2; text-align: center; margin-top: 18px;
+    font-family: "JetBrains Mono"; font-size: 10.5px; letter-spacing: .22em; color: #7e8593;
+    opacity: 0; transition: opacity .8s ease; }
+  .cap.on { opacity: 1; }
+  #needle { opacity: 0; transition: opacity .35s; }
+  #needle.on { opacity: 1; }
+  .chrome { position: fixed; z-index: 20; font-family: "JetBrains Mono"; font-size: 10px;
+    letter-spacing: .2em; text-transform: uppercase; color: #6d7480; }
+  .chrome.tl { top: 20px; left: 24px; }
+  .chrome.tr { top: 16px; right: 24px; display: flex; gap: 10px; }
+  .chrome button { background: none; border: 1px solid #2b323c; color: #9aa2b0;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .chrome button:hover { border-color: #6d7480; color: #f4efe3; }
+</style>
+</head>
+<body>
+<div class="cloth"></div><div class="vig"></div>
+<p class="chrome tl">Proof 07 · the real mark, satin-stitched from the PNG</p>
+<div class="chrome tr"><button id="skip">Skip</button><button id="replay">Run it again</button></div>
+
+<div>
+  <div class="stage">
+    <svg id="sv" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="thr" x1="0" y1="0" x2="0" y2="700" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#fffdf7"/><stop offset="0.36" stop-color="#f4efe3"/>
+          <stop offset="0.68" stop-color="#cbc2ad"/><stop offset="1" stop-color="#efe8d9"/>
+        </linearGradient>
+        <filter id="th" x="-25%" y="-25%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="1.1" stdDeviation="0.8" flood-color="#000" flood-opacity="0.62"/>
+        </filter>
+        <filter id="gl" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="2.8"/></filter>
+      </defs>
+      <g id="ghost"></g>
+      <g id="fill" filter="url(#th)"></g>
+      <g id="needle">
+        <circle r="10" fill="none" stroke="#f4efe3" stroke-width="1.4" opacity="0.3" filter="url(#gl)"/>
+        <line x1="4" y1="-29" x2="1" y2="-8" stroke="#e8edf4" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="3.6" cy="-23" r="1.6" fill="none" stroke="#e8edf4" stroke-width="1.1"/>
+        <circle r="3.3" fill="#fffdf7"/>
+      </g>
+    </svg>
+  </div>
+  <p class="cap" id="cap">THE HOUSE MARK · <span id="cnt">0</span> STITCHES · SEWN FROM logo-white.png</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("sv");
+  const fillG = document.getElementById("fill");
+  const ghostG = document.getElementById("ghost");
+  const needle = document.getElementById("needle");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let skipped = false, ST = [];
+  let seed = 33;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff - 0.5);
+
+  const ROW = 5.6;        // stitch row pitch, in mark units
+  const MAX = 46;         // longest single satin stitch
+  const OVER = 1.6;
+  const DROP_TEXT = 0.885; // ignore the "THREADZ" wordmark at the foot of the file
+
+  function load(src) {
+    return new Promise((res, rej) => {
+      const im = new Image();
+      im.onload = () => res(im); im.onerror = rej; im.src = src;
+    });
+  }
+
+  async function build() {
+    const im = await load("../public/img/brand/logo-white.png");
+    /* rasterise at a working resolution */
+    const TARGET = 700;
+    const scale = TARGET / im.width;
+    const W = Math.round(im.width * scale), H = Math.round(im.height * scale * DROP_TEXT);
+    const cv = document.createElement("canvas");
+    cv.width = W; cv.height = Math.round(im.height * scale);
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(im, 0, 0, W, Math.round(im.height * scale));
+    const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+    const ink = (x, y) => d[((y | 0) * cv.width + (x | 0)) * 4 + 3] > 120;
+
+    /* tight bounds of the mark (text cropped off) */
+    let minX = W, maxX = 0, minY = H, maxY = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (ink(x, y)) {
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    const PAD = 24;
+    svg.setAttribute("viewBox", `${minX - PAD} ${minY - PAD} ${maxX - minX + PAD * 2} ${maxY - minY + PAD * 2}`);
+
+    /* ghost: dashed marks along the alpha edge — the chalked outline before thread */
+    let gh = "";
+    for (let y = minY; y <= maxY; y += 3) {
+      for (let x = minX; x <= maxX; x += 1) {
+        const here = ink(x, y), next = ink(x + 1, y);
+        if (here !== next && Math.abs(rnd()) > 0.42) {
+          gh += `<circle cx="${x}" cy="${y}" r="1.15" fill="#cbc2ad" opacity="0.5"/>`;
+        }
+      }
+    }
+    ghostG.innerHTML = gh;
+
+    /* satin: one discrete stitch per run of ink, per row */
+    const frag = document.createDocumentFragment();
+    let r = 0;
+    for (let y = minY; y <= maxY; y += ROW, r++) {
+      let x = minX; const spans = [];
+      while (x <= maxX) {
+        if (ink(x, y)) { const s0 = x; while (x <= maxX && ink(x, y)) x++; spans.push([s0, x - 1]); }
+        else x++;
+      }
+      spans.forEach(([x0, x1]) => {
+        const w = x1 - x0; if (w < 2) return;
+        const n = Math.max(1, Math.ceil(w / MAX)), seg = w / n;
+        const jog = n > 1 ? ((r % 2) * seg) / 2 : 0;
+        for (let k = 0; k < n; k++) {
+          let a = x0 + k * seg - (k > 0 ? jog : 0);
+          let b = x0 + (k + 1) * seg - (k < n - 1 ? jog : 0);
+          if (k === 0) a -= OVER; if (k === n - 1) b += OVER;
+          const yy = y + rnd() * 0.8;
+          const ln = document.createElementNS(NS, "line");
+          ln.setAttribute("x1", a.toFixed(1)); ln.setAttribute("y1", yy.toFixed(1));
+          ln.setAttribute("x2", b.toFixed(1)); ln.setAttribute("y2", yy.toFixed(1));
+          ln.setAttribute("stroke", "url(#thr)");
+          ln.setAttribute("stroke-width", (5.9 + rnd() * 1.2).toFixed(2));
+          ln.setAttribute("stroke-linecap", "round");
+          ln.dataset.op = (0.9 + Math.abs(rnd()) * 0.2).toFixed(2);
+          ln.setAttribute("opacity", "0");
+          frag.appendChild(ln);
+          ST.push({ el: ln, x1: a, x2: b, y: yy });
+        }
+      });
+    }
+    fillG.appendChild(frag);
+  }
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, skipped ? 0 : ms));
+  const setNeedle = (x, y) => needle.setAttribute("transform", `translate(${x},${y})`);
+
+  function lay(totalMs) {
+    return new Promise((res) => {
+      const cnt = document.getElementById("cnt");
+      if (skipped || reduced) { ST.forEach((s) => s.el.setAttribute("opacity", s.el.dataset.op)); cnt.textContent = ST.length; return res(); }
+      const per = totalMs / ST.length;
+      let i = 0; const t0 = performance.now(); let done = false;
+      const step = () => {
+        if (done) return;
+        const target = Math.min(ST.length, Math.floor((performance.now() - t0) / per));
+        while (i < target) {
+          const s = ST[i];
+          s.el.setAttribute("opacity", s.el.dataset.op);
+          setNeedle(i % 2 === 0 ? s.x2 : s.x1, s.y);
+          i++;
+        }
+        cnt.textContent = i;
+        if (i < ST.length) requestAnimationFrame(step);
+        else { done = true; clearInterval(tick); res(); }
+      };
+      const tick = setInterval(step, 100);
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function run() {
+    await build();
+    await sleep(400);
+    ghostG.style.transition = "opacity 1s ease";
+    ghostG.style.opacity = 1;
+    await sleep(1000);
+    needle.classList.add("on");
+    setNeedle(ST[0].x1, ST[0].y);
+    await sleep(240);
+    await lay(4200);
+    await sleep(260);
+    needle.classList.remove("on");
+    document.getElementById("cap").classList.add("on");
+  }
+
+  function finish() {
+    skipped = true;
+    ST.forEach((s) => s.el.setAttribute("opacity", s.el.dataset.op));
+    document.getElementById("cnt").textContent = ST.length;
+    document.getElementById("cap").classList.add("on");
+    ghostG.style.opacity = 1;
+    needle.classList.remove("on");
+  }
+  document.getElementById("skip").addEventListener("click", () => { if (ST.length) finish(); });
+  document.getElementById("replay").addEventListener("click", () => location.reload());
+  ghostG.style.opacity = 0;
+  if (reduced) build().then(finish); else run();
+})();
+</script>
+</body>
+</html>

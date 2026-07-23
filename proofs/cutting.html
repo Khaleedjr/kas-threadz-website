@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — the cutting table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: #211b16; overflow: hidden; display: grid; place-items: center;
+    font-family: "Instrument Sans", system-ui, sans-serif; }
+  /* the table: dark wood, paper laid on it */
+  .table { position: fixed; inset: 0;
+    background:
+      repeating-linear-gradient(94deg, rgba(0,0,0,.16) 0 2px, transparent 2px 26px),
+      linear-gradient(160deg, #2c231c, #1c1611);
+  }
+  .paper { position: fixed; inset: 3.5vh 3vw; border-radius: 2px;
+    background:
+      repeating-linear-gradient(0deg, rgba(64,86,120,.055) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(90deg, rgba(64,86,120,.055) 0 1px, transparent 1px 46px),
+      linear-gradient(155deg, #efe8d8, #e4dbc8 60%, #ded4bf);
+    box-shadow: 0 26px 60px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.25) inset;
+    opacity: 0; transition: opacity 1.1s ease;
+  }
+  .paper.on { opacity: 1; }
+  .paper::after { content: ""; position: absolute; inset: 0; opacity: .35; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"); }
+
+  .stage { position: relative; z-index: 3; width: min(94vw, 132vh); }
+  svg.plan { display: block; width: 100%; height: auto; overflow: visible; }
+
+  .ink { fill: none; stroke: #3a332b; stroke-width: 1.7; opacity: 0; stroke-linejoin: round; stroke-linecap: round; }
+  .ink.thin { stroke-width: 1.1; }
+  .seam { fill: none; stroke: #6d6252; stroke-width: 1.1; stroke-dasharray: 7 6; opacity: 0;
+    transition: opacity .8s ease; }
+  .seam.on { opacity: .8; }
+  .cut { fill: none; stroke: #a8422f; stroke-width: 2.4; opacity: 0; stroke-linecap: round; }
+  .fill { fill: #eae3d2; opacity: 0; transition: opacity .9s ease; }
+  .fill.on { opacity: .55; }
+
+  text { user-select: none; }
+  .lbl { font-family: "IBM Plex Mono"; font-size: 11px; letter-spacing: .2em; fill: #5c5346; }
+  .lbl.red { fill: #a8422f; }
+  .lblsm { font-family: "IBM Plex Mono"; font-size: 9.5px; letter-spacing: .18em; fill: #7a7062; }
+  .kas { font-family: "Fraunces"; font-weight: 500; font-size: 74px; fill: #2b251e; letter-spacing: .01em; }
+  .thr { font-family: "Instrument Sans"; font-weight: 500; font-size: 20px; letter-spacing: .52em; fill: #574e42; }
+  .serif-i { font-family: "Fraunces"; font-style: italic; font-size: 20px; fill: #7a6a52; }
+  .cta-t { font-family: "Instrument Sans"; font-size: 11.5px; font-weight: 600; letter-spacing: .28em; fill: #f3ecdc; }
+
+  .fades { opacity: 0; transition: opacity .8s ease, transform .8s cubic-bezier(.22,1,.36,1); transform: translateY(6px); }
+  .fades.on { opacity: 1; transform: none; }
+
+  .pin { opacity: 0; transform-box: fill-box; transform-origin: center;
+    transition: opacity .28s ease; }
+  .pin.on { opacity: 1; animation: drop .34s cubic-bezier(.34,1.5,.5,1) both; }
+  @keyframes drop { 0% { transform: translateY(-14px) scale(1.5); } 100% { transform: none; } }
+
+  #wheel { opacity: 0; transition: opacity .3s; }
+  #wheel.on { opacity: 1; }
+
+  .chrome { position: fixed; z-index: 20; font-size: 10px; letter-spacing: .22em;
+    text-transform: uppercase; color: #8a7d68; }
+  .chrome.tl { top: 18px; left: 22px; }
+  .chrome.tr { top: 14px; right: 22px; display: flex; gap: 10px; }
+  .chrome button { background: none; border: 1px solid #4a4034; color: #b3a58c;
+    font: inherit; letter-spacing: inherit; text-transform: inherit;
+    padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+  .chrome button:hover { border-color: #8a7d68; color: #efe8d8; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01s !important; animation-duration: .01s !important; } }
+</style>
+</head>
+<body>
+  <div class="table"></div>
+  <div class="paper" id="paper"></div>
+  <p class="chrome tl">Proof piece 04 · the cutting table</p>
+  <div class="chrome tr"><button id="skip">Skip</button><button id="replay">Run it again</button></div>
+
+  <div class="stage">
+  <svg class="plan" viewBox="0 0 1200 760" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="pinsh" x="-60%" y="-60%" width="240%" height="240%">
+        <feDropShadow dx="3" dy="5" stdDeviation="2.4" flood-color="#3a2f22" flood-opacity="0.45"/>
+      </filter>
+      <filter id="paperlift" x="-15%" y="-15%" width="130%" height="130%">
+        <feDropShadow dx="1" dy="3" stdDeviation="3" flood-color="#4a3f30" flood-opacity="0.22"/>
+      </filter>
+      <linearGradient id="btn" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3b332a"/><stop offset="1" stop-color="#2a241d"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ===== main piece: front panel, cut on fold ===== -->
+    <path class="fill" id="panelfill" filter="url(#paperlift)" d="
+      M 300 96 C 372 98 412 120 432 154 L 520 132 L 580 258 L 610 596
+      C 610 624 606 632 596 638 L 300 638 Z"/>
+    <path class="seam" d="
+      M 300 118 C 360 120 396 138 414 166 L 500 148 L 558 262 L 588 592
+      C 588 606 584 612 576 616 L 300 616"/>
+    <path class="ink" id="panel" d="
+      M 300 96 C 372 98 412 120 432 154 L 520 132 L 580 258 L 610 596
+      C 610 624 606 632 596 638 L 300 638 Z"/>
+    <path class="cut" id="cutline" d="
+      M 300 96 C 372 98 412 120 432 154 L 520 132 L 580 258 L 610 596
+      C 610 624 606 632 596 638 L 300 638"/>
+
+    <!-- fold line -->
+    <path class="ink thin" id="foldline" d="M 300 96 L 300 638" stroke-dasharray="16 7 3 7"/>
+    <g transform="rotate(-90 286 376)"><text class="lblsm fades" id="foldlbl" x="286" y="376" text-anchor="middle">CUT 1 ON FOLD</text></g>
+
+    <!-- notches -->
+    <path class="ink thin" id="n1" d="M 480 142 l 0 16"/>
+    <path class="ink thin" id="n2" d="M 574 300 l -16 3"/>
+    <path class="ink thin" id="n3" d="M 592 452 l -16 1"/>
+
+    <!-- grain line -->
+    <path class="ink thin" id="grain" d="M 336 296 L 336 500 M 329 308 L 336 294 L 343 308 M 329 488 L 336 502 L 343 488"/>
+    <g transform="rotate(-90 322 398)"><text class="lblsm fades" id="grainlbl" x="322" y="398" text-anchor="middle">GRAIN</text></g>
+
+    <!-- drill holes -->
+    <circle class="ink thin" id="d1" cx="336" cy="556" r="3.4"/>
+    <circle class="ink thin" id="d2" cx="336" cy="596" r="3.4"/>
+
+    <!-- the wordmark, printed on the pattern -->
+    <text class="kas fades" id="kas" x="386" y="330">KAS</text>
+    <text class="thr fades" id="thr" x="390" y="366">THREADZ</text>
+    <text class="lbl fades" id="piecelbl" x="390" y="410">PIECE 01 · FRONT PANEL</text>
+    <text class="lblsm fades" id="piecelbl2" x="390" y="430">KAFTAN · SIZE 40 · SA 1.5CM</text>
+    <text class="serif-i fades" id="serif" x="390" y="484">Art in every stitch.</text>
+
+    <!-- CTA stamped on the panel -->
+    <g class="fades" id="ctag">
+      <rect x="388" y="518" width="212" height="46" rx="1" fill="url(#btn)"/>
+      <text class="cta-t" x="494" y="546" text-anchor="middle">COMMISSION</text>
+    </g>
+
+    <!-- ===== piece 02: pocket flap ===== -->
+    <path class="fill" id="flapfill" filter="url(#paperlift)" d="M 736 128 L 892 128 L 892 250 L 814 292 L 736 250 Z"/>
+    <path class="seam" d="M 750 142 L 878 142 L 878 242 L 814 276 L 750 242 Z"/>
+    <path class="ink" id="flap" d="M 736 128 L 892 128 L 892 250 L 814 292 L 736 250 Z"/>
+    <text class="lblsm fades" id="flaplbl" x="736" y="316">PIECE 02 · POCKET FLAP · CUT 2</text>
+    <text class="lbl red fades" id="flapcode" x="736" y="336">EMB: LD 115F</text>
+    <!-- the design, chalked onto the flap -->
+    <g class="fades" id="flapdesign">
+      <rect x="798" y="140" width="32" height="130" fill="#8a7a5e" opacity=".5"
+        style="-webkit-mask:url('../public/img/designs/ld115f.png') center / contain no-repeat; mask:url('../public/img/designs/ld115f.png') center / contain no-repeat;"/>
+    </g>
+
+    <!-- ===== piece 03: cuff ===== -->
+    <path class="fill" id="cufffill" filter="url(#paperlift)" d="M 736 400 L 1092 400 L 1092 486 L 736 486 Z"/>
+    <path class="seam" d="M 750 414 L 1078 414 L 1078 472 L 750 472 Z"/>
+    <path class="ink" id="cuff" d="M 736 400 L 1092 400 L 1092 486 L 736 486 Z"/>
+    <path class="ink thin" id="cuffgrain" d="M 780 443 L 1050 443 M 792 436 L 778 443 L 792 450 M 1038 436 L 1052 443 L 1038 450"/>
+    <text class="lblsm fades" id="cufflbl" x="736" y="512">PIECE 03 · CUFF · CUT 2 · GRAIN LENGTHWISE</text>
+
+    <!-- ===== nav, written in the margin ===== -->
+    <text class="lblsm fades" id="nav" x="736" y="586">COLLECTION   ·   LIBRARY   ·   THE LOOM   ·   ATELIER</text>
+    <path class="ink thin" id="navrule" d="M 736 600 L 1092 600"/>
+    <text class="lblsm fades" id="stamp" x="1092" y="632" text-anchor="end">DRAFTED · ABUJA · 23.07.26</text>
+
+    <!-- pins -->
+    <g class="pin" id="p1" filter="url(#pinsh)"><circle cx="302" cy="112" r="7" fill="#b8473a"/><circle cx="300" cy="110" r="2.4" fill="#e8c9c2"/></g>
+    <g class="pin" id="p2" filter="url(#pinsh)"><circle cx="596" cy="612" r="7" fill="#b8473a"/><circle cx="594" cy="610" r="2.4" fill="#e8c9c2"/></g>
+    <g class="pin" id="p3" filter="url(#pinsh)"><circle cx="530" cy="146" r="7" fill="#3f6b8a"/><circle cx="528" cy="144" r="2.4" fill="#c6dae6"/></g>
+    <g class="pin" id="p4" filter="url(#pinsh)"><circle cx="878" cy="142" r="7" fill="#3f6b8a"/><circle cx="876" cy="140" r="2.4" fill="#c6dae6"/></g>
+    <g class="pin" id="p5" filter="url(#pinsh)"><circle cx="1074" cy="414" r="7" fill="#b8473a"/><circle cx="1072" cy="412" r="2.4" fill="#e8c9c2"/></g>
+
+    <!-- the tracing wheel -->
+    <g id="wheel">
+      <circle r="11" fill="none" stroke="#a8422f" stroke-width="2"/>
+      <circle r="3" fill="#a8422f"/>
+      <g stroke="#a8422f" stroke-width="1.6">
+        <path d="M 0 -11 v -4"/><path d="M 0 11 v 4"/><path d="M -11 0 h -4"/><path d="M 11 0 h 4"/>
+        <path d="M -7.8 -7.8 l -2.8 -2.8"/><path d="M 7.8 7.8 l 2.8 2.8"/>
+        <path d="M 7.8 -7.8 l 2.8 -2.8"/><path d="M -7.8 7.8 l -2.8 2.8"/>
+      </g>
+    </g>
+  </svg>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  const svg = document.querySelector("svg.plan");
+  const wheel = document.getElementById("wheel");
+  const paper = document.getElementById("paper");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let skipped = false;
+
+  const drawables = [...svg.querySelectorAll(".ink, .cut")];
+  const defs = svg.querySelector("defs");
+  drawables.forEach((p, i) => {
+    const id = "cm" + i;
+    const mask = document.createElementNS(svg.namespaceURI, "mask");
+    mask.setAttribute("id", id);
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("x", "-40"); mask.setAttribute("y", "-40");
+    mask.setAttribute("width", "1280"); mask.setAttribute("height", "840");
+    const rp = document.createElementNS(svg.namespaceURI, p.tagName);
+    for (const a of ["d", "cx", "cy", "r"]) if (p.hasAttribute(a)) rp.setAttribute(a, p.getAttribute(a));
+    rp.setAttribute("fill", "none");
+    rp.setAttribute("stroke", "#fff");
+    rp.setAttribute("stroke-width", parseFloat(getComputedStyle(p).strokeWidth) + 7);
+    rp.setAttribute("stroke-linecap", "round");
+    mask.appendChild(rp);
+    defs.appendChild(mask);
+    p.setAttribute("mask", `url(#${id})`);
+    p.__reveal = rp;
+    p.__len = p.getTotalLength();
+  });
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, skipped ? 0 : ms));
+  const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+
+  function draw(p, dur, onFrame) {
+    return new Promise((res) => {
+      const L = p.__len, rp = p.__reveal;
+      rp.style.strokeDasharray = L;
+      rp.style.strokeDashoffset = L;
+      p.style.opacity = 1;
+      if (skipped || reduced) { rp.style.strokeDashoffset = 0; return res(); }
+      const t0 = performance.now();
+      let done = false;
+      const step = () => {
+        if (done) return;
+        const raw = Math.min(1, (performance.now() - t0) / dur);
+        const e = ease(raw);
+        rp.style.strokeDashoffset = L * (1 - e);
+        if (onFrame) onFrame(p.getPointAtLength(L * e), e);
+        if (raw < 1) requestAnimationFrame(step);
+        else { done = true; clearInterval(tick); res(); }
+      };
+      const tick = setInterval(step, 120);
+      requestAnimationFrame(step);
+    });
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const on = (sel) => document.querySelectorAll(sel).forEach((e) => e.classList.add("on"));
+
+  async function run() {
+    paper.classList.add("on");
+    await sleep(700);
+
+    /* draft the pieces in pencil */
+    await draw($("panel"), 1100);
+    on("#panelfill");
+    await draw($("foldline"), 420);
+    await Promise.all([draw($("n1"), 160), draw($("n2"), 160), draw($("n3"), 160)]);
+    await draw($("grain"), 380);
+    await Promise.all([draw($("d1"), 200), draw($("d2"), 200)]);
+    on(".seam");
+    on("#foldlbl"); on("#grainlbl");
+    await sleep(240);
+
+    await draw($("flap"), 520);
+    on("#flapfill");
+    await draw($("cuff"), 560);
+    on("#cufffill");
+    await draw($("cuffgrain"), 300);
+    await draw($("navrule"), 420);
+    on("#flaplbl"); on("#flapcode"); on("#flapdesign"); on("#cufflbl"); on("#nav"); on("#stamp");
+    await sleep(200);
+
+    /* pin it down */
+    for (const id of ["p1", "p2", "p3", "p4", "p5"]) { $(id).classList.add("on"); await sleep(130); }
+    await sleep(260);
+
+    /* the wordmark is printed on the piece */
+    on("#kas"); await sleep(160);
+    on("#thr"); await sleep(140);
+    on("#piecelbl"); on("#piecelbl2");
+    await sleep(340);
+
+    /* now cut it */
+    wheel.classList.add("on");
+    await draw($("cutline"), 2400, (pt) => wheel.setAttribute("transform", `translate(${pt.x},${pt.y})`));
+    wheel.classList.remove("on");
+    await sleep(200);
+    on("#serif"); await sleep(180);
+    on("#ctag");
+  }
+
+  function finalState() {
+    skipped = true;
+    drawables.forEach((p) => { p.style.opacity = 1; p.__reveal.style.strokeDasharray = "none"; p.__reveal.style.strokeDashoffset = 0; });
+    document.querySelectorAll(".fades, .seam, .fill, .pin").forEach((e) => e.classList.add("on"));
+    paper.classList.add("on");
+    wheel.classList.remove("on");
+  }
+  $("skip").addEventListener("click", finalState);
+  $("replay").addEventListener("click", () => location.reload());
+  if (reduced) finalState(); else run();
+})();
+</script>
+</body>
+</html>

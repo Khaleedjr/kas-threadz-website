@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — brand system round</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Bodoni+Moda:opsz,wght@6..96,600;6..96,700&family=Instrument+Serif&family=Marcellus&family=Syne:wght@600;700;800&family=Libre+Caslon+Display&family=Instrument+Sans:wght@400;500;600&family=Inter:wght@400;500;600&family=Jost:wght@400;500&family=Archivo:wght@400;500;600&family=Karla:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Space+Mono:wght@400;700&family=DM+Mono:wght@400;500&family=Azeret+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0d0f12; color: #e7ecf3; font-family: "Instrument Sans", system-ui, sans-serif; }
+  .top { position: sticky; top: 0; z-index: 30; backdrop-filter: blur(14px);
+    background: rgba(13,15,18,.85); border-bottom: 1px solid rgba(231,236,243,.09);
+    padding: 13px 26px; display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
+  .top h1 { font-size: 12px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; }
+  .top p { font-size: 11.5px; color: #7d8593; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 24px 100px; }
+  .secthead { margin: 44px 0 22px; display: flex; align-items: baseline; gap: 14px; }
+  .secthead .n { font-family: "IBM Plex Mono"; font-size: 11px; letter-spacing: .2em; color: #6d7480; }
+  .secthead h2 { font-size: 15px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
+  .secthead span { font-size: 12px; color: #7d8593; }
+
+  .opt { margin-bottom: 26px; border-radius: 4px; overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,.42); }
+  .opt .bar { display: flex; align-items: baseline; gap: 12px; padding: 11px 18px;
+    background: #14171b; border-bottom: 1px solid rgba(231,236,243,.07); }
+  .opt .bar .k { font-family: "IBM Plex Mono"; font-size: 11px; color: #c9a06b; letter-spacing: .18em; }
+  .opt .bar .nm { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+  .opt .bar .vb { font-size: 11.5px; color: #7d8593; }
+  .opt .bar .sw { margin-left: auto; display: flex; gap: 5px; }
+  .opt .bar .sw i { width: 15px; height: 15px; border-radius: 2px; display: block;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+
+  .duo { display: grid; grid-template-columns: 1.25fr .75fr; }
+  @media (max-width: 820px) { .duo { grid-template-columns: 1fr; } }
+
+  /* cloth half */
+  .cloth { position: relative; padding: 30px 26px 24px; min-height: 236px;
+    display: flex; flex-direction: column; justify-content: center; }
+  .cloth::before { content: ""; position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(64deg, rgba(255,255,255,.016) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(-64deg, rgba(0,0,0,.16) 0 1px, transparent 1px 5px);
+    pointer-events: none; }
+  .cloth svg { display: block; width: 100%; height: auto; position: relative; }
+  .cloth .sub { position: relative; margin-top: 12px; font-size: 10px; letter-spacing: .42em;
+    text-transform: uppercase; text-align: center; }
+
+  /* paper half */
+  .paper { padding: 22px 24px; position: relative; }
+  .paper::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, rgba(64,86,120,.06) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(90deg, rgba(64,86,120,.06) 0 1px, transparent 1px 34px); }
+  .paper .ttl { position: relative; font-family: "IBM Plex Mono"; font-size: 10px;
+    letter-spacing: .22em; margin-bottom: 12px; }
+  .paper .row { position: relative; display: flex; justify-content: space-between;
+    font-size: 11px; padding: 6px 0; border-top: 1px dashed currentColor; opacity: .92; }
+  .paper .row:first-of-type { border-top: none; }
+  .paper .row b { font-family: "IBM Plex Mono"; font-weight: 500; }
+  .paper .cutline { position: relative; height: 2px; margin: 12px 0 10px; border-radius: 2px; }
+  .paper .btn { position: relative; display: inline-block; font-size: 10px; font-weight: 600;
+    letter-spacing: .24em; text-transform: uppercase; padding: 10px 18px; }
+  .paper .pins { position: absolute; right: 16px; top: 14px; display: flex; gap: 6px; }
+  .paper .pins i { width: 9px; height: 9px; border-radius: 50%; display: block;
+    box-shadow: 0 2px 3px rgba(0,0,0,.35); }
+
+  /* type specimen */
+  .spec { padding: 22px 26px 26px; background: #14171b; border-top: 1px solid rgba(231,236,243,.07); }
+  .spec .big { font-size: 27px; line-height: 1.16; color: #e7ecf3; margin-bottom: 10px; }
+  .spec .bod { font-size: 13px; line-height: 1.7; color: #98a0ad; max-width: 62ch; }
+  .spec .cds { margin-top: 12px; font-size: 11px; letter-spacing: .2em; color: #c9a06b; }
+  .spec .names { margin-top: 14px; font-size: 10.5px; letter-spacing: .16em; color: #6d7480;
+    text-transform: uppercase; font-family: "IBM Plex Mono"; }
+  .foot { text-align: center; font-size: 13.5px; color: #7d8593; line-height: 1.9; margin-top: 46px; }
+  .foot code { font-family: "IBM Plex Mono"; background: rgba(231,236,243,.09); padding: 2px 7px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div><h1>KAS THREADZ · brand system round</h1>
+  <p>Palette as a materials list · typography on the stitched mark · pick one from each</p></div>
+</div>
+<div class="wrap">
+
+  <div class="secthead"><span class="n">ROUND A</span><h2>Materials</h2>
+    <span>cloth · thread · paper · cut · pin — every colour has a job</span></div>
+  <div id="materials"></div>
+
+  <div class="secthead"><span class="n">ROUND B</span><h2>Typography</h2>
+    <span>shown satin-stitched, because that is where the face lives or dies</span></div>
+  <div id="typography"></div>
+
+  <p class="foot">Pick one from each round: <code>A3 + B2</code>.<br/>
+  Or say what's wrong with the closest one and I'll run that round again.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+
+  /* ---------- ROUND A · materials ---------- */
+  const MATERIALS = [
+    { k: "A1", nm: "Graphite & Steel", vb: "cold charcoal cloth · steel thread · blueprint paper",
+      cloth: "#1b1e23", cloth2: "#101215", t1: "#f2f5f9", t2: "#a8b2c0",
+      paper: "#e6eaef", ink: "#2c3440", cut: "#a8422f", pin: "#3f6b8a" },
+    { k: "A2", nm: "Ink & Bone", vb: "blue-black cloth · bone thread · warm white paper",
+      cloth: "#14181f", cloth2: "#0b0e13", t1: "#f4efe3", t2: "#cbc2ad",
+      paper: "#f2eee5", ink: "#232a33", cut: "#9d3b2c", pin: "#3a6079" },
+    { k: "A3", nm: "Indigo & Brass", vb: "Kano indigo cloth · brass thread · kraft paper",
+      cloth: "#161d2e", cloth2: "#0d1220", t1: "#e8c88a", t2: "#b98f4e",
+      paper: "#e5dcc6", ink: "#2a2b26", cut: "#9d3b2c", pin: "#2f5773" },
+    { k: "A4", nm: "Oxblood & Chalk", vb: "the burgundy, as cloth · chalk thread · bone paper",
+      cloth: "#2b1216", cloth2: "#170a0d", t1: "#f2ece2", t2: "#c6b8a6",
+      paper: "#efe9de", ink: "#2b2320", cut: "#8f3324", pin: "#3a6079" },
+    { k: "A5", nm: "Forest & Copper", vb: "deep green cloth · copper thread · stone paper",
+      cloth: "#121d19", cloth2: "#0a110f", t1: "#e2a077", t2: "#b06b45",
+      paper: "#e4e3dc", ink: "#232a26", cut: "#9d3b2c", pin: "#33607a" },
+    { k: "A6", nm: "Jet & Gold", vb: "true black cloth · gold thread · bright white paper",
+      cloth: "#121212", cloth2: "#070707", t1: "#f0d79c", t2: "#c9a05c",
+      paper: "#f7f5f1", ink: "#1c1c1c", cut: "#a8422f", pin: "#3f6b8a" },
+  ];
+
+  /* ---------- ROUND B · typography ---------- */
+  const TYPE = [
+    { k: "B1", nm: "Playfair · Instrument · Plex", vb: "classic fashion house",
+      disp: "Playfair Display", dw: 700, sans: "Instrument Sans", mono: "IBM Plex Mono" },
+    { k: "B2", nm: "Bodoni Moda · Inter · Space", vb: "high-fashion contrast, editorial teeth",
+      disp: "Bodoni Moda", dw: 700, sans: "Inter", mono: "Space Mono" },
+    { k: "B3", nm: "Instrument Serif · Instrument · Plex", vb: "contemporary, quiet, modern",
+      disp: "Instrument Serif", dw: 400, sans: "Instrument Sans", mono: "IBM Plex Mono" },
+    { k: "B4", nm: "Marcellus · Jost · DM Mono", vb: "inscriptional, ceremonial, Roman",
+      disp: "Marcellus", dw: 400, sans: "Jost", mono: "DM Mono" },
+    { k: "B5", nm: "Syne · Archivo · Azeret", vb: "graphic and unexpected — the risk option",
+      disp: "Syne", dw: 800, sans: "Archivo", mono: "Azeret Mono" },
+    { k: "B6", nm: "Libre Caslon · Karla · JetBrains", vb: "literary, archival, bookish",
+      disp: "Libre Caslon Display", dw: 400, sans: "Karla", mono: "JetBrains Mono" },
+  ];
+
+  /* build a satin-stitched wordmark into a fresh <svg> */
+  function stitchedMark(font, weight, t1, t2, size) {
+    const W = 700, H = 190;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const uid = "u" + Math.abs(Math.random() * 1e9 | 0);
+    const defs = document.createElementNS(NS, "defs");
+    defs.innerHTML =
+      `<linearGradient id="g${uid}" x1="0" y1="20" x2="0" y2="150" gradientUnits="userSpaceOnUse">
+         <stop offset="0" stop-color="${t1}"/><stop offset="0.46" stop-color="${t2}"/>
+         <stop offset="0.78" stop-color="${t1}"/><stop offset="1" stop-color="${t2}"/>
+       </linearGradient>
+       <filter id="s${uid}" x="-25%" y="-25%" width="150%" height="150%">
+         <feDropShadow dx="0" dy="1" stdDeviation="0.7" flood-color="#000" flood-opacity="0.55"/>
+       </filter>
+       <clipPath id="c${uid}"><text x="${W / 2}" y="128" text-anchor="middle"
+         font-family="${font}" font-weight="${weight}" font-size="${size}" letter-spacing="4">KAS</text></clipPath>`;
+    svg.appendChild(defs);
+
+    const ghost = document.createElementNS(NS, "text");
+    ghost.setAttribute("x", W / 2); ghost.setAttribute("y", 128);
+    ghost.setAttribute("text-anchor", "middle");
+    ghost.setAttribute("font-family", font);
+    ghost.setAttribute("font-weight", weight);
+    ghost.setAttribute("font-size", size);
+    ghost.setAttribute("letter-spacing", 4);
+    ghost.setAttribute("fill", "none");
+    ghost.setAttribute("stroke", t2);
+    ghost.setAttribute("stroke-width", ".9");
+    ghost.setAttribute("stroke-dasharray", "2.6 2.6");
+    ghost.setAttribute("opacity", ".5");
+    ghost.textContent = "KAS";
+    svg.appendChild(ghost);
+
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("clip-path", `url(#c${uid})`);
+    g.setAttribute("filter", `url(#s${uid})`);
+    let seed = 11;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff - 0.5);
+    const a = (7 * Math.PI) / 180;
+    for (let y = 18; y <= 146; y += 4.3) {
+      const cx = W / 2 + rnd() * 1.2, yy = y + rnd() * 0.6, dx = W / 2;
+      const ox = Math.cos(a) * dx, oy = Math.sin(a) * dx;
+      const ln = document.createElementNS(NS, "line");
+      ln.setAttribute("x1", cx - ox); ln.setAttribute("y1", yy - oy);
+      ln.setAttribute("x2", cx + ox); ln.setAttribute("y2", yy + oy);
+      ln.setAttribute("stroke", `url(#g${uid})`);
+      ln.setAttribute("stroke-width", "3.5");
+      ln.setAttribute("stroke-linecap", "round");
+      g.appendChild(ln);
+    }
+    svg.appendChild(g);
+    return svg;
+  }
+
+  function paperCard(m, mono) {
+    const d = document.createElement("div");
+    d.className = "paper";
+    d.style.background = m.paper;
+    d.style.color = m.ink;
+    d.innerHTML =
+      `<div class="pins"><i style="background:${m.cut}"></i><i style="background:${m.pin}"></i></div>
+       <p class="ttl" style="font-family:'${mono}'">PIECE 01 · FRONT PANEL · CUT 1 ON FOLD</p>
+       <div class="row"><span>Fabric</span><b style="font-family:'${mono}'">SEVEN STAR</b></div>
+       <div class="row"><span>Embroidery</span><b style="font-family:'${mono}'">LD 115</b></div>
+       <div class="row"><span>Chest / Length</span><b style="font-family:'${mono}'">40" / 44"</b></div>
+       <div class="row"><span>Estimate</span><b style="font-family:'${mono}'">₦53,000</b></div>
+       <div class="cutline" style="background:${m.cut}"></div>
+       <span class="btn" style="background:${m.ink}; color:${m.paper}">Commission</span>`;
+    return d;
+  }
+
+  const matWrap = document.getElementById("materials");
+  MATERIALS.forEach((m) => {
+    const opt = document.createElement("div");
+    opt.className = "opt";
+    opt.innerHTML =
+      `<div class="bar"><span class="k">${m.k}</span><span class="nm">${m.nm}</span>
+        <span class="vb">${m.vb}</span>
+        <span class="sw"><i style="background:${m.cloth}"></i><i style="background:${m.t1}"></i>
+        <i style="background:${m.paper}"></i><i style="background:${m.cut}"></i><i style="background:${m.pin}"></i></span></div>`;
+    const duo = document.createElement("div");
+    duo.className = "duo";
+    const cloth = document.createElement("div");
+    cloth.className = "cloth";
+    cloth.style.background = `radial-gradient(115% 90% at 50% 26%, ${m.cloth}, ${m.cloth2} 72%)`;
+    cloth.appendChild(stitchedMark("Playfair Display", 700, m.t1, m.t2, 128));
+    const sub = document.createElement("p");
+    sub.className = "sub"; sub.style.color = m.t2; sub.textContent = "T H R E A D Z";
+    cloth.appendChild(sub);
+    duo.appendChild(cloth);
+    duo.appendChild(paperCard(m, "IBM Plex Mono"));
+    opt.appendChild(duo);
+    matWrap.appendChild(opt);
+  });
+
+  const typWrap = document.getElementById("typography");
+  const base = MATERIALS[1]; /* neutral ink & bone, so the face is what changes */
+  TYPE.forEach((t) => {
+    const opt = document.createElement("div");
+    opt.className = "opt";
+    opt.innerHTML =
+      `<div class="bar"><span class="k">${t.k}</span><span class="nm">${t.nm}</span>
+        <span class="vb">${t.vb}</span></div>`;
+    const cloth = document.createElement("div");
+    cloth.className = "cloth";
+    cloth.style.background = `radial-gradient(115% 90% at 50% 26%, ${base.cloth}, ${base.cloth2} 72%)`;
+    cloth.appendChild(stitchedMark(t.disp, t.dw, base.t1, base.t2, t.disp === "Syne" ? 116 : 128));
+    const sub = document.createElement("p");
+    sub.className = "sub"; sub.style.color = base.t2;
+    sub.style.fontFamily = `'${t.sans}'`; sub.textContent = "T H R E A D Z";
+    cloth.appendChild(sub);
+    opt.appendChild(cloth);
+
+    const spec = document.createElement("div");
+    spec.className = "spec";
+    spec.innerHTML =
+      `<p class="big" style="font-family:'${t.disp}'; font-weight:${t.dw}">Every code on this site is a real machine file.</p>
+       <p class="bod" style="font-family:'${t.sans}'">A luxury embroidery and bespoke tailoring house in Abuja. When you choose design LD 115, the needle runs the file named LD 115. Kaftan, agbada, jallabiya and senator wear, cut to your measurements and finished by hand.</p>
+       <p class="cds" style="font-family:'${t.mono}'">LD 51 · LD 115 · AF 63 · AGD 26 · ₦53,000 · 40" CHEST</p>
+       <p class="names">${t.disp} / ${t.sans} / ${t.mono}</p>`;
+    opt.appendChild(spec);
+    typWrap.appendChild(opt);
+  });
+})();
+</script>
+</body>
+</html>

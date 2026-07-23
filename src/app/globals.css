@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* ============================================================
+   KAS THREADZ · design tokens
+   System: paper & cloth. Light paper is where you plan (specs,
+   the Loom, measurements, tracking). Dark cloth is where you
+   browse and commit. One line bridges them: gold-bone thread on
+   cloth, graphite draft and red cut line on paper.
+   Palette: Ink & Bone. Type: Syne / Jost / JetBrains Mono.
+   ============================================================ */
+
+@theme {
+  /* --- cloth register --- */
+  --color-cloth: #14181f;
+  --color-cloth-deep: #0b0e13;
+  --color-cloth-raised: #1b212b;
+  --color-thread: #f4efe3;
+  --color-thread-dim: #cbc2ad;
+  --color-thread-bright: #fffdf7;
+
+  /* --- paper register --- */
+  --color-paper: #f2eee5;
+  --color-paper-shade: #e7e1d3;
+  --color-ink: #232a33;
+  --color-ink-soft: #5d6673;
+
+  /* --- the tailor's marks --- */
+  --color-cut: #9d3b2c;
+  --color-pin: #3a6079;
+
+  --font-display: var(--font-syne), system-ui, sans-serif;
+  --font-sans: var(--font-jost), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+
+  --ease-thread: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Semantic surface variables. A page sets one of these two on a
+   wrapper and every child reads the right ground, ink and accent. */
+:root,
+[data-register="paper"] {
+  --surface: var(--color-paper);
+  --surface-raised: #ffffff;
+  --on-surface: var(--color-ink);
+  --on-surface-soft: var(--color-ink-soft);
+  --line: rgba(35, 42, 51, 0.16);
+  --line-dashed: rgba(35, 42, 51, 0.28);
+  --accent: var(--color-cut);
+  --action: var(--color-ink);
+  --on-action: var(--color-paper);
+}
+
+[data-register="cloth"] {
+  --surface: var(--color-cloth);
+  --surface-raised: var(--color-cloth-raised);
+  --on-surface: var(--color-thread);
+  --on-surface-soft: #a9b2be;
+  --line: rgba(244, 239, 227, 0.1);
+  --line-dashed: rgba(244, 239, 227, 0.22);
+  --accent: var(--color-thread-dim);
+  --action: var(--color-thread);
+  --on-action: var(--color-cloth-deep);
+}
+
+@layer base {
+  body {
+    background: var(--color-cloth-deep);
+    color: var(--color-thread);
+    font-family: var(--font-sans);
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+  }
+
+  /* Machine codes are data, never prose. Always mono. */
+  code, kbd, samp, .code {
+    font-family: var(--font-mono);
+    letter-spacing: 0.14em;
+  }
+
+  /* ---- chrome the browser would otherwise supply in its own taste ---- */
+
+  /* A scrollbar is a thread running down the edge. Thin, unpainted track,
+     and it takes the colour of whichever register it is scrolling. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--on-surface) 26%, transparent) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--on-surface) 24%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--accent) 70%, transparent);
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  /* the little stepper arrows are OS chrome; a thread has no buttons */
+  *::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 34%, transparent);
+    color: var(--on-surface);
+  }
+
+  /* keyboard focus reads as a tacked stitch, not a browser default ring */
+  :focus-visible {
+    outline: 2px dashed var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* form fields belong to the paper register, so they draw like fields on a
+     drafting sheet rather than like OS widgets */
+  input,
+  select,
+  textarea {
+    background: transparent;
+    color: var(--on-surface);
+    border: 1px solid var(--line-dashed);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    accent-color: var(--accent);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: color-mix(in oklab, var(--on-surface) 40%, transparent);
+  }
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent);
+  }
+  /* the spinner arrows are OS chrome and nothing to do with this house */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  /* The cloth: a woven ground, not a flat fill.
+     The lift must stay translucent. An opaque gradient on top buries the
+     weave and the surface goes dead flat. */
+  /* Every layer lives on the element itself. An overlay pseudo-element would
+     need its children positioned to sit above it, and that quietly breaks any
+     `position: fixed` descendant, the nav included. */
+  .ground-cloth {
+    background:
+      radial-gradient(118% 92% at 50% 14%, rgba(58, 70, 92, 0.34), rgba(11, 14, 19, 0) 62%),
+      repeating-linear-gradient(64deg, rgba(244, 239, 227, 0.018) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(-64deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 5px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, #171c24, #12161d 58%, var(--color-cloth-deep));
+    background-blend-mode: normal, normal, normal, overlay, normal;
+    background-attachment: fixed, fixed, fixed, fixed, fixed;
+  }
+
+  /* the paper: pattern stock with its drafting grid */
+  .ground-paper {
+    background:
+      repeating-linear-gradient(0deg, rgba(58, 96, 121, 0.055) 0 1px, transparent 1px 38px),
+      repeating-linear-gradient(90deg, rgba(58, 96, 121, 0.055) 0 1px, transparent 1px 38px),
+      var(--color-paper);
+  }
+
+  /* A first-time visitor should not see the finished mark before it is sewn.
+     The inline script in the layout adds this class before first paint, and
+     the component removes it once it has taken over. Without JavaScript the
+     class is never added, so the mark is simply there. */
+  .kas-sew-pending .kas-mark-paths {
+    opacity: 0;
+  }
+
+  /* the mark follows the register it is sitting on */
+  .logo-paper,
+  [data-register="cloth"] .logo-paper {
+    display: none;
+  }
+  [data-register="cloth"] .logo-cloth {
+    display: block;
+  }
+  [data-register="paper"] .logo-cloth {
+    display: none;
+  }
+  [data-register="paper"] .logo-paper {
+    display: block;
+  }
+
+  /* the scroll nudge: thread paying out, then drawing back */
+  .kas-cue {
+    transform-origin: top;
+    animation: kas-pay-out 2.4s var(--ease-thread) infinite;
+  }
+
+  @keyframes kas-pay-out {
+    0%,
+    100% {
+      transform: scaleY(0.25);
+      opacity: 0.35;
+    }
+    45% {
+      transform: scaleY(1);
+      opacity: 0.9;
+    }
+  }
+
+  /* micro-labels only, never body text */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  /* Money is never incidental. Mono, weighted, at full contrast and with
+     figures that line up in a column. */
+  .price {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    color: var(--on-surface);
+  }
+
+  /* A chip that has to stay readable over photography it cannot control. */
+  .chip-over-photo {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-thread);
+    background: rgba(8, 11, 15, 0.62);
+    border: 1px solid rgba(244, 239, 227, 0.34);
+    backdrop-filter: blur(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — night shift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #07060a; overflow: hidden; cursor: none;
+    font-family: "Instrument Sans", system-ui, sans-serif;
+    --mx: 50vw; --my: 45vh; --r: 185px;
+  }
+
+  .room { position: fixed; inset: 0; }
+  /* the piece, unlit */
+  .layer { position: absolute; inset: 0; display: grid; place-items: center; }
+  .layer img { height: 92vh; width: auto; object-fit: contain; display: block; }
+
+  .dark img { filter: brightness(.085) saturate(.22) contrast(.85); }
+  .dark::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(70% 60% at 50% 42%, rgba(90,80,110,.05), transparent 70%);
+  }
+
+  /* the lit layer, revealed only under the lamp */
+  .lit {
+    -webkit-mask-image: radial-gradient(circle var(--r) at var(--mx) var(--my),
+      #000 0%, #000 42%, rgba(0,0,0,.55) 66%, transparent 88%);
+    mask-image: radial-gradient(circle var(--r) at var(--mx) var(--my),
+      #000 0%, #000 42%, rgba(0,0,0,.55) 66%, transparent 88%);
+  }
+  .lit img { filter: brightness(1.06) saturate(1.04) contrast(1.03); }
+
+  /* warm spill from the lamp */
+  .spill {
+    position: fixed; inset: 0; pointer-events: none; mix-blend-mode: soft-light;
+    background: radial-gradient(circle calc(var(--r) * 1.15) at var(--mx) var(--my),
+      rgba(255,226,178,.62), rgba(255,226,178,.14) 55%, transparent 78%);
+  }
+  .grain { position: fixed; inset: 0; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E"); }
+
+  /* the lamp itself */
+  .bulb { position: fixed; left: var(--mx); top: var(--my); width: 15px; height: 15px;
+    margin: -7.5px 0 0 -7.5px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, #fff3dc, #f0c98a 55%, rgba(240,201,138,0) 72%);
+    box-shadow: 0 0 26px 8px rgba(255,214,150,.32); }
+
+  /* annotations — only readable inside the light */
+  /* one full-viewport masked layer, so the gradient's coordinates are viewport coordinates */
+  .annolayer {
+    position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    -webkit-mask-image: radial-gradient(circle var(--r) at var(--mx) var(--my), #000 0%, #000 40%, transparent 78%);
+    mask-image: radial-gradient(circle var(--r) at var(--mx) var(--my), #000 0%, #000 40%, transparent 78%);
+  }
+  .anno {
+    position: absolute; font-family: "IBM Plex Mono";
+    font-size: 10.5px; letter-spacing: .18em; color: #f7e6c6; white-space: nowrap;
+    text-shadow: 0 1px 6px rgba(0,0,0,.9);
+  }
+  .anno .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: #f0dcb8; margin-right: 9px; vertical-align: middle; }
+
+  /* always-on chrome */
+  .mark { position: fixed; left: 42px; top: 36px; z-index: 6; }
+  .mark .k { font-family: "Fraunces"; font-size: 30px; font-weight: 500; color: #6f6659; letter-spacing: .04em; }
+  .mark .t { font-size: 9.5px; letter-spacing: .5em; color: #4e483f; margin-top: 3px; }
+  .nav { position: fixed; right: 42px; top: 44px; z-index: 6; display: flex; gap: 26px;
+    font-size: 9.5px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; color: #574f45; }
+  .foot { position: fixed; left: 0; right: 0; bottom: 34px; z-index: 6; text-align: center; }
+  .foot .ln { font-family: "Fraunces"; font-style: italic; font-size: 18px; color: #6b6154; }
+  .foot .cta { margin-top: 14px; display: inline-block; border: 1px solid #4a4239; color: #a89a86;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .28em; text-transform: uppercase;
+    padding: 13px 26px; cursor: none; transition: border-color .4s, color .4s; }
+  .foot .cta:hover { border-color: #f0dcb8; color: #f5e8cf; }
+  .hint { position: fixed; left: 0; right: 0; bottom: 132px; text-align: center; z-index: 6;
+    font-size: 10px; letter-spacing: .34em; text-transform: uppercase; color: #4e463c;
+    transition: opacity 1s ease; }
+  .hint.gone { opacity: 0; }
+  .chrome { position: fixed; z-index: 20; top: 18px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #4a433a; }
+</style>
+</head>
+<body>
+  <div class="room">
+    <div class="layer dark"><img src="../public/img/work/jallab-maroon.jpg" alt=""/></div>
+    <div class="layer lit"><img src="../public/img/work/jallab-maroon.jpg" alt=""/></div>
+  </div>
+  <div class="spill"></div>
+  <div class="grain"></div>
+
+  <p class="chrome">Proof piece 05 · night shift</p>
+
+  <div class="annolayer">
+    <div class="anno" id="a1"><span class="dot"></span>AF 63 · NECKLINE RUN · CREAM 40WT</div>
+    <div class="anno" id="a2"><span class="dot"></span>GOLD CORD TASSEL · HAND-TIED</div>
+    <div class="anno" id="a3"><span class="dot"></span>CUFF RUN · MATCHED PAIR</div>
+    <div class="anno" id="a4"><span class="dot"></span>SEVEN STAR · SOLID WOOL · WINE</div>
+  </div>
+
+  <div class="mark"><div class="k">KAS</div><div class="t">THREADZ</div></div>
+  <nav class="nav"><span>Collection</span><span>Library</span><span>The Loom</span><span>Atelier</span></nav>
+  <p class="hint" id="hint">Move your light across the piece</p>
+  <div class="foot">
+    <div class="ln">Maroon Tassel Jallab · from ₦51,000</div>
+    <div><span class="cta">Commission a piece</span></div>
+  </div>
+  <div class="bulb"></div>
+
+<script>
+(function () {
+  "use strict";
+  const b = document.body;
+  const hint = document.getElementById("hint");
+  let moved = false;
+  /* annotation anchors, as fractions of the viewport */
+  const anchors = [
+    ["a1", 0.545, 0.30],
+    ["a2", 0.545, 0.585],
+    ["a3", 0.30, 0.66],
+    ["a4", 0.30, 0.44],
+  ];
+  function place() {
+    anchors.forEach(([id, fx, fy]) => {
+      const el = document.getElementById(id);
+      el.style.left = fx * innerWidth + "px";
+      el.style.top = fy * innerHeight + "px";
+    });
+  }
+  place();
+  addEventListener("resize", place);
+
+  let tx = innerWidth / 2, ty = innerHeight * 0.45;
+  let cx = tx, cy = ty;
+  addEventListener("pointermove", (e) => {
+    tx = e.clientX; ty = e.clientY;
+    if (!moved) { moved = true; hint.classList.add("gone"); }
+  });
+  /* slight lag: the lamp is heavy */
+  (function loop() {
+    cx += (tx - cx) * 0.16;
+    cy += (ty - cy) * 0.16;
+    b.style.setProperty("--mx", cx + "px");
+    b.style.setProperty("--my", cy + "px");
+    requestAnimationFrame(loop);
+  })();
+
+  /* the lamp swells slightly when you hold still */
+  let idle = null, big = false;
+  addEventListener("pointermove", () => {
+    if (big) { b.style.setProperty("--r", "185px"); big = false; }
+    clearTimeout(idle);
+    idle = setTimeout(() => { b.style.setProperty("--r", "245px"); big = true; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

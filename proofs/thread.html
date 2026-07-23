@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — one continuous thread</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #0b0908; font-family: "Instrument Sans", system-ui, sans-serif; overflow-x: hidden; }
+  .clothbg {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(120% 70% at 50% 20%, rgba(46,38,32,.5), rgba(12,10,9,0) 65%),
+      repeating-linear-gradient(63deg, rgba(236,229,218,.015) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(-63deg, rgba(0,0,0,.14) 0 1px, transparent 1px 5px),
+      #100d0b;
+  }
+  .clothbg::after {
+    content: ""; position: absolute; inset: 0; opacity: .05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  .chrome { position: fixed; z-index: 20; font-size: 10px; letter-spacing: .22em;
+    text-transform: uppercase; color: #6e675e; }
+  .chrome.tl { top: 20px; left: 24px; }
+  .paid { position: fixed; z-index: 20; right: 24px; top: 18px; font-family: "IBM Plex Mono";
+    font-size: 10.5px; letter-spacing: .18em; color: #8a8073; text-align: right; }
+  .paid b { color: #e6cfa6; font-weight: 500; }
+
+  .stage {
+    position: relative; z-index: 2;
+    width: min(1200px, 100vw);
+    aspect-ratio: 1200 / 3400;
+    margin: 0 auto;
+    container-type: inline-size;
+  }
+  svg.thread { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  #line { fill: none; stroke: url(#tg); stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
+  #needle { opacity: 0; transition: opacity .3s; }
+  #needle.on { opacity: 1; }
+
+  .blk { position: absolute; opacity: 0; transform: translateY(14px);
+    transition: opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1); }
+  .blk.on { opacity: 1; transform: none; }
+
+  .kas { font-family: "Fraunces"; font-weight: 500; font-size: 9.4cqw; line-height: .9;
+    letter-spacing: .02em; color: #ece5da; }
+  .thr { font-size: 2.1cqw; font-weight: 500; letter-spacing: .5em; color: #b6ab9c; margin-top: .8cqw; }
+  .eyebrow { font-size: 1.02cqw; font-weight: 600; letter-spacing: .38em; color: #a89a86; text-transform: uppercase; }
+  .h2 { font-family: "Fraunces"; font-weight: 500; font-size: 3.4cqw; line-height: 1.14; color: #ece5da; }
+  .body { font-size: 1.28cqw; line-height: 1.75; color: #9a9084; max-width: 34cqw; }
+  .mono { font-family: "IBM Plex Mono"; font-size: 1cqw; letter-spacing: .2em; color: #6e675e; }
+  .serif-i { font-family: "Fraunces"; font-style: italic; font-size: 2.3cqw; color: #cbb891; }
+
+  .card { position: absolute; width: 23.3cqw; }
+  .card .ph { width: 100%; aspect-ratio: 3/4; overflow: hidden; background: #171310; }
+  .card .ph img { width: 100%; height: 100%; object-fit: cover; object-position: top center;
+    filter: saturate(.92) brightness(.94); }
+  .card .nm { font-family: "Fraunces"; font-size: 1.7cqw; color: #ece5da; margin-top: 1cqw; }
+  .card .cd { font-family: "IBM Plex Mono"; font-size: .92cqw; letter-spacing: .18em; color: #c9a06b; margin-top: .3cqw; }
+  .card .pr { font-size: 1.05cqw; color: #8a8073; margin-top: .2cqw; }
+
+  .step { position: absolute; }
+  .step .n { font-family: "IBM Plex Mono"; font-size: .95cqw; letter-spacing: .24em; color: #c9a06b; }
+  .step .t { font-family: "Fraunces"; font-size: 2.1cqw; color: #ece5da; margin-top: .3cqw; }
+  .step .d { font-size: 1.1cqw; color: #8a8073; margin-top: .2cqw; }
+
+  .ctaLabel { position: absolute; font-size: 1.15cqw; font-weight: 600; letter-spacing: .3em;
+    color: #ece5da; text-transform: uppercase; }
+  @media (prefers-reduced-motion: reduce) { .blk { transition: none; } }
+</style>
+</head>
+<body>
+<div class="clothbg"></div>
+<p class="chrome tl">Proof piece 03 · one continuous thread</p>
+<p class="paid">THREAD PAID OUT<br/><b id="pct">0.0 M</b></p>
+
+<div class="stage" id="stage">
+  <svg class="thread" viewBox="0 0 1200 3400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
+    <defs>
+      <linearGradient id="tg" x1="0" y1="0" x2="0" y2="3400" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#d9b982"/><stop offset="0.3" stop-color="#eed3a4"/>
+        <stop offset="0.7" stop-color="#c9a06b"/><stop offset="1" stop-color="#e6cfa6"/>
+      </linearGradient>
+      <filter id="ts" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1.2" stdDeviation="0.8" flood-color="#000" flood-opacity="0.6"/>
+      </filter>
+      <filter id="gl" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="3"/></filter>
+    </defs>
+
+    <path id="line" filter="url(#ts)" d="
+      M 150 -40
+      L 150 250
+      C 150 345 232 398 342 398
+      L 858 398
+      C 968 398 1050 452 1050 545
+      L 1050 762
+      C 1050 855 980 892 882 892
+      L 300 892
+      C 192 892 140 950 140 1048
+      L 140 1418
+      C 140 1520 202 1562 302 1562
+      L 428 1562
+      C 452 1562 464 1602 488 1602 C 512 1602 524 1562 548 1562
+      L 778 1562
+      C 802 1562 814 1602 838 1602 C 862 1602 874 1562 898 1562
+      L 1002 1562
+      C 1092 1562 1142 1622 1142 1712
+      L 1142 2078
+      C 1142 2178 1082 2222 982 2222
+      L 300 2222
+      C 200 2222 150 2282 150 2382
+      L 150 2902
+      C 150 2996 212 3034 312 3034
+      L 460 3034
+      L 760 3034
+      L 760 3096
+      L 460 3096
+      L 460 3040
+      C 446 3022 430 3030 434 3044
+      C 438 3058 456 3050 449 3036
+    "/>
+
+    <g id="needle">
+      <circle r="9" fill="none" stroke="#f0d3a2" stroke-width="1.4" opacity="0.3" filter="url(#gl)"/>
+      <line x1="4" y1="-26" x2="1" y2="-7" stroke="#d7d9da" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="3.4" cy="-21" r="1.5" fill="none" stroke="#d7d9da" stroke-width="1"/>
+      <circle r="3.2" fill="#f4e2c0"/>
+    </g>
+  </svg>
+
+  <!-- ZONE 1 · hero -->
+  <div class="blk" data-y="300" style="left:28.5%; top:5.2%; text-align:center; width:43%">
+    <div class="kas">KAS</div>
+    <div class="thr">THREADZ</div>
+  </div>
+  <div class="blk" data-y="430" style="left:28.5%; top:13.4%; width:43%; text-align:center">
+    <p class="mono">BESPOKE EMBROIDERY · ABUJA · EST. 2019</p>
+  </div>
+
+  <!-- ZONE 2 · the house -->
+  <div class="blk" data-y="1060" style="left:14.5%; top:30.6%; width:44%">
+    <p class="eyebrow">The House</p>
+    <h2 class="h2" style="margin:.9cqw 0 1.1cqw">One thread runs<br/>through everything.</h2>
+    <p class="body">A single needle draws every line on this page, the same way a single spool draws every line on the cloth. Nothing here is cut and restarted. Scroll and you are paying out thread.</p>
+  </div>
+  <div class="blk" data-y="1200" style="left:63%; top:33.5%; width:24%">
+    <p class="mono" style="line-height:2.2">SPOOL Nº 04<br/>GOLD · 40 WT<br/>RUNNING STITCH<br/>PITCH 13.0</p>
+  </div>
+
+  <!-- ZONE 3 · collection -->
+  <div class="blk card" data-y="1600" style="left:12.5%; top:47.3%">
+    <div class="ph"><img src="../public/img/work/kaftan-black.jpg" alt=""/></div>
+    <div class="nm">Onyx &amp; Gold</div><div class="cd">LD 184</div><div class="pr">from ₦53,000</div>
+  </div>
+  <div class="blk card" data-y="1640" style="left:38.3%; top:47.3%">
+    <div class="ph"><img src="../public/img/work/jallab-maroon.jpg" alt=""/></div>
+    <div class="nm">Maroon Tassel</div><div class="cd">AF 63</div><div class="pr">from ₦51,000</div>
+  </div>
+  <div class="blk card" data-y="1680" style="left:64.2%; top:47.3%">
+    <div class="ph"><img src="../public/img/work/agbada-maroon.jpg" alt=""/></div>
+    <div class="nm">The Trader</div><div class="cd">AGD 26</div><div class="pr">from ₦120,000</div>
+  </div>
+
+  <!-- ZONE 4 · the loom -->
+  <div class="blk" data-y="2400" style="left:14.5%; top:70.3%; width:40%">
+    <p class="eyebrow">The Loom</p>
+    <h2 class="h2" style="margin:.9cqw 0">Build it before we cut it.</h2>
+  </div>
+  <div class="blk step" data-y="2520" style="left:14.5%; top:73.8%">
+    <div class="n">STEP 01</div><div class="t">Fabric</div><div class="d">Five house materials, or bring your own cloth.</div>
+  </div>
+  <div class="blk step" data-y="2660" style="left:14.5%; top:78%">
+    <div class="n">STEP 02</div><div class="t">Colour</div><div class="d">Any colour on any weave.</div>
+  </div>
+  <div class="blk step" data-y="2800" style="left:14.5%; top:82.1%">
+    <div class="n">STEP 03</div><div class="t">Embroidery</div><div class="d">55 machine files. The needle previews your pick.</div>
+  </div>
+
+  <!-- ZONE 5 · cta -->
+  <div class="blk" data-y="3010" style="left:28.5%; top:87.6%; width:43%; text-align:center">
+    <p class="serif-i">Art in every stitch.</p>
+  </div>
+  <div class="blk ctaLabel" data-y="3060" style="left:38.3%; top:89.75%; width:25%; text-align:center">
+    Commission a piece
+  </div>
+  <div class="blk" data-y="3180" style="left:28.5%; top:93.5%; width:43%; text-align:center">
+    <p class="mono">TIED OFF · LD 51 · LD 115 · AF 63 · AGD 26 · 55 FILES</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const line = document.getElementById("line");
+  const needle = document.getElementById("needle");
+  const pct = document.getElementById("pct");
+  const blocks = [...document.querySelectorAll(".blk")];
+  const L = line.getTotalLength();
+  line.style.strokeDasharray = L;
+  line.style.strokeDashoffset = L;
+
+  /* map: how far along the path corresponds to a given svg-y */
+  const SAMPLES = 400;
+  const table = [];
+  for (let i = 0; i <= SAMPLES; i++) {
+    const p = line.getPointAtLength((L * i) / SAMPLES);
+    table.push({ len: (L * i) / SAMPLES, y: p.y });
+  }
+  function lenAtY(y) {
+    for (let i = 0; i < table.length; i++) if (table[i].y >= y) return table[i].len;
+    return L;
+  }
+
+  let raf = null;
+  function update() {
+    raf = null;
+    const scrollable = document.documentElement.scrollHeight - innerHeight;
+    const prog = scrollable > 0 ? Math.min(1, Math.max(0, scrollY / scrollable)) : 0;
+    /* the head runs slightly ahead of the reading position */
+    const head = Math.min(1, prog * 1.06 + 0.055);
+    const drawn = L * head;
+    line.style.strokeDashoffset = L - drawn;
+    const pt = line.getPointAtLength(drawn);
+    needle.setAttribute("transform", `translate(${pt.x},${pt.y})`);
+    needle.classList.toggle("on", head > 0.012 && head < 0.999);
+    pct.textContent = (drawn / L * 18.4).toFixed(1) + " M";
+    blocks.forEach((b) => {
+      if (b.classList.contains("on")) return;
+      if (drawn >= lenAtY(+b.dataset.y) - 6) b.classList.add("on");
+    });
+  }
+  addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+  addEventListener("resize", update);
+  update();
+})();
+</script>
+</body>
+</html>

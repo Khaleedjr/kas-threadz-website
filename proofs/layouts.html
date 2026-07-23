@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>KAS THREADZ — layout language</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  :root {
+    --bg: #0e0c0d; --bge: #151213; --fg: #f1ece5; --muted: #9a918a;
+    --line: rgba(241,236,229,.14); --line-soft: rgba(241,236,229,.07);
+    font-family: system-ui, "Segoe UI", sans-serif;
+  }
+  body { background: var(--bg); color: var(--fg); }
+  .topbar { position: sticky; top: 0; z-index: 30; backdrop-filter: blur(14px);
+    background: rgba(14,12,13,.8); border-bottom: 1px solid var(--line-soft);
+    padding: 13px 26px; display: flex; justify-content: space-between; align-items: baseline; }
+  .topbar h1 { font-size: 12.5px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; }
+  .topbar p { font-size: 11.5px; color: var(--muted); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 44px 26px 100px; display: grid; gap: 72px; grid-template-columns: 100%; }
+  .wrap > section { min-width: 0; }
+  .tag { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+  .tag .ltr { font-family: Georgia, serif; font-size: 30px; opacity: .35; }
+  .tag .nm { font-size: 14px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+  .tag .vb { font-size: 11.5px; color: var(--muted); }
+  .mock { border-radius: 4px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,.4); position: relative; }
+  .serif { font-family: Georgia, "Times New Roman", serif; }
+  .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .caps { text-transform: uppercase; letter-spacing: .22em; }
+
+  /* ---------- A · cinematic full-bleed ---------- */
+  .cine { height: 640px; position: relative; }
+  .cine img.bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .cine .scrim { position: absolute; inset: 0;
+    background: linear-gradient(200deg, rgba(10,8,9,.05) 30%, rgba(10,8,9,.78) 82%); }
+  .cine nav { position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+    display: flex; justify-content: space-between; align-items: center; padding: 22px 34px;
+    color: #f2ece4; }
+  .cine nav img { height: 30px; }
+  .cine nav .links { display: flex; gap: 28px; font-size: 10px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; opacity: .92; }
+  .cine .block { position: absolute; left: 34px; right: 34px; bottom: 40px; z-index: 3; color: #f4efe8;
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; flex-wrap: wrap; }
+  .cine h3 { font-size: clamp(42px, 5.4vw, 66px); font-weight: 500; line-height: 1.02; letter-spacing: -.014em; max-width: 11ch; }
+  .cine .sub { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; opacity: .85; margin-bottom: 16px; }
+  .cine .cta { flex: none; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .cine .cta .b1 { background: #f2ece4; color: #141011; font-size: 11px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase; padding: 16px 28px; border: none; cursor: pointer; }
+  .cine .cta .b2 { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #f2ece4;
+    background: none; border: none; border-bottom: 1px solid rgba(242,236,228,.5); padding: 4px 2px; cursor: pointer; }
+
+  /* ---------- B · the archive ---------- */
+  .arch { background: var(--bge); display: grid; grid-template-columns: 1.35fr .65fr; min-height: 560px; }
+  .arch-list { border-right: 1px solid var(--line-soft); padding: 26px 0 10px; }
+  .arch-head { padding: 0 30px 18px; display: flex; justify-content: space-between; align-items: baseline; }
+  .arch-head h3 { font-size: 20px; font-weight: 500; }
+  .arch-head span { font-size: 10px; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; }
+  .arow { display: grid; grid-template-columns: 92px 1fr 130px 90px; gap: 14px; align-items: center;
+    padding: 13px 30px; border-top: 1px solid var(--line-soft); font-size: 12px; }
+  .arow:hover, .arow.sel { background: rgba(241,236,229,.045); }
+  .arow .code { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; letter-spacing: .06em; }
+  .arow .fam { color: var(--muted); }
+  .arow .plc { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+  .arow .st { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; border: 1px solid var(--line);
+    border-radius: 999px; padding: 4px 10px; text-align: center; color: var(--muted); }
+  .arow.sel .st { border-color: #f1ece5; color: #f1ece5; }
+  .arch-view { padding: 34px 30px; display: flex; flex-direction: column; }
+  .arch-view .mask { flex: 1; -webkit-mask: url("../public/img/designs/ld115f.png") center / contain no-repeat;
+    mask: url("../public/img/designs/ld115f.png") center / contain no-repeat; background: #e8e0d4; min-height: 300px; }
+  .arch-view .cap { margin-top: 22px; }
+  .arch-view .cap .c1 { font-family: ui-monospace, Menlo, monospace; font-size: 14px; margin-bottom: 6px; }
+  .arch-view .cap .c2 { font-size: 11.5px; color: var(--muted); line-height: 1.6; }
+  .arch-view .cta { margin-top: 18px; align-self: flex-start; background: #f1ece5; color: #141011;
+    border: none; font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+    padding: 13px 22px; cursor: pointer; }
+
+  /* ---------- C · dark stage ---------- */
+  .stage { min-height: 680px; display: grid; place-items: center; position: relative;
+    background: radial-gradient(58% 50% at 50% 38%, #241e20 0%, #0e0c0d 74%); text-align: center; padding: 60px 20px; }
+  .stage .halo { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(34% 30% at 50% 34%, rgba(240,232,220,.05), transparent 70%); }
+  .stage figure { position: relative; z-index: 2; }
+  .stage img { height: 430px; width: auto; object-fit: cover; object-position: top center;
+    border-radius: 2px; box-shadow: 0 50px 90px -40px rgba(0,0,0,.85); }
+  .stage .no { position: absolute; top: 42px; left: 0; right: 0; font-size: 10.5px; letter-spacing: .4em;
+    text-transform: uppercase; color: var(--muted); }
+  .stage figcaption { margin-top: 30px; }
+  .stage .t1 { font-size: 26px; font-weight: 500; letter-spacing: .01em; }
+  .stage .t2 { font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+  .stage .b1 { margin-top: 26px; background: none; color: var(--fg); border: 1px solid var(--line);
+    font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; padding: 14px 30px; cursor: pointer; }
+  .stage .arrows { position: absolute; bottom: 36px; left: 0; right: 0; display: flex; justify-content: center; gap: 26px;
+    font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+
+  /* ---------- D · type as image ---------- */
+  .typm { min-height: 620px; padding: 60px 34px 0; display: flex; flex-direction: column; justify-content: space-between; }
+  .typm .word { font-family: Georgia, serif; font-weight: 700; font-size: clamp(120px, 23vw, 270px);
+    line-height: .86; letter-spacing: -.02em; text-align: center;
+    background-image: url("../public/img/work/agbada-maroon.jpg");
+    background-size: cover; background-position: 50% 18%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: brightness(1.45) contrast(1.08); }
+  .typm .row { display: flex; justify-content: space-between; align-items: baseline; padding: 26px 0 0; flex-wrap: wrap; gap: 14px; }
+  .typm .row p { font-size: 12.5px; color: var(--muted); max-width: 44ch; line-height: 1.65; }
+  .typm .row .b1 { background: #f1ece5; color: #141011; border: none; font-size: 11px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase; padding: 15px 26px; cursor: pointer; }
+  .typm .ticker { margin: 44px -34px 0; border-top: 1px solid var(--line-soft); padding: 15px 0; overflow: hidden; white-space: nowrap; }
+  .typm .ticker span { font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: .3em;
+    color: var(--muted); padding-right: 44px; }
+
+  /* ---------- E · the loom (scroll-story configurator) ---------- */
+  .loom { background: var(--bge); display: grid; grid-template-columns: .95fr 1.05fr; min-height: 600px; }
+  .loom-stage { position: relative; border-right: 1px solid var(--line-soft); display: grid; place-items: center; padding: 40px; }
+  .loom-stage img { max-height: 480px; width: auto; border-radius: 2px; }
+  .loom-stage .pin { position: absolute; top: 24px; left: 28px; font-size: 9.5px; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--muted); }
+  .loom-steps { padding: 48px 40px; position: relative; }
+  .loom-steps::before { content: ""; position: absolute; left: 40px; top: 60px; bottom: 60px; width: 1px;
+    background: var(--line-soft); }
+  .lstep { position: relative; padding: 0 0 40px 34px; }
+  .lstep .dotm { position: absolute; left: -4.5px; top: 3px; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--bge); border: 1.5px solid var(--muted); }
+  .lstep.act .dotm { background: #f1ece5; border-color: #f1ece5; }
+  .lstep h4 { font-size: 10.5px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .lstep.act h4 { color: var(--fg); }
+  .lstep .t { font-family: Georgia, serif; font-size: 21px; margin-bottom: 12px; }
+  .lswatches { display: flex; gap: 8px; }
+  .lsw { width: 42px; height: 42px; border-radius: 3px; background-size: cover; background-position: center;
+    box-shadow: inset 0 0 0 1px rgba(241,236,229,.18); }
+  .lsw.sel { box-shadow: 0 0 0 1.5px #f1ece5; }
+  .ldots { display: flex; gap: 8px; }
+  .ldot { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(241,236,229,.2); }
+  .lmasks { display: flex; gap: 12px; align-items: center; }
+  .lmask { width: 44px; height: 64px; background: #cfc4b4; }
+  .lm1 { -webkit-mask: url("../public/img/designs/ld115f.png") center / contain no-repeat; mask: url("../public/img/designs/ld115f.png") center / contain no-repeat; }
+  .lm2 { -webkit-mask: url("../public/img/designs/ld184f.png") center / contain no-repeat; mask: url("../public/img/designs/ld184f.png") center / contain no-repeat; }
+  .lm3 { -webkit-mask: url("../public/img/designs/af63.png") center / contain no-repeat; mask: url("../public/img/designs/af63.png") center / contain no-repeat; width: 58px; }
+  .loom-note { font-size: 11px; color: var(--muted); letter-spacing: .04em; padding-left: 34px; }
+  .lprice { padding: 22px 0 0 34px; display: flex; align-items: baseline; gap: 18px; }
+  .lprice .amt { font-family: Georgia, serif; font-size: 26px; }
+  .lprice .b1 { background: #f1ece5; color: #141011; border: none; font-size: 10.5px; font-weight: 700;
+    letter-spacing: .18em; text-transform: uppercase; padding: 13px 24px; cursor: pointer; }
+
+  .foot { text-align: center; font-size: 13.5px; color: var(--muted); line-height: 1.9; }
+  .foot code { font-family: ui-monospace, Menlo, monospace; background: rgba(241,236,229,.09); padding: 2px 7px; border-radius: 4px; }
+  @media (max-width: 780px) {
+    .arch, .loom { grid-template-columns: 1fr; }
+    .arch-list { border-right: none; }
+    .loom-stage { border-right: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div><h1>KAS THREADZ · layout language</h1>
+    <p>Five page architectures · one neutral theme · colour is a separate decision</p></div>
+  </div>
+  <div class="wrap">
+
+    <section>
+      <div class="tag"><span class="ltr">A</span><span class="nm">Cinematic Full-Bleed</span><span class="vb">the photograph is the page · campaign-film register</span></div>
+      <div class="mock cine">
+        <img class="bgimg" src="../public/img/work/agbada-blue.jpg" alt=""/>
+        <div class="scrim"></div>
+        <nav>
+          <img src="../public/img/brand/logo-cream.png" alt="KAS THREADZ"/>
+          <span class="links"><span>Collection</span><span>Design Library</span><span>Atelier</span><span>Commission</span></span>
+        </nav>
+        <div class="block">
+          <div>
+            <p class="sub">The house of KAS · Abuja</p>
+            <h3 class="serif">Cut. Stitched. Yours.</h3>
+          </div>
+          <div class="cta">
+            <button class="b1">Commission a piece</button>
+            <button class="b2">Watch it stitched</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="tag"><span class="ltr">B</span><span class="nm">The Archive</span><span class="vb">the machine-file library as the interface · atelier ledger</span></div>
+      <div class="mock arch">
+        <div class="arch-list">
+          <div class="arch-head"><h3 class="serif">The Design Library</h3><span>55 machine files · 1994–2026</span></div>
+          <div class="arow"><span class="code">LD 51</span><span class="fam">Flap &amp; pocket set</span><span class="plc">Kaftan</span><span class="st">In library</span></div>
+          <div class="arow"><span class="code">LD 84</span><span class="fam">Flap &amp; pocket set</span><span class="plc">Kaftan</span><span class="st">In library</span></div>
+          <div class="arow sel"><span class="code">LD 115</span><span class="fam">Flap &amp; pocket set</span><span class="plc">Kaftan</span><span class="st">Selected</span></div>
+          <div class="arow"><span class="code">LD 184</span><span class="fam">Flap &amp; pocket set</span><span class="plc">Kaftan</span><span class="st">In library</span></div>
+          <div class="arow"><span class="code">AF 63</span><span class="fam">Neckline run</span><span class="plc">Jallabiya</span><span class="st">In library</span></div>
+          <div class="arow"><span class="code">AGD 26</span><span class="fam">Chest panel</span><span class="plc">Agbada</span><span class="st">In library</span></div>
+          <div class="arow"><span class="code">AGD 12</span><span class="fam">Chest panel</span><span class="plc">Agbada</span><span class="st">In library</span></div>
+        </div>
+        <div class="arch-view">
+          <div class="mask"></div>
+          <div class="cap">
+            <p class="c1">LD 115 · flap</p>
+            <p class="c2">Stitched as a pair with pocket LD 115P. The code is the actual machine file: what you pick here is what the needle runs.</p>
+          </div>
+          <button class="cta">Put it on a kaftan</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="tag"><span class="ltr">C</span><span class="nm">The Dark Stage</span><span class="vb">one garment · one spotlight · monumental restraint</span></div>
+      <div class="mock stage">
+        <div class="halo"></div>
+        <p class="no">№ 03 / 09 · the collection</p>
+        <figure>
+          <img src="../public/img/work/jallab-maroon.jpg" alt="Maroon Tassel Jallab"/>
+          <figcaption>
+            <p class="t1 serif">Maroon Tassel Jallab</p>
+            <p class="t2">Cream scrollwork · gold tassel · AF 63</p>
+            <button class="b1">Commission</button>
+          </figcaption>
+        </figure>
+        <div class="arrows"><span>← Prev</span><span>Next →</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="tag"><span class="ltr">D</span><span class="nm">Type as Image</span><span class="vb">the wordmark wears the cloth · brutalist luxe</span></div>
+      <div class="mock typm">
+        <div>
+          <div class="word">KAS</div>
+          <div class="row">
+            <p>Luxury embroidery and bespoke tailoring, Abuja. The letters above are wearing the Trader Agbada: photography lives inside the type.</p>
+            <button class="b1">Enter the atelier</button>
+          </div>
+        </div>
+        <div class="ticker"><span>LD 51 · LD 57 · LD 58 · LD 76 · LD 84 · LD 108 · LD 109 · LD 115 · LD 160 · LD 184 · LD 192 · AF 46 · AF 47C · AF 63 · AGD 001 · AGD 12 · AGD 26 — 55 machine files in the house library</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="tag"><span class="ltr">E</span><span class="nm">The Loom</span><span class="vb">scroll-story configurator · the garment builds as you move</span></div>
+      <div class="mock loom">
+        <div class="loom-stage">
+          <span class="pin">Live preview · stays pinned while you scroll</span>
+          <img src="../public/img/work/kaftan-grey-side.jpg" alt="Kaftan on the stand"/>
+        </div>
+        <div class="loom-steps">
+          <div class="lstep act">
+            <span class="dotm"></span>
+            <h4>Step 01 · Fabric</h4>
+            <p class="t serif">Seven Star, smooth solid wool</p>
+            <div class="lswatches">
+              <span class="lsw sel" style="background-image:url('../public/img/fabrics/seven-royal.jpg')"></span>
+              <span class="lsw" style="background-image:url('../public/img/fabrics/focus-navy.jpg')"></span>
+              <span class="lsw" style="background-image:url('../public/img/fabrics/proper-charcoal.jpg')"></span>
+              <span class="lsw" style="background-image:url('../public/img/fabrics/noble-tan.jpg')"></span>
+            </div>
+          </div>
+          <div class="lstep">
+            <span class="dotm"></span>
+            <h4>Step 02 · Colour</h4>
+            <div class="ldots">
+              <span class="ldot" style="background:#20364f"></span>
+              <span class="ldot" style="background:#2f4a3d"></span>
+              <span class="ldot" style="background:#4a3728"></span>
+              <span class="ldot" style="background:#1a1518"></span>
+              <span class="ldot" style="background:#e9e2d6"></span>
+            </div>
+          </div>
+          <div class="lstep">
+            <span class="dotm"></span>
+            <h4>Step 03 · Embroidery</h4>
+            <div class="lmasks"><span class="lmask lm1"></span><span class="lmask lm2"></span><span class="lmask lm3"></span></div>
+          </div>
+          <p class="loom-note">On the real page each step is a full screen; the garment updates live as you scroll past it.</p>
+          <div class="lprice"><span class="amt serif">₦53,000</span><button class="b1">Send to the studio</button></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="foot">
+      Pick a letter, mix them (<code>A hero, B for the library, E for the customizer</code>), or call none of it.<br/>
+      Colour stays open until Khalid answers on take three.
+    </p>
+  </div>
+</body>
+</html>
