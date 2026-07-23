@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { MARK_ASPECT, MARK_GROUPS, MARK_TOTAL, MARK_VIEWBOX } from "@/lib/mark-stitches";
 
 const CEREMONY_KEY = "kas-mark-sewn";
@@ -78,12 +79,15 @@ export function StitchedMark({
     const tick = () => {
       if (finished) return;
       const n = Math.min(MARK_TOTAL, Math.floor((performance.now() - start) / per));
-      setDrawn(n);
-      // uncover only once the first frame has emptied it, so the finished mark
-      // is never glimpsed before it is sewn
+      // Uncover only once the paths are actually empty in the DOM. The server
+      // sends the finished mark, so a plain setState here would hand the browser
+      // a frame of the whole logo at full opacity before React cleared it.
       if (!revealed) {
         revealed = true;
+        flushSync(() => setDrawn(n));
         reveal();
+      } else {
+        setDrawn(n);
       }
       const p = points[Math.max(0, n - 1)];
       if (p) setNeedle(p);
