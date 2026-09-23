@@ -3,7 +3,8 @@ import { SITE } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/" },
+    // the studio's page is private, and never to be listed
+    rules: { userAgent: "*", allow: "/", disallow: "/studio" },
     sitemap: `${SITE.url}/sitemap.xml`,
   };
 }
