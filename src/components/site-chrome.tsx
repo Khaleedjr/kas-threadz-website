@@ -126,18 +126,31 @@ function MenuToggle({ open, onToggle }: { open: boolean; onToggle: () => void })
   );
 }
 
-/** The cart, once there is something in it: nothing to look at before then. */
+/**
+ * The cart, as a bag drawn in the nav's own line, with the number of sets
+ * in it pinned to its corner once there are any.
+ */
 function CartLink() {
   const sets = setsIn(useCart());
-  if (!sets) return null;
   return (
     <Link
       href="/cart"
-      className="rounded-sm border px-[12px] py-[9px] text-[10px] font-medium uppercase tracking-[0.2em] whitespace-nowrap"
-      style={{ borderColor: "currentColor" }}
-      aria-label={`Your cart, ${sets} ${sets === 1 ? "set" : "sets"}`}
+      className="relative grid h-9 w-9 shrink-0 place-items-center"
+      aria-label={sets ? `Your cart, ${sets} ${sets === 1 ? "set" : "sets"}` : "Your cart, empty"}
     >
-      Cart · {sets}
+      <svg aria-hidden width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 8h14l-1.2 12.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9L5 8Z" />
+        <path d="M9 10V6.5a3 3 0 0 1 6 0V10" />
+      </svg>
+      {sets > 0 && (
+        <span
+          aria-hidden
+          className="absolute -right-[2px] -top-[1px] grid h-[17px] min-w-[17px] place-items-center rounded-full px-[4px] font-mono text-[10px] font-medium leading-none"
+          style={{ background: "var(--accent)", color: "var(--on-action)" }}
+        >
+          {sets}
+        </span>
+      )}
     </Link>
   );
 }
