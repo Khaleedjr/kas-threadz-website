@@ -1,3 +1,4 @@
+import { getCatalogue } from "@/lib/content";
 import { preorderStore } from "@/lib/preorder-store";
 import { orderRow } from "@/lib/studio-orders";
 import { signedIn } from "@/lib/studio-auth";
@@ -40,7 +41,8 @@ export async function GET() {
   const store = preorderStore();
   if (!store) return new Response("The preorder database is not connected.", { status: 503 });
 
-  const rows = (await store.orders()).map(orderRow);
+  const cat = await getCatalogue();
+  const rows = (await store.orders()).map((o) => orderRow(o, cat));
   const lines = [
     COLUMNS.map(([title]) => cell(title)).join(","),
     ...rows.map((r) => COLUMNS.map(([, k]) => (k === "phone" ? phoneCell(r.phone) : cell(r[k]))).join(",")),

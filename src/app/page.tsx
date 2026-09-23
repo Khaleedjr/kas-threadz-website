@@ -4,8 +4,11 @@ import { StitchedMark } from "@/components/stitched-mark";
 import { RevealNav, ScrollCue, SiteFooter } from "@/components/site-chrome";
 import { StudioSchema } from "@/components/structured-data";
 import { PIECES, naira } from "@/lib/catalogue";
+import { getCatalogue } from "@/lib/content";
+import { piecePhoto } from "@/lib/content-defaults";
 
-export default function Home() {
+export default async function Home() {
+  const { photos } = await getCatalogue();
   const featured = PIECES.slice(0, 3);
 
   return (
@@ -70,8 +73,8 @@ export default function Home() {
                 className="group relative block aspect-[3/4] overflow-hidden rounded-sm bg-[var(--color-cloth-deep)]"
               >
                 <Image
-                  src={piece.image}
-                  alt={piece.alt}
+                  src={piecePhoto(piece, photos).url}
+                  alt={piecePhoto(piece, photos).alt}
                   fill
                   priority={index === 0}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -95,8 +98,8 @@ export default function Home() {
       <section className="grid border-t border-[var(--line)] md:grid-cols-[0.85fr_1.15fr]">
         <div className="relative min-h-[250px]">
           <Image
-            src="/img/work/kaftan-grey-side.jpg"
-            alt="Grey kaftan photographed from the side on a stand"
+            src={photos.homeLoom?.url ?? "/img/work/kaftan-grey-side.jpg"}
+            alt={photos.homeLoom?.alt ?? "Grey kaftan photographed from the side on a stand"}
             fill
             sizes="(max-width: 768px) 100vw, 40vw"
             className="object-cover object-top"

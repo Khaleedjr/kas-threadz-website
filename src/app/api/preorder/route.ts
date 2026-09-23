@@ -1,4 +1,4 @@
-import { PREORDER } from "@/lib/preorder";
+import { getCatalogue } from "@/lib/content";
 import { checkOrder, describe, newReference } from "@/lib/preorder-server";
 import { preorderStore } from "@/lib/preorder-store";
 import { paystackReady, startPayment } from "@/lib/paystack";
@@ -14,24 +14,28 @@ export async function POST(request: Request) {
     return Response.json({ error: "Preorders are not taking payment yet. Please WhatsApp the studio." }, { status: 503 });
   }
 
-  const order = checkOrder(await request.json().catch(() => null));
+  const cat = await getCatalogue();
+  const order = checkOrder(await request.json().catch(() => null), cat);
   if ("error" in order) return Response.json({ error: order.error }, { status: 400 });
 
-  const words = describe(order.garment);
+  const words = describe(order.garment, cat);
   const { tier } = words;
   const reference = newReference();
-  if (!(await store.hold(tier, reference))) {
-    return Response.json({ error: `The ${PREORDER[tier].name.toLowerCase()} sets are all taken.` }, { status: 409 });
+  const { price, total, name } = cat.terms[tier];
+  if (!(await store.hold(tier, reference, total))) {
+    return Response.json({ error: `The ${name.toLowerCase()} sets are all taken.` }, { status: 409 });
   }
 
   try {
     const url = await startPayment({
       email: order.customer.email,
-      amount: PREORDER[tier].price,
+      amount: price,
       reference,
       callbackUrl: `${new URL(request.url).origin}/preorder/confirm`,
       metadata: {
         tier,
+        // the price charged, so the payment is checked against it even if it changes meanwhile
+        price,
         garment: order.garment,
         customer: order.customer,
         // shown on the transaction in the Paystack dashboard

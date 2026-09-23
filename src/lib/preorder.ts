@@ -11,8 +11,14 @@
 
 export type Tier = "adult" | "children";
 
-export const PREORDER: Record<Tier, { name: string; price: number; total: number }> = {
-  // the split of the 100 is the studio's call; change the two totals here
+/** Each size's name, full price in naira, and how many sets the run has. */
+export type PreorderTerms = Record<Tier, { name: string; price: number; total: number }>;
+
+/**
+ * The terms the preorder opened on. The studio changes prices and set
+ * counts in Sanity (see `src/lib/content.ts`); these stand when it has none.
+ */
+export const PREORDER: PreorderTerms = {
   adult: { name: "Adult", price: 15000, total: 70 },
   children: { name: "Children", price: 12000, total: 30 },
 };

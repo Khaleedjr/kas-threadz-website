@@ -5,6 +5,7 @@
  */
 
 import { naira } from "./catalogue";
+import type { Catalogue } from "./content-defaults";
 import { describe } from "./preorder-server";
 import type { StoredOrder } from "./preorder-store";
 
@@ -39,8 +40,8 @@ function whatsappFor(phone: string): string | null {
   return digits.length >= 10 ? `https://wa.me/${digits}` : null;
 }
 
-export function orderRow(o: StoredOrder): OrderRow {
-  const words = o.garment ? describe(o.garment) : null;
+export function orderRow(o: StoredOrder, cat: Catalogue): OrderRow {
+  const words = o.garment ? describe(o.garment, cat) : null;
   const phone = o.customer?.phone ?? "";
   return {
     reference: o.reference,

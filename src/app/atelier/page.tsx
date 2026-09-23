@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
+import { getCatalogue } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "The Atelier",
@@ -17,7 +18,8 @@ const PROCESS = [
   { n: "05", title: "Fitting & delivery", body: "Fittings in the Abuja studio. Nationwide and diaspora by courier." },
 ];
 
-export default function AtelierPage() {
+export default async function AtelierPage() {
+  const { photos } = await getCatalogue();
   return (
     <div data-register="cloth" className="ground-cloth flex-1 flex flex-col text-[var(--on-surface)]">
       <SiteNav />
@@ -65,8 +67,8 @@ export default function AtelierPage() {
 
         <section className="relative min-h-[340px]">
           <Image
-            src="/img/work/jallab-maroon.jpg"
-            alt="A maroon jallabiya with a cream embroidered neckline and a gold tassel"
+            src={photos.atelier?.url ?? "/img/work/jallab-maroon.jpg"}
+            alt={photos.atelier?.alt ?? "A maroon jallabiya with a cream embroidered neckline and a gold tassel"}
             fill
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
