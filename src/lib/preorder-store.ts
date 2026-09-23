@@ -13,9 +13,9 @@
 
 import { Redis } from "@upstash/redis";
 import {
-  PREORDER,
   type PreorderCustomer,
   type PreorderGarment,
+  type PreorderTerms,
   type Stock,
   type Tier,
 } from "./preorder";
@@ -61,40 +61,43 @@ export type StoredOrder = {
 /** Each size's sets sold and sets held while someone pays, for the studio. */
 export type Tally = Record<Tier, { total: number; sold: number; held: number }>;
 
+/* The run's size is the studio's to change (see `content.ts`), so every
+   count is taken against the terms as they stand when it is asked. */
 type Store = {
-  stock(): Promise<Stock>;
-  hold(tier: Tier, reference: string): Promise<boolean>;
+  stock(terms: PreorderTerms): Promise<Stock>;
+  /** hold a set of `tier` for this reference, if one of `total` is free */
+  hold(tier: Tier, reference: string, total: number): Promise<boolean>;
   release(tier: Tier, reference: string): Promise<void>;
   confirm(tier: Tier, reference: string, order: StoredOrder): Promise<boolean>;
   /** every paid order, newest first */
   orders(): Promise<StoredOrder[]>;
-  tally(): Promise<Tally>;
+  tally(terms: PreorderTerms): Promise<Tally>;
 };
 
 const newestFirst = (a: StoredOrder, b: StoredOrder) => b.at.localeCompare(a.at);
 
 function redisStore(redis: Redis): Store {
   return {
-    async stock() {
+    async stock(terms) {
       const now = Date.now();
       const out = {} as Stock;
-      for (const tier of Object.keys(PREORDER) as Tier[]) {
+      for (const tier of Object.keys(terms) as Tier[]) {
         await redis.zremrangebyscore(key.holds(tier), "-inf", now);
         const [sold, held] = await Promise.all([
           redis.get<number>(key.sold(tier)),
           redis.zcard(key.holds(tier)),
         ]);
-        const total = PREORDER[tier].total;
+        const total = terms[tier].total;
         out[tier] = { total, left: Math.max(0, total - Number(sold ?? 0) - held) };
       }
       return out;
     },
-    async hold(tier, reference) {
+    async hold(tier, reference, total) {
       const now = Date.now();
       const ok = await redis.eval(
         HOLD,
         [key.sold(tier), key.holds(tier)],
-        [now, now + HOLD_MS, PREORDER[tier].total, reference],
+        [now, now + HOLD_MS, total, reference],
       );
       return Number(ok) === 1;
     },
@@ -125,13 +128,13 @@ function redisStore(redis: Redis): Store {
         .filter((o): o is StoredOrder => Boolean(o?.reference))
         .sort(newestFirst);
     },
-    async tally() {
+    async tally(terms) {
       const now = Date.now();
       const out = {} as Tally;
-      for (const tier of Object.keys(PREORDER) as Tier[]) {
+      for (const tier of Object.keys(terms) as Tier[]) {
         await redis.zremrangebyscore(key.holds(tier), "-inf", now);
         const [sold, held] = await Promise.all([redis.get<number>(key.sold(tier)), redis.zcard(key.holds(tier))]);
-        out[tier] = { total: PREORDER[tier].total, sold: Number(sold ?? 0), held };
+        out[tier] = { total: terms[tier].total, sold: Number(sold ?? 0), held };
       }
       return out;
     },
@@ -152,17 +155,17 @@ function memoryStore(): Store {
     for (const [ref, until] of holds[t]) if (until < now) holds[t].delete(ref);
   };
   return {
-    async stock() {
+    async stock(terms) {
       const out = {} as Stock;
-      for (const t of Object.keys(PREORDER) as Tier[]) {
+      for (const t of Object.keys(terms) as Tier[]) {
         lapse(t);
-        out[t] = { total: PREORDER[t].total, left: Math.max(0, PREORDER[t].total - sold[t] - holds[t].size) };
+        out[t] = { total: terms[t].total, left: Math.max(0, terms[t].total - sold[t] - holds[t].size) };
       }
       return out;
     },
-    async hold(t, ref) {
+    async hold(t, ref, total) {
       lapse(t);
-      if (sold[t] + holds[t].size >= PREORDER[t].total) return false;
+      if (sold[t] + holds[t].size >= total) return false;
       holds[t].set(ref, Date.now() + HOLD_MS);
       return true;
     },
@@ -179,11 +182,11 @@ function memoryStore(): Store {
     async orders() {
       return [...orders.values()].sort(newestFirst);
     },
-    async tally() {
+    async tally(terms) {
       const out = {} as Tally;
-      for (const t of Object.keys(PREORDER) as Tier[]) {
+      for (const t of Object.keys(terms) as Tier[]) {
         lapse(t);
-        out[t] = { total: PREORDER[t].total, sold: sold[t], held: holds[t].size };
+        out[t] = { total: terms[t].total, sold: sold[t], held: holds[t].size };
       }
       return out;
     },

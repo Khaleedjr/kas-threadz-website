@@ -3,9 +3,9 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { naira } from "@/lib/catalogue";
-import { COLOURS, FABRICS } from "@/lib/loom";
 import { THREADS, threadFilter, threadTones, type ThreadTones } from "@/lib/loom-preview";
-import { ADULT_LENGTHS, CHILD_LENGTHS, PREORDER, type Tier } from "@/lib/preorder";
+import { ADULT_LENGTHS, CHILD_LENGTHS, type Tier } from "@/lib/preorder";
+import { useCatalogue } from "./catalogue-context";
 
 /*
  * The Loom's choices, drawn once and used in two places: the steps beside
@@ -28,6 +28,7 @@ export function FabricChoices({
   onPick: (id: string) => void;
   fit: Fit;
 }) {
+  const FABRICS = useCatalogue().fabrics;
   if (fit === "steps") {
     return (
       <div className="flex flex-wrap gap-2">
@@ -77,6 +78,7 @@ export function ColourChoices({
   onPick: (hex: string) => void;
   fit: Fit;
 }) {
+  const COLOURS = useCatalogue().colours;
   const ring = (on: boolean) => (on ? "0 0 0 1.5px var(--accent)" : "inset 0 0 0 1px rgba(0,0,0,0.2)");
   if (fit === "steps") {
     return (
@@ -307,6 +309,7 @@ export function SizeChoices({
   onPick: (length: number) => void;
   fit: Fit;
 }) {
+  const PREORDER = useCatalogue().terms;
   const groups: Array<[Tier, number[]]> = [
     ["children", CHILD_LENGTHS],
     ["adult", ADULT_LENGTHS],

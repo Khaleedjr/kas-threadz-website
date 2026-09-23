@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
 import { PieceSchema } from "@/components/structured-data";
 import { GARMENT_LABEL, PIECES, naira } from "@/lib/catalogue";
+import { getCatalogue } from "@/lib/content";
+import { piecePhoto } from "@/lib/content-defaults";
 
 export function generateStaticParams() {
   return PIECES.map((piece) => ({ slug: piece.slug }));
@@ -30,6 +32,7 @@ export default async function PiecePage({ params }: { params: Promise<{ slug: st
   if (index === -1) notFound();
 
   const piece = PIECES[index];
+  const photo = piecePhoto(piece, (await getCatalogue()).photos);
   const prev = PIECES[(index - 1 + PIECES.length) % PIECES.length];
   const next = PIECES[(index + 1) % PIECES.length];
 
@@ -40,7 +43,7 @@ export default async function PiecePage({ params }: { params: Promise<{ slug: st
       data-register="cloth"
       className="ground-cloth flex h-dvh flex-col overflow-hidden text-[var(--on-surface)]"
     >
-      <PieceSchema slug={piece.slug} />
+      <PieceSchema slug={piece.slug} image={photo.url} />
       <SiteNav />
 
       <section
@@ -62,8 +65,8 @@ export default async function PiecePage({ params }: { params: Promise<{ slug: st
 
         <div className="relative mt-[clamp(8px,2vh,22px)] min-h-0 w-full flex-1">
           <Image
-            src={piece.image}
-            alt={piece.alt}
+            src={photo.url}
+            alt={photo.alt}
             fill
             priority
             sizes="(max-width: 768px) 90vw, 40vw"

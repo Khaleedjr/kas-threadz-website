@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { DESIGNS, GARMENT_LABEL, NECKLINES, type Garment } from "@/lib/catalogue";
-import { COLOURS, FABRICS, type LoomConfig } from "@/lib/loom";
-import { PREORDER, tierFor } from "@/lib/preorder";
+import type { LoomConfig } from "@/lib/loom";
+import { tierFor } from "@/lib/preorder";
+import { drawnFabric } from "@/lib/content-defaults";
+import { useCatalogue } from "./catalogue-context";
 import { FLAT_RATIO, LENGTH_RANGE, flatCallouts } from "@/lib/jallabiya-flat";
 import { THREADS, threadTones } from "@/lib/loom-preview";
 import { GarmentPreview } from "./garment-preview";
@@ -58,10 +60,12 @@ const OPENING = {
 };
 
 export function Loom({ phone = false }: { phone?: boolean }) {
+  const { colours: COLOURS, fabrics: FABRICS, terms: PREORDER } = useCatalogue();
   const [config, setConfig] = useState<LoomConfig>(() => ({
     garment: "jallabiya",
-    fabric: "cotton",
-    colour: OPENING[phone ? "phone" : "wide"].colour,
+    // the opening cloth and colour, if the studio still offers them
+    fabric: (FABRICS.find((f) => f.id === "cotton") ?? FABRICS[0]).id,
+    colour: (COLOURS.find((c) => c.hex === OPENING[phone ? "phone" : "wide"].colour) ?? COLOURS[0]).hex,
     design: OPENING[phone ? "phone" : "wide"].design,
     thread: "original",
     measurements: { height: LENGTH_RANGE.standard, fit: "regular" },
@@ -73,8 +77,8 @@ export function Loom({ phone = false }: { phone?: boolean }) {
 
   const available = useMemo(() => designsFor(config.garment), [config.garment]);
   const design = available.find((d) => d.code === config.design) ?? available[0];
-  const fabric = FABRICS.find((f) => f.id === config.fabric)!;
-  const colour = COLOURS.find((c) => c.hex === config.colour)!;
+  const fabric = FABRICS.find((f) => f.id === config.fabric) ?? FABRICS[0];
+  const colour = COLOURS.find((c) => c.hex === config.colour) ?? COLOURS[0];
   const thread = THREADS.find((t) => t.id === config.thread) ?? THREADS[0];
   // how the design is recoloured for the thread; null keeps its own colours
   const tones = useMemo(() => threadTones(config.thread, colour.hex), [config.thread, colour.hex]);
@@ -221,7 +225,8 @@ export function Loom({ phone = false }: { phone?: boolean }) {
         <GarmentPreview
           garment={config.garment}
           colour={colour.hex}
-          fabric={fabric}
+          // drawn matte or with a sheen, whatever the studio calls the cloth
+          fabric={drawnFabric(fabric)}
           design={design ?? null}
           thread={tones}
           length={config.measurements.height}

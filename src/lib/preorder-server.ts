@@ -5,22 +5,23 @@
  */
 
 import { NECKLINES } from "./catalogue";
-import { COLOURS, FABRICS } from "./loom";
+import type { Catalogue } from "./content-defaults";
 import { THREADS } from "./loom-preview";
 import {
-  PREORDER,
   isOfferedLength,
   tierFor,
   type PreorderCustomer,
   type PreorderGarment,
+  type PreorderTerms,
   type Tier,
 } from "./preorder";
 import { preorderStore } from "./preorder-store";
 import type { Verified } from "./paystack";
 
-/** Check an order against what the studio actually offers. Returns the reason if it is not. */
+/** Check an order against what the studio offers now. Returns the reason if it is not. */
 export function checkOrder(
   input: unknown,
+  cat: Catalogue,
 ): { garment: PreorderGarment; customer: PreorderCustomer } | { error: string } {
   const o = (input ?? {}) as Record<string, unknown>;
   const g = (o.garment ?? {}) as Record<string, unknown>;
@@ -34,8 +35,8 @@ export function checkOrder(
     thread: str(g.thread) || "original",
     length: Number(g.length),
   };
-  if (!FABRICS.some((f) => f.id === garment.fabric)) return { error: "Choose a fabric." };
-  if (!COLOURS.some((x) => x.hex === garment.colour)) return { error: "Choose a colour." };
+  if (!cat.fabrics.some((f) => f.id === garment.fabric)) return { error: "Choose a fabric." };
+  if (!cat.colours.some((x) => x.hex === garment.colour)) return { error: "Choose a colour." };
   if (!NECKLINES.some((n) => n.code === garment.design)) return { error: "Choose a neckline design." };
   if (!THREADS.some((t) => t.id === garment.thread)) return { error: "Choose a thread." };
   if (!isOfferedLength(garment.length)) return { error: "Choose a length." };
@@ -51,14 +52,17 @@ export function checkOrder(
   return { garment, customer };
 }
 
-/** The order in words, as the studio reads it. */
-export function describe(g: PreorderGarment) {
+/**
+ * The order in words, as the studio reads it. A colour or fabric since taken
+ * off the Loom still reads, by its code, so old orders never go blank.
+ */
+export function describe(g: PreorderGarment, cat: Catalogue) {
   const tier = tierFor(g.length);
   return {
     tier,
     size: `${g.length} inches (${tier === "children" ? "children" : "adult"})`,
-    fabric: FABRICS.find((f) => f.id === g.fabric)?.name ?? g.fabric,
-    colour: COLOURS.find((x) => x.hex === g.colour)?.name ?? g.colour,
+    fabric: cat.fabrics.find((f) => f.id === g.fabric)?.name ?? g.fabric,
+    colour: cat.colours.find((x) => x.hex === g.colour)?.name ?? g.colour,
     design: g.design,
     thread: THREADS.find((t) => t.id === g.thread)?.name ?? g.thread,
   };
@@ -71,11 +75,22 @@ export const newReference = () =>
 /**
  * Record a payment Paystack has confirmed, if it is for a preorder and for
  * the full price of its tier. Recording the same payment again does nothing.
+ *
+ * The price checked is the one the customer was charged, carried on the
+ * payment itself, so a price changed in the studio while they were paying
+ * never turns a good payment away. It is never below the lower of that and
+ * the price now, so the page cannot talk it down.
  */
-export async function recordPayment(reference: string, v: Verified): Promise<"recorded" | "already" | "invalid"> {
-  const meta = (v.metadata ?? {}) as { tier?: Tier; garment?: PreorderGarment; customer?: PreorderCustomer };
+export async function recordPayment(
+  reference: string,
+  v: Verified,
+  terms: PreorderTerms,
+): Promise<"recorded" | "already" | "invalid"> {
+  const meta = (v.metadata ?? {}) as { tier?: Tier; price?: number; garment?: PreorderGarment; customer?: PreorderCustomer };
   const tier = meta.tier;
-  if (!v.paid || !tier || !(tier in PREORDER) || v.amount < PREORDER[tier].price) return "invalid";
+  if (!v.paid || !tier || !(tier in terms)) return "invalid";
+  const due = Math.min(terms[tier].price, Number(meta.price) || terms[tier].price);
+  if (v.amount < due) return "invalid";
   const store = preorderStore();
   if (!store) return "invalid";
   const done = await store.confirm(tier, reference, {

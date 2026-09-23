@@ -1,3 +1,4 @@
+import { getCatalogue } from "@/lib/content";
 import { recordPayment } from "@/lib/preorder-server";
 import { signedByPaystack, verifyPayment } from "@/lib/paystack";
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   const event = JSON.parse(raw) as { event?: string; data?: { reference?: string } };
   const reference = event.data?.reference;
   if (event.event === "charge.success" && reference) {
-    await recordPayment(reference, await verifyPayment(reference));
+    await recordPayment(reference, await verifyPayment(reference), (await getCatalogue()).terms);
   }
   // Paystack only needs to hear it arrived
   return new Response("ok");

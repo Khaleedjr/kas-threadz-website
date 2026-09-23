@@ -45,7 +45,7 @@ export function StudioSchema() {
 }
 
 /** A single made-to-order piece. */
-export function PieceSchema({ slug }: { slug: string }) {
+export function PieceSchema({ slug, image }: { slug: string; image?: string }) {
   const piece = PIECES.find((p) => p.slug === slug);
   if (!piece) return null;
 
@@ -54,7 +54,7 @@ export function PieceSchema({ slug }: { slug: string }) {
     "@type": "Product",
     name: piece.name,
     description: `${piece.detail} Embroidered with ${piece.design}, ${piece.designNote.toLowerCase()}. Cut to measure in ${SITE.city}.`,
-    image: `${SITE.url}${piece.image}`,
+    image: image?.startsWith("http") ? image : `${SITE.url}${image ?? piece.image}`,
     brand: { "@type": "Brand", name: SITE.name },
     offers: {
       "@type": "Offer",

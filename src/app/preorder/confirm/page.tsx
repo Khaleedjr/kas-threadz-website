@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
 import { naira } from "@/lib/catalogue";
-import { PREORDER, type PreorderGarment, type PreorderCustomer, type Tier } from "@/lib/preorder";
+import { getCatalogue } from "@/lib/content";
+import type { PreorderGarment, PreorderCustomer, Tier } from "@/lib/preorder";
 import { describe, recordPayment } from "@/lib/preorder-server";
 import { preorderStore } from "@/lib/preorder-store";
 import { verifyPayment } from "@/lib/paystack";
@@ -32,14 +33,15 @@ export default async function ConfirmPage({
     garment?: PreorderGarment;
     customer?: PreorderCustomer;
   };
-  const outcome = verified && reference ? await recordPayment(reference, verified) : "invalid";
+  const cat = await getCatalogue();
+  const outcome = verified && reference ? await recordPayment(reference, verified, cat.terms) : "invalid";
   const paid = outcome !== "invalid";
 
-  if (!paid && reference && meta.tier && meta.tier in PREORDER) {
+  if (!paid && reference && meta.tier && meta.tier in cat.terms) {
     await preorderStore()?.release(meta.tier, reference);
   }
 
-  const words = meta.garment ? describe(meta.garment) : null;
+  const words = meta.garment ? describe(meta.garment, cat) : null;
   const first = meta.customer?.name.split(" ")[0];
 
   return (
@@ -55,7 +57,7 @@ export default async function ConfirmPage({
               {first ? `Thank you, ${first}.` : "Thank you."} It is paid for and on the list.
             </h1>
             <p className="mt-4 text-[14px] leading-[1.72]" style={{ color: "var(--on-surface-soft)" }}>
-              Your jallabiya is one of the first {PREORDER.adult.total + PREORDER.children.total} sets.
+              Your jallabiya is one of the first {cat.terms.adult.total + cat.terms.children.total} sets.
               Paystack has sent the receipt to your email, and the studio will be in touch on WhatsApp
               about delivery.
             </p>
@@ -70,7 +72,7 @@ export default async function ConfirmPage({
                 ["Colour", words.colour],
                 ["Neckline", words.design],
                 ["Thread", words.thread],
-                ["Paid", naira(PREORDER[meta.tier].price)],
+                ["Paid", naira(verified?.amount ?? cat.terms[meta.tier].price)],
               ].map(([k, v]) => (
                 <div key={k} className="contents">
                   <dt className="label" style={{ color: "var(--on-surface-soft)" }}>

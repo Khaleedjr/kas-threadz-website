@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { naira } from "@/lib/catalogue";
-import { PREORDER, type Tier } from "@/lib/preorder";
+import type { Tier } from "@/lib/preorder";
+import { getCatalogue } from "@/lib/content";
 import { preorderStore } from "@/lib/preorder-store";
 import { orderRow } from "@/lib/studio-orders";
 import { signedIn, studioReady } from "@/lib/studio-auth";
@@ -35,11 +36,16 @@ export default async function StudioPage({
           KAS THREADZ <span style={{ color: "var(--accent)" }}>· Studio</span>
         </Link>
         {(await signedIn()) && (
-          <form action={signOut}>
-            <button type="submit" className="label underline underline-offset-4" style={{ color: "var(--on-surface-soft)" }}>
-              Sign out
-            </button>
-          </form>
+          <div className="flex items-center gap-5">
+            <Link href="/studio/content" className="label underline underline-offset-4" style={{ color: "var(--accent)" }}>
+              Edit the site
+            </Link>
+            <form action={signOut}>
+              <button type="submit" className="label underline underline-offset-4" style={{ color: "var(--on-surface-soft)" }}>
+                Sign out
+              </button>
+            </form>
+          </div>
         )}
       </header>
       <main id="main" className="flex flex-1 flex-col">
@@ -107,16 +113,18 @@ async function Orders() {
       </Note>
     );
   }
-  const [orders, tally] = await Promise.all([store.orders(), store.tally()]);
-  const rows = orders.map(orderRow);
+  const cat = await getCatalogue();
+  const terms = cat.terms;
+  const [orders, tally] = await Promise.all([store.orders(), store.tally(terms)]);
+  const rows = orders.map((o) => orderRow(o, cat));
   const taken = rows.reduce((sum, r) => sum + r.paidNaira, 0);
-  const tiers = Object.keys(PREORDER) as Tier[];
+  const tiers = Object.keys(terms) as Tier[];
 
   return (
     <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col gap-[clamp(20px,3vw,32px)] px-[clamp(16px,4vw,40px)] py-[clamp(20px,4vw,40px)]">
       <section>
         <p className="label" style={{ color: "var(--accent)" }}>
-          Preorder · first run of {tiers.reduce((n, t) => n + PREORDER[t].total, 0)} sets
+          Preorder · first run of {tiers.reduce((n, t) => n + terms[t].total, 0)} sets
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {tiers.map((t) => {
@@ -126,7 +134,7 @@ async function Orders() {
               <div key={t} className="col-span-2 rounded-sm border px-4 py-3 sm:col-span-1" style={{ borderColor: "var(--line-dashed)" }}>
                 <p className="flex items-baseline justify-between gap-2">
                   <span className="label" style={{ color: "var(--on-surface-soft)" }}>
-                    {PREORDER[t].name} · {naira(PREORDER[t].price)}
+                    {terms[t].name} · {naira(terms[t].price)}
                   </span>
                   <span className="font-mono text-[12px] tabular-nums">
                     {left} of {total} left

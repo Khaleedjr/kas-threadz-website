@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
+import { getCatalogue } from "@/lib/content";
+import { CatalogueProvider } from "./catalogue-context";
 import { Loom } from "./loom";
 
 export const metadata: Metadata = {
@@ -16,11 +18,13 @@ async function fromPhone() {
 }
 
 export default async function LoomPage() {
-  const phone = await fromPhone();
+  const [phone, catalogue] = await Promise.all([fromPhone(), getCatalogue()]);
   return (
     <div data-register="paper" className="ground-paper flex-1 flex flex-col text-[var(--on-surface)]">
       <SiteNav />
-      <Loom phone={phone} />
+      <CatalogueProvider value={catalogue}>
+        <Loom phone={phone} />
+      </CatalogueProvider>
       <SiteFooter />
     </div>
   );

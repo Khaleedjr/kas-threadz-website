@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { naira } from "@/lib/catalogue";
-import { PREORDER, tierFor, type PreorderGarment, type Stock, type Tier } from "@/lib/preorder";
+import { tierFor, type PreorderGarment, type Stock, type Tier } from "@/lib/preorder";
+import { useCatalogue } from "./catalogue-context";
 import { whatsappLink } from "@/lib/site";
 import { ThreadCount } from "./thread-count";
 
@@ -15,6 +16,7 @@ const REFRESH_MS = 20000;
  * it once its payment is confirmed.
  */
 export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; summary: string }) {
+  const PREORDER = useCatalogue().terms;
   const tier = tierFor(garment.length);
   const [stock, setStock] = useState<Stock | null>(null);
   const [countFailed, setCountFailed] = useState(false);
@@ -152,6 +154,7 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
  * preorder fills.
  */
 function Count({ tier, stock, failed, active }: { tier: Tier; stock: Stock | null; failed: boolean; active: boolean }) {
+  const PREORDER = useCatalogue().terms;
   const total = PREORDER[tier].total;
   const left = stock?.[tier].left;
   return (
