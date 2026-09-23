@@ -16,7 +16,7 @@
    ============================================================ */
 
 import { luminance, shade } from "./garment";
-import { NECKLINE_FIT } from "./neckline-fit";
+import { NECKLINE_FIT, type NecklineFit } from "./neckline-fit";
 import { STITCH_FRONT, chalkFor } from "./stitching";
 import { threadFilter, type ThreadTones } from "./loom-preview";
 
@@ -190,6 +190,19 @@ const TIP_SHARE = 0.77;
 const TIP_DROP = 4;
 const DESIGN_MAX_H = 500;
 
+/** Where a neckline sits: its box on the drawing, and its arm tips on the shoulder seams. */
+function designBox(fit: NecklineFit) {
+  let w = (TIP_SHARE * SHOULDER_POINT[0]) / fit.span;
+  let h = w / fit.ratio;
+  if (h > DESIGN_MAX_H) {
+    h = DESIGN_MAX_H;
+    w = h * fit.ratio;
+  }
+  const tipHalf = w * fit.span;
+  const tipY = shoulderY(tipHalf) + TIP_DROP;
+  return { x: C - w / 2, y: tipY - fit.tip * h, w, h, tipHalf, tipY };
+}
+
 /**
  * The neckline, and everything that sews it in.
  *
@@ -206,15 +219,8 @@ function necklineLayer(
 ): { art: string; needle: string; defs: string } {
   const fit = NECKLINE_FIT[href];
   if (!fit) return { art: "", needle: "", defs: "" };
-  let w = (TIP_SHARE * SHOULDER_POINT[0]) / fit.span;
-  let h = w / fit.ratio;
-  if (h > DESIGN_MAX_H) {
-    h = DESIGN_MAX_H;
-    w = h * fit.ratio;
-  }
-  const tipHalf = w * fit.span;
-  const tipY = shoulderY(tipHalf) + TIP_DROP;
-  const x = r2(C - w / 2), y = r2(tipY - fit.tip * h), iw = r2(w), ih = r2(h);
+  const b = designBox(fit);
+  const x = r2(b.x), y = r2(b.y), iw = r2(b.w), ih = r2(b.h);
   const box = `x="${x}" y="${y}" width="${iw}" height="${ih}"`;
   const order = href.replace(/\.png$/, "-order.png");
   const funcs = ["R", "G", "B"]
@@ -279,6 +285,74 @@ const FRAME = (() => {
 
 /** The drawing's width over its height, for the pane that shows it. */
 export const FLAT_RATIO = FRAME.w / FRAME.h;
+
+/** A point on the drawing as fractions of its frame, left to right and top to bottom. */
+export type FlatPoint = { x: number; y: number };
+
+/**
+ * A label set beside the garment, and the line from it to the part it
+ * names: a straight run out of the label, a bend, then straight on to the
+ * part, where a pin marks the spot. All as fractions of the frame.
+ */
+export type FlatCallout = {
+  /** which side of its anchor the label sits: left of the garment, or right */
+  side: "left" | "right";
+  /** where the line meets the label's edge, halfway up it */
+  anchor: FlatPoint;
+  /** where the line bends, level with the label */
+  elbow: FlatPoint;
+  /** the point on the garment it names, where the pin goes */
+  target: FlatPoint;
+};
+
+/**
+ * The Loom's labels on a phone, each in paper the garment leaves empty: the
+ * design above the left shoulder, the colour beside the right sleeve, the
+ * fabric beside the skirt and the size by the hem, which moves with the
+ * length. The design's line ends on its own thread, wherever the chosen
+ * neckline puts it.
+ */
+export function flatCallouts(state: {
+  length?: number;
+  neckline?: string | null;
+}): Record<"design" | "colour" | "fabric" | "size", FlatCallout> {
+  const { hemMid } = lengthOf({ color: "", fabric: "", length: state.length });
+  const f = ([x, y]: P): FlatPoint => ({
+    x: Math.round(((x - FRAME.x) / FRAME.w) * 1e4) / 1e4,
+    y: Math.round(((y - FRAME.y) / FRAME.h) * 1e4) / 1e4,
+  });
+  const callout = (side: "left" | "right", anchor: P, run: number, target: P): FlatCallout => ({
+    side,
+    anchor: f(anchor),
+    elbow: f([anchor[0] + (side === "left" ? run : -run), anchor[1]]),
+    target: f(target),
+  });
+
+  /* a little way along the design's left arm from its tip, snapped to the
+     nearest point of the needle's own path so the pin sits on thread */
+  let design: P = [C - 110, 190];
+  const fit = state.neckline ? NECKLINE_FIT[state.neckline] : undefined;
+  if (fit) {
+    const b = designBox(fit);
+    const want: P = [C - 0.75 * b.tipHalf, b.tipY + 0.25 * (b.y + b.h - b.tipY)];
+    let best = Infinity;
+    for (let i = 0; i + 1 < fit.track.length; i += 2) {
+      const p: P = [b.x + fit.track[i] * b.w, b.y + fit.track[i + 1] * b.h];
+      const d = (p[0] - want[0]) ** 2 + (p[1] - want[1]) ** 2;
+      if (p[0] < C && d < best) {
+        best = d;
+        design = p;
+      }
+    }
+  }
+
+  return {
+    design: callout("left", [C - 196, 70], 40, design),
+    colour: callout("right", [C + 262, 378], 20, [C + 205, 420]),
+    fabric: callout("left", [C - 196, 790], 30, [C - 100, 850]),
+    size: callout("right", [C + 200, hemMid - 90], 26, [C + 90, hemMid - 14]),
+  };
+}
 
 export function buildJallabiyaFlat(state: FlatState): string {
   const s = state;

@@ -12,7 +12,13 @@
  */
 
 import { Redis } from "@upstash/redis";
-import { PREORDER, type Stock, type Tier } from "./preorder";
+import {
+  PREORDER,
+  type PreorderCustomer,
+  type PreorderGarment,
+  type Stock,
+  type Tier,
+} from "./preorder";
 
 const HOLD_MS = 30 * 60 * 1000;
 
@@ -40,12 +46,32 @@ if redis.call('SET', KEYS[3], ARGV[2], 'NX') then
 end
 return 0`;
 
+/** A paid order, as it is kept: what `recordPayment` writes. */
+export type StoredOrder = {
+  reference: string;
+  tier: Tier;
+  /** in naira */
+  paid: number;
+  garment?: PreorderGarment;
+  customer?: PreorderCustomer;
+  /** when the payment was confirmed, ISO 8601 */
+  at: string;
+};
+
+/** Each size's sets sold and sets held while someone pays, for the studio. */
+export type Tally = Record<Tier, { total: number; sold: number; held: number }>;
+
 type Store = {
   stock(): Promise<Stock>;
   hold(tier: Tier, reference: string): Promise<boolean>;
   release(tier: Tier, reference: string): Promise<void>;
-  confirm(tier: Tier, reference: string, order: object): Promise<boolean>;
+  confirm(tier: Tier, reference: string, order: StoredOrder): Promise<boolean>;
+  /** every paid order, newest first */
+  orders(): Promise<StoredOrder[]>;
+  tally(): Promise<Tally>;
 };
+
+const newestFirst = (a: StoredOrder, b: StoredOrder) => b.at.localeCompare(a.at);
 
 function redisStore(redis: Redis): Store {
   return {
@@ -83,6 +109,32 @@ function redisStore(redis: Redis): Store {
       );
       return Number(ok) === 1;
     },
+    async orders() {
+      // the run is a hundred sets, so every order's key can simply be walked
+      const keys: string[] = [];
+      let cursor = "0";
+      do {
+        const [next, batch] = await redis.scan(cursor, { match: key.order("*"), count: 500 });
+        cursor = String(next);
+        keys.push(...batch);
+      } while (cursor !== "0");
+      if (!keys.length) return [];
+      const values = await redis.mget<unknown[]>(...keys);
+      return values
+        .map((v) => (typeof v === "string" ? (JSON.parse(v) as StoredOrder) : (v as StoredOrder | null)))
+        .filter((o): o is StoredOrder => Boolean(o?.reference))
+        .sort(newestFirst);
+    },
+    async tally() {
+      const now = Date.now();
+      const out = {} as Tally;
+      for (const tier of Object.keys(PREORDER) as Tier[]) {
+        await redis.zremrangebyscore(key.holds(tier), "-inf", now);
+        const [sold, held] = await Promise.all([redis.get<number>(key.sold(tier)), redis.zcard(key.holds(tier))]);
+        out[tier] = { total: PREORDER[tier].total, sold: Number(sold ?? 0), held };
+      }
+      return out;
+    },
   };
 }
 
@@ -94,7 +146,7 @@ function redisStore(redis: Redis): Store {
 function memoryStore(): Store {
   const sold: Record<Tier, number> = { adult: 0, children: 0 };
   const holds: Record<Tier, Map<string, number>> = { adult: new Map(), children: new Map() };
-  const orders = new Set<string>();
+  const orders = new Map<string, StoredOrder>();
   const lapse = (t: Tier) => {
     const now = Date.now();
     for (const [ref, until] of holds[t]) if (until < now) holds[t].delete(ref);
@@ -117,12 +169,23 @@ function memoryStore(): Store {
     async release(t, ref) {
       holds[t].delete(ref);
     },
-    async confirm(t, ref) {
+    async confirm(t, ref, order) {
       if (orders.has(ref)) return false;
-      orders.add(ref);
+      orders.set(ref, order);
       holds[t].delete(ref);
       sold[t] += 1;
       return true;
+    },
+    async orders() {
+      return [...orders.values()].sort(newestFirst);
+    },
+    async tally() {
+      const out = {} as Tally;
+      for (const t of Object.keys(PREORDER) as Tier[]) {
+        lapse(t);
+        out[t] = { total: PREORDER[t].total, sold: sold[t], held: holds[t].size };
+      }
+      return out;
     },
   };
 }
