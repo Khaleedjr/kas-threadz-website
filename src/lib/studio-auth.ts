@@ -9,6 +9,7 @@
 
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const STUDIO_COOKIE = "kas_studio";
 /** How long a sign-in lasts, in seconds. */
@@ -41,10 +42,20 @@ export function newSession(): string {
 
 /** Whether this request carries a live, genuine sign-in. */
 export async function signedIn(): Promise<boolean> {
-  if (!studioReady()) return false;
+  // read first, always: it is what marks every desk page as made per request, never built ahead
   const value = (await cookies()).get(STUDIO_COOKIE)?.value ?? "";
+  if (!studioReady()) return false;
   const [raw, signature = ""] = value.split(".");
   const until = Number(raw);
   if (!Number.isFinite(until) || until < Date.now()) return false;
   return same(signature, sign(until));
+}
+
+/**
+ * Stop here unless signed in. Every dashboard page, action and download
+ * calls this itself: a layout alone is not a lock, since a page or an action
+ * can be reached without passing through it.
+ */
+export async function requireStudio(): Promise<void> {
+  if (!(await signedIn())) redirect("/studio/sign-in");
 }

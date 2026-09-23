@@ -1,116 +1,154 @@
 /*
- * The site's editable content, read from Sanity: the Loom's colours and
- * fabrics, the preorder's prices and set counts, and the photographs.
+ * The content the studio edits in its dashboard: the Loom's colours and
+ * fabrics, the preorder's prices and set counts, the collection and the
+ * photographs. Kept in the database as one document.
  *
- * Read on the server and kept for a minute, so an edit published in the
- * studio is on the site within about a minute. Anything missing, malformed
- * or unreachable falls back to the defaults in `content-defaults.ts`, so the
- * site never loses its colours or its prices to a bad edit or an outage.
+ * Pages read it through a cache, and every save clears that cache, so an
+ * edit is on the site at the next page load. Whatever is missing or
+ * malformed falls back to the defaults, so the site never loses its colours
+ * or its prices to a bad edit.
  *
  * Server only.
  */
 
-import { createClient } from "next-sanity";
-import { apiVersion, dataset, projectId, sanityConnected } from "@/sanity/env";
-import { DEFAULT_CATALOGUE, type Catalogue, type Colour, type LoomFabric, type Photo } from "./content-defaults";
+import { unstable_cache } from "next/cache";
+import { GARMENT_LABEL, type Garment } from "./catalogue";
+import { DEFAULT_CATALOGUE, type Catalogue, type Photo } from "./content-defaults";
+import { memoryAllowed, redis } from "./redis";
 
-/** How long a read is kept before Sanity is asked again, in seconds. */
-const FRESH_FOR = 60;
+const KEY = "content:catalogue";
+/** The cache tag every read carries and every save clears. */
+export const CONTENT_TAG = "content";
 
-const client = sanityConnected
-  ? createClient({ projectId, dataset, apiVersion, useCdn: false, perspective: "published" })
-  : null;
+const HEX = /^#[0-9a-f]{6}$/;
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const GARMENTS = Object.keys(GARMENT_LABEL) as Garment[];
 
-const QUERY = `{
-  "colours": *[_type == "colour" && available != false] | order(coalesce(position, 9999) asc, name asc) { name, hex },
-  "fabrics": *[_type == "fabric" && available != false] | order(coalesce(position, 9999) asc, name asc) {
-    "id": key.current, name, character, finish
-  },
-  "terms": *[_id == "preorderSettings"][0] { adultPrice, adultSets, childrenPrice, childrenSets },
-  "photos": *[_id == "sitePhotos"][0] {
-    "homeLoom": homeLoom { "url": asset->url, alt },
-    "atelier": atelier { "url": asset->url, alt },
-    "pieces": pieces[] { piece, "url": photo.asset->url, "alt": photo.alt }
-  }
-}`;
-
-type Raw = {
-  colours?: Array<{ name?: string; hex?: string }>;
-  fabrics?: Array<{ id?: string; name?: string; character?: string; finish?: string }>;
-  terms?: { adultPrice?: number; adultSets?: number; childrenPrice?: number; childrenSets?: number } | null;
-  photos?: {
-    homeLoom?: { url?: string; alt?: string } | null;
-    atelier?: { url?: string; alt?: string } | null;
-    pieces?: Array<{ piece?: string; url?: string; alt?: string }> | null;
-  } | null;
+const text = (v: unknown, max = 400) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const whole = (v: unknown, min = 0) => {
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isInteger(n) && n >= min ? n : null;
+};
+const photo = (v: unknown): Photo | null => {
+  const p = v as Partial<Photo> | null;
+  return p && typeof p.url === "string" && p.url ? { url: p.url, alt: text(p.alt, 200) } : null;
 };
 
-const HEX = /^#[0-9a-fA-F]{6}$/;
-const count = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n >= 0;
-
-function photoOf(p?: { url?: string; alt?: string } | null): Photo | null {
-  return p?.url ? { url: p.url, alt: p.alt ?? "" } : null;
-}
-
-/** Sanity's answer, checked field by field; whatever does not pass keeps its default. */
-function shape(raw: Raw): Catalogue {
+/** A stored document, checked field by field. Whatever does not pass keeps its default. */
+export function normalise(raw: unknown): Catalogue {
+  const r = (raw ?? {}) as Partial<Record<keyof Catalogue, unknown>>;
   const d = DEFAULT_CATALOGUE;
 
-  const colours: Colour[] = (raw.colours ?? [])
-    .filter((c) => c.name && c.hex && HEX.test(c.hex))
-    .map((c) => ({ name: c.name!, hex: c.hex!.toLowerCase() }));
+  const colours = Array.isArray(r.colours)
+    ? r.colours
+        .map((c) => ({ name: text(c?.name, 40), hex: text(c?.hex, 7).toLowerCase(), hidden: Boolean(c?.hidden) }))
+        .filter((c) => c.name && HEX.test(c.hex))
+    : d.colours;
 
-  const fabrics: LoomFabric[] = (raw.fabrics ?? [])
-    .filter((f) => f.id && f.name)
-    .map((f) => ({
-      id: f.id!,
-      name: f.name!,
-      character: f.character ?? "",
-      add: 0,
-      finish: f.finish === "sheen" ? "sheen" : "matte",
-    }));
+  const fabrics = Array.isArray(r.fabrics)
+    ? r.fabrics
+        .map((f) => ({
+          id: text(f?.id, 40),
+          name: text(f?.name, 40),
+          character: text(f?.character, 120),
+          add: 0,
+          finish: f?.finish === "sheen" ? ("sheen" as const) : ("matte" as const),
+          hidden: Boolean(f?.hidden),
+        }))
+        .filter((f) => f.name && SLUG.test(f.id))
+    : d.fabrics;
 
-  const t = raw.terms;
-  const terms = {
-    adult: {
-      ...d.terms.adult,
-      price: count(t?.adultPrice) && t.adultPrice > 0 ? t.adultPrice : d.terms.adult.price,
-      total: count(t?.adultSets) ? t.adultSets : d.terms.adult.total,
-    },
-    children: {
-      ...d.terms.children,
-      price: count(t?.childrenPrice) && t.childrenPrice > 0 ? t.childrenPrice : d.terms.children.price,
-      total: count(t?.childrenSets) ? t.childrenSets : d.terms.children.total,
-    },
-  };
+  const t = (r.terms ?? {}) as Partial<Catalogue["terms"]>;
+  const tier = (k: keyof Catalogue["terms"]) => ({
+    name: d.terms[k].name,
+    price: whole(t[k]?.price, 100) ?? d.terms[k].price,
+    total: whole(t[k]?.total) ?? d.terms[k].total,
+  });
 
-  const pieces: Record<string, Photo> = {};
-  for (const p of raw.photos?.pieces ?? []) {
-    const photo = photoOf(p);
-    if (p.piece && photo) pieces[p.piece] = photo;
-  }
+  const p = (r.preorder ?? {}) as Partial<Catalogue["preorder"]>;
+
+  const pieces = Array.isArray(r.pieces)
+    ? r.pieces
+        .map((x) => ({
+          slug: text(x?.slug, 60),
+          name: text(x?.name, 60),
+          garment: GARMENTS.includes(x?.garment) ? (x.garment as Garment) : "kaftan",
+          design: text(x?.design, 30),
+          designNote: text(x?.designNote, 80),
+          detail: text(x?.detail, 400),
+          fromPrice: whole(x?.fromPrice, 0) ?? 0,
+          leadDays: whole(x?.leadDays, 1) ?? 14,
+          image: text(x?.image, 500),
+          alt: text(x?.alt, 200),
+          hidden: Boolean(x?.hidden),
+        }))
+        .filter((x) => SLUG.test(x.slug) && x.name && x.image)
+    : d.pieces;
+
+  const ph = (r.photos ?? {}) as Partial<Record<keyof Catalogue["photos"], unknown>>;
 
   return {
     // an emptied list would leave the Loom with nothing to offer: keep the defaults
     colours: colours.length ? colours : d.colours,
     fabrics: fabrics.length ? fabrics : d.fabrics,
-    terms,
-    photos: {
-      homeLoom: photoOf(raw.photos?.homeLoom),
-      atelier: photoOf(raw.photos?.atelier),
-      pieces,
+    terms: { adult: tier("adult"), children: tier("children") },
+    preorder: {
+      open: typeof p.open === "boolean" ? p.open : d.preorder.open,
+      description: typeof p.description === "string" ? text(p.description, 300) : d.preorder.description,
     },
+    pieces,
+    photos: { homeLoom: photo(ph.homeLoom), atelier: photo(ph.atelier) },
   };
 }
 
-/** The content as it stands, or the defaults when Sanity is not connected or not answering. */
-export async function getCatalogue(): Promise<Catalogue> {
-  if (!client) return DEFAULT_CATALOGUE;
+/* on this machine without a database, edits are kept in memory */
+const memory = globalThis as unknown as { __kasContent?: unknown };
+
+async function readStored(): Promise<unknown> {
+  const db = redis();
+  if (db) {
+    const v = await db.get<unknown>(KEY);
+    return typeof v === "string" ? JSON.parse(v) : v;
+  }
+  return memoryAllowed() ? (memory.__kasContent ?? null) : null;
+}
+
+/** Everything the studio has set, hidden things included: for the dashboard. Never cached. */
+export async function getContent(): Promise<Catalogue> {
   try {
-    const raw = await client.fetch<Raw>(QUERY, {}, { next: { revalidate: FRESH_FOR, tags: ["content"] } });
-    return shape(raw ?? {});
+    return normalise(await readStored());
   } catch (err) {
-    console.error("Sanity could not be read; using the built-in content.", err);
+    console.error("The content could not be read; using the built-in content.", err);
     return DEFAULT_CATALOGUE;
   }
+}
+
+/** What the site offers: the content with everything hidden taken out. */
+export const getCatalogue = unstable_cache(
+  async (): Promise<Catalogue> => {
+    const all = await getContent();
+    const colours = all.colours.filter((c) => !c.hidden);
+    const fabrics = all.fabrics.filter((f) => !f.hidden);
+    return {
+      ...all,
+      colours: colours.length ? colours : DEFAULT_CATALOGUE.colours,
+      fabrics: fabrics.length ? fabrics : DEFAULT_CATALOGUE.fabrics,
+      pieces: all.pieces.filter((x) => !x.hidden),
+    };
+  },
+  ["catalogue"],
+  { tags: [CONTENT_TAG], revalidate: 600 },
+);
+
+/**
+ * Save part of the content. The caller clears the cache (`updateTag`), which
+ * only a server action may do.
+ */
+export async function saveContent(change: Partial<Catalogue>): Promise<Catalogue> {
+  const next = normalise({ ...(await getContent()), ...change });
+  const db = redis();
+  if (db) await db.set(KEY, JSON.stringify(next));
+  else if (memoryAllowed()) memory.__kasContent = next;
+  else throw new Error("No database is connected.");
+  return next;
 }

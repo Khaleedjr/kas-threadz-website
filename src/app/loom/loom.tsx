@@ -60,7 +60,7 @@ const OPENING = {
 };
 
 export function Loom({ phone = false }: { phone?: boolean }) {
-  const { colours: COLOURS, fabrics: FABRICS, terms: PREORDER } = useCatalogue();
+  const { colours: COLOURS, fabrics: FABRICS, terms: PREORDER, preorder } = useCatalogue();
   const [config, setConfig] = useState<LoomConfig>(() => ({
     garment: "jallabiya",
     // the opening cloth and colour, if the studio still offers them
@@ -296,6 +296,11 @@ export function Loom({ phone = false }: { phone?: boolean }) {
       {/* the draft */}
       <section className="px-8 py-8">
         <h1 className="text-[22px]">Build it before we cut it.</h1>
+        {preorder.description && (
+          <p className="mt-2 max-w-[52ch] text-[14px] leading-relaxed" style={{ color: "var(--on-surface-soft)" }}>
+            {preorder.description}
+          </p>
+        )}
 
         {/* on a phone the choices are the labels on the garment; the steps are for a wide screen */}
         {labels.length > 0 && (

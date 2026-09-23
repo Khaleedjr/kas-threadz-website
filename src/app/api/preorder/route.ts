@@ -15,6 +15,9 @@ export async function POST(request: Request) {
   }
 
   const cat = await getCatalogue();
+  if (!cat.preorder.open) {
+    return Response.json({ error: "Preorders are closed for now. Please WhatsApp the studio." }, { status: 409 });
+  }
   const order = checkOrder(await request.json().catch(() => null), cat);
   if ("error" in order) return Response.json({ error: order.error }, { status: 400 });
 
@@ -37,6 +40,8 @@ export async function POST(request: Request) {
         // the price charged, so the payment is checked against it even if it changes meanwhile
         price,
         garment: order.garment,
+        // the order in the words the customer saw, kept whatever the studio renames later
+        described: { fabric: words.fabric, colour: words.colour },
         customer: order.customer,
         // shown on the transaction in the Paystack dashboard
         custom_fields: [

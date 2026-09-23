@@ -1,4 +1,4 @@
-import { PIECES, naira } from "@/lib/catalogue";
+import { naira, type Piece } from "@/lib/catalogue";
 import { SITE } from "@/lib/site";
 
 /**
@@ -8,7 +8,7 @@ import { SITE } from "@/lib/site";
  * infer "tailor in Abuja, open Mon to Sat, reachable on WhatsApp" from prose.
  * This states it plainly.
  */
-export function StudioSchema() {
+export function StudioSchema({ pieces }: { pieces: Piece[] }) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ClothingStore",
@@ -25,7 +25,7 @@ export function StudioSchema() {
     },
     openingHours: SITE.openingHours,
     sameAs: [SITE.instagram],
-    makesOffer: PIECES.map((piece) => ({
+    makesOffer: pieces.map((piece) => ({
       "@type": "Offer",
       name: piece.name,
       description: `${piece.detail} Embroidered with ${piece.design}.`,
@@ -45,16 +45,14 @@ export function StudioSchema() {
 }
 
 /** A single made-to-order piece. */
-export function PieceSchema({ slug, image }: { slug: string; image?: string }) {
-  const piece = PIECES.find((p) => p.slug === slug);
-  if (!piece) return null;
+export function PieceSchema({ piece }: { piece: Piece }) {
 
   const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: piece.name,
     description: `${piece.detail} Embroidered with ${piece.design}, ${piece.designNote.toLowerCase()}. Cut to measure in ${SITE.city}.`,
-    image: image?.startsWith("http") ? image : `${SITE.url}${image ?? piece.image}`,
+    image: piece.image.startsWith("http") ? piece.image : `${SITE.url}${piece.image}`,
     brand: { "@type": "Brand", name: SITE.name },
     offers: {
       "@type": "Offer",
