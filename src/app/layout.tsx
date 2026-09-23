@@ -47,7 +47,10 @@ export const viewport: Viewport = {
  * render; without JavaScript the class is never added and the mark is simply
  * there.
  */
-const CEREMONY_GUARD = `try{if(!sessionStorage.getItem("kas-mark-sewn"))document.documentElement.classList.add("kas-sew-pending")}catch(e){}`;
+// Always hide the mark pre-paint so the sew replays on every load. Restore the
+// guarded version to return to once-per-session:
+// `try{if(!sessionStorage.getItem("kas-mark-sewn"))document.documentElement.classList.add("kas-sew-pending")}catch(e){}`
+const CEREMONY_GUARD = `document.documentElement.classList.add("kas-sew-pending")`;
 
 export default function RootLayout({
   children,

@@ -5,7 +5,7 @@ import { Loom } from "./loom";
 export const metadata: Metadata = {
   title: "The Loom",
   description:
-    "Build your piece before we cut it: fabric, colour, embroidery and measurements, with the estimate always visible.",
+    "Preorder the jallabiya: choose the cloth, colour, neckline embroidery and size, and pay in full. The first run is 100 sets, adult and children's.",
 };
 
 export default function LoomPage() {
