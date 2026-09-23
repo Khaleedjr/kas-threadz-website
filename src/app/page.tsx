@@ -3,17 +3,16 @@ import Link from "next/link";
 import { StitchedMark } from "@/components/stitched-mark";
 import { RevealNav, ScrollCue, SiteFooter } from "@/components/site-chrome";
 import { StudioSchema } from "@/components/structured-data";
-import { PIECES, naira } from "@/lib/catalogue";
+import { naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
-import { piecePhoto } from "@/lib/content-defaults";
 
 export default async function Home() {
-  const { photos } = await getCatalogue();
-  const featured = PIECES.slice(0, 3);
+  const { photos, pieces } = await getCatalogue();
+  const featured = pieces.slice(0, 3);
 
   return (
     <div data-register="cloth" className="ground-cloth flex-1 flex flex-col text-[var(--on-surface)]">
-      <StudioSchema />
+      <StudioSchema pieces={pieces} />
       <RevealNav />
 
       {/* The mark gets the whole first screen. No nav competing with it, and
@@ -73,8 +72,8 @@ export default async function Home() {
                 className="group relative block aspect-[3/4] overflow-hidden rounded-sm bg-[var(--color-cloth-deep)]"
               >
                 <Image
-                  src={piecePhoto(piece, photos).url}
-                  alt={piecePhoto(piece, photos).alt}
+                  src={piece.image}
+                  alt={piece.alt}
                   fill
                   priority={index === 0}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

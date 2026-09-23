@@ -86,7 +86,13 @@ export async function recordPayment(
   v: Verified,
   terms: PreorderTerms,
 ): Promise<"recorded" | "already" | "invalid"> {
-  const meta = (v.metadata ?? {}) as { tier?: Tier; price?: number; garment?: PreorderGarment; customer?: PreorderCustomer };
+  const meta = (v.metadata ?? {}) as {
+    tier?: Tier;
+    price?: number;
+    garment?: PreorderGarment;
+    described?: { fabric?: string; colour?: string };
+    customer?: PreorderCustomer;
+  };
   const tier = meta.tier;
   if (!v.paid || !tier || !(tier in terms)) return "invalid";
   const due = Math.min(terms[tier].price, Number(meta.price) || terms[tier].price);
@@ -98,6 +104,7 @@ export async function recordPayment(
     tier,
     paid: v.amount,
     garment: meta.garment,
+    described: meta.described,
     customer: meta.customer,
     at: new Date().toISOString(),
   });

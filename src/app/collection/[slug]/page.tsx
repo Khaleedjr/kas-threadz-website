@@ -4,12 +4,13 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
 import { PieceSchema } from "@/components/structured-data";
-import { GARMENT_LABEL, PIECES, naira } from "@/lib/catalogue";
+import { GARMENT_LABEL, naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
-import { piecePhoto } from "@/lib/content-defaults";
 
-export function generateStaticParams() {
-  return PIECES.map((piece) => ({ slug: piece.slug }));
+/* built ahead for the pieces there are now; a piece added in the studio is
+   built the first time someone opens it */
+export async function generateStaticParams() {
+  return (await getCatalogue()).pieces.map((piece) => ({ slug: piece.slug }));
 }
 
 export async function generateMetadata({
@@ -18,7 +19,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const piece = PIECES.find((p) => p.slug === slug);
+  const piece = (await getCatalogue()).pieces.find((p) => p.slug === slug);
   if (!piece) return { title: "Not found" };
   return {
     title: piece.name,
@@ -28,11 +29,11 @@ export async function generateMetadata({
 
 export default async function PiecePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const PIECES = (await getCatalogue()).pieces;
   const index = PIECES.findIndex((p) => p.slug === slug);
   if (index === -1) notFound();
 
   const piece = PIECES[index];
-  const photo = piecePhoto(piece, (await getCatalogue()).photos);
   const prev = PIECES[(index - 1 + PIECES.length) % PIECES.length];
   const next = PIECES[(index + 1) % PIECES.length];
 
@@ -43,7 +44,7 @@ export default async function PiecePage({ params }: { params: Promise<{ slug: st
       data-register="cloth"
       className="ground-cloth flex h-dvh flex-col overflow-hidden text-[var(--on-surface)]"
     >
-      <PieceSchema slug={piece.slug} image={photo.url} />
+      <PieceSchema piece={piece} />
       <SiteNav />
 
       <section
@@ -65,8 +66,8 @@ export default async function PiecePage({ params }: { params: Promise<{ slug: st
 
         <div className="relative mt-[clamp(8px,2vh,22px)] min-h-0 w-full flex-1">
           <Image
-            src={photo.url}
-            alt={photo.alt}
+            src={piece.image}
+            alt={piece.alt}
             fill
             priority
             sizes="(max-width: 768px) 90vw, 40vw"

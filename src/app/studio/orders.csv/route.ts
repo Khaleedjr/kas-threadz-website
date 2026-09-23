@@ -11,6 +11,7 @@ import { signedIn } from "@/lib/studio-auth";
 const COLUMNS = [
   ["Date", "date"],
   ["Reference", "reference"],
+  ["Status", "statusLabel"],
   ["Name", "name"],
   ["Phone", "phone"],
   ["Email", "email"],
@@ -20,6 +21,7 @@ const COLUMNS = [
   ["Neckline", "design"],
   ["Thread", "thread"],
   ["Paid (NGN)", "paidNaira"],
+  ["Note", "note"],
 ] as const;
 
 /** One cell: quoted, and never read by a spreadsheet as a formula. */

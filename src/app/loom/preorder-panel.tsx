@@ -16,7 +16,7 @@ const REFRESH_MS = 20000;
  * it once its payment is confirmed.
  */
 export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; summary: string }) {
-  const PREORDER = useCatalogue().terms;
+  const { terms: PREORDER, preorder } = useCatalogue();
   const tier = tierFor(garment.length);
   const [stock, setStock] = useState<Stock | null>(null);
   const [countFailed, setCountFailed] = useState(false);
@@ -50,6 +50,7 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
 
   const left = stock?.[tier].left;
   const soldOut = left === 0;
+  const closed = !preorder.open;
 
   async function pay(e: React.FormEvent) {
     e.preventDefault();
@@ -93,11 +94,11 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
           <button
             type="button"
             onClick={() => setOpen(true)}
-            disabled={soldOut}
+            disabled={soldOut || closed}
             className="rounded-sm px-6 py-[13px] text-[10.5px] font-medium uppercase tracking-[0.2em] disabled:opacity-40"
             style={{ background: "var(--action)", color: "var(--on-action)" }}
           >
-            {soldOut ? `${PREORDER[tier].name} sets sold out` : "Preorder and pay"}
+            {closed ? "Preorders closed for now" : soldOut ? `${PREORDER[tier].name} sets sold out` : "Preorder and pay"}
           </button>
         )}
         <p className="label" style={{ color: "var(--on-surface-soft)" }}>

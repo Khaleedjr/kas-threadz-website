@@ -9,7 +9,7 @@ export async function signIn(form: FormData) {
   if (!passwordMatches(attempt)) {
     // a pause on every wrong guess, so guessing is slow
     await new Promise((r) => setTimeout(r, 1200));
-    redirect("/studio?wrong=1");
+    redirect("/studio/sign-in?wrong=1");
   }
   (await cookies()).set(STUDIO_COOKIE, newSession(), {
     httpOnly: true,
@@ -23,5 +23,5 @@ export async function signIn(form: FormData) {
 
 export async function signOut() {
   (await cookies()).delete({ name: STUDIO_COOKIE, path: "/studio" });
-  redirect("/studio");
+  redirect("/studio/sign-in");
 }

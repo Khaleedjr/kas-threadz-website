@@ -2,9 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
-import { GARMENT_LABEL, PIECES, naira } from "@/lib/catalogue";
+import { GARMENT_LABEL, naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
-import { piecePhoto } from "@/lib/content-defaults";
 
 export const metadata: Metadata = {
   title: "The Collection",
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionPage() {
-  const { photos } = await getCatalogue();
+  const { pieces: PIECES } = await getCatalogue();
   return (
     <div data-register="cloth" className="ground-cloth flex-1 flex flex-col text-[var(--on-surface)]">
       <SiteNav />
@@ -38,8 +37,8 @@ export default async function CollectionPage() {
                 className="group relative block aspect-[3/4] overflow-hidden rounded-sm bg-[var(--color-cloth-deep)]"
               >
                 <Image
-                  src={piecePhoto(piece, photos).url}
-                  alt={piecePhoto(piece, photos).alt}
+                  src={piece.image}
+                  alt={piece.alt}
                   fill
                   priority={index === 0}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
