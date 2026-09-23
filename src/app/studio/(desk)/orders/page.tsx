@@ -21,6 +21,7 @@ export default async function OrdersPage({
   const store = preorderStore();
   const cat = await getContent();
   const all = store ? await store.orders() : [];
+  // an order can hold several builds: its customer's details are what search looks at
   const rows = all
     .filter((o) => !status || o.status === status)
     .filter((o) => !tier || o.tier === tier)
@@ -127,10 +128,17 @@ export default async function OrdersPage({
                       </Link>
                     </td>
                     <td className="border-b px-3 py-3" style={{ borderColor: "var(--line)" }}>
-                      {r.size} · {r.colour} {r.fabric.toLowerCase()}
-                      <span className="mt-1 block text-[12px]" style={{ color: "var(--on-surface-soft)" }}>
-                        <span className="code">{r.design}</span> · {r.thread === "As designed" ? "thread as designed" : `${r.thread.toLowerCase()} thread`}
-                      </span>
+                      {r.items.map((i, n) => (
+                        <span key={n} className="block">
+                          {i.qty > 1 ? `${i.qty} × ` : ""}
+                          {i.garment.length}″ · {i.colour} {i.fabric.toLowerCase()} · <span className="code text-[12px]">{i.design}</span>
+                        </span>
+                      ))}
+                      {r.delivery && (
+                        <span className="mt-1 block text-[12px]" style={{ color: "var(--on-surface-soft)" }}>
+                          {r.delivery.method === "pickup" ? "Collect" : `Deliver · ${r.delivery.label}`}
+                        </span>
+                      )}
                     </td>
                     <td className="border-b px-3 py-3" style={{ borderColor: "var(--line)" }}>
                       <StatusBadge status={r.status} />
@@ -162,7 +170,8 @@ export default async function OrdersPage({
                   </p>
                   <p className="mt-2 font-medium">{r.name}</p>
                   <p className="mt-1 text-[13px] leading-relaxed">
-                    {r.size} · {r.colour} {r.fabric.toLowerCase()} · <span className="code text-[12px]">{r.design}</span>
+                    {r.summary}
+                    {r.delivery && ` · ${r.delivery.method === "pickup" ? "collect" : r.delivery.label}`}
                   </p>
                   <p className="mt-2">
                     <StatusBadge status={r.status} />

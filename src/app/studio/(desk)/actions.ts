@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { CONTENT_TAG, getContent, saveContent } from "@/lib/content";
 import type { Catalogue, Colour, LoomFabric, ShopPiece } from "@/lib/content-defaults";
+import type { Shipping } from "@/lib/shipping";
 import { ORDER_STATUSES, preorderStore, type OrderStatus } from "@/lib/preorder-store";
 import { requireStudio } from "@/lib/studio-auth";
 
@@ -154,4 +155,24 @@ export async function savePhotos(form: FormData) {
   };
   await publish({ photos: { homeLoom: photo("homeLoom"), atelier: photo("atelier") } });
   redirect("/studio/photos?saved=1");
+}
+
+/* -------------------------------------------------------------- shipping */
+
+export async function saveShipping(shipping: Shipping): Promise<{ ok: boolean; message: string }> {
+  await requireStudio();
+  if (!shipping.zones.some((z) => !z.hidden) && !shipping.pickup.on) {
+    return { ok: false, message: "Offer at least one place to deliver to, or collecting." };
+  }
+  // a new zone takes a key from its name, never one already in use
+  const used = new Set(shipping.zones.map((z) => z.id).filter(Boolean));
+  const zones = shipping.zones.map((z) => {
+    if (z.id) return z;
+    let id = slugOf(z.label) || "zone";
+    for (let n = 2; used.has(id); n++) id = `${slugOf(z.label) || "zone"}-${n}`;
+    used.add(id);
+    return { ...z, id };
+  });
+  await publish({ shipping: { ...shipping, zones } });
+  return { ok: true, message: "Saved. Checkout uses it from the next page load." };
 }

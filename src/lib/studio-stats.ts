@@ -6,10 +6,17 @@
 import { naira } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import { describe } from "./preorder-server";
-import type { Order, OrderStatus } from "./preorder-store";
+import { itemsOf, type Order, type OrderStatus } from "./preorder-store";
 
 /** Orders that count as sales: every one not cancelled. */
 export const sales = (orders: Order[]) => orders.filter((o) => o.status !== "cancelled");
+
+/** Sets sold, across every order that counts. */
+export const setsSold = (orders: Order[]) =>
+  sales(orders).reduce((n, o) => n + itemsOf(o).reduce((m, i) => m + i.qty, 0), 0);
+
+/** What delivery fees brought in. */
+export const deliveryTaken = (orders: Order[]) => sales(orders).reduce((n, o) => n + (o.delivery?.fee ?? 0), 0);
 
 export const taken = (orders: Order[]) => sales(orders).reduce((n, o) => n + o.paid, 0);
 
@@ -60,15 +67,17 @@ export function breakdowns(orders: Order[], cat: Catalogue) {
     length: tally(),
   };
   for (const o of sales(orders)) {
-    if (!o.garment) continue;
-    const w = describe(o.garment, cat);
-    const add = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
-    add(b.colour, o.described?.colour || w.colour);
-    add(b.design, w.design);
-    add(b.fabric, o.described?.fabric || w.fabric);
-    add(b.thread, w.thread);
-    add(b.tier, cat.terms[w.tier].name);
-    add(b.length, `${o.garment.length}″`);
+    for (const i of itemsOf(o)) {
+      const w = describe(i.garment, cat);
+      // counted in sets: two of the same build is two
+      const add = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + i.qty);
+      add(b.colour, i.described?.colour || w.colour);
+      add(b.design, w.design);
+      add(b.fabric, i.described?.fabric || w.fabric);
+      add(b.thread, w.thread);
+      add(b.tier, cat.terms[w.tier].name);
+      add(b.length, `${i.garment.length}″`);
+    }
   }
   const ranked = (m: Map<string, number>) => [...m.entries()].sort((a, z) => z[1] - a[1]);
   return {

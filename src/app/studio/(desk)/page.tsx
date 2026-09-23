@@ -2,8 +2,8 @@ import Link from "next/link";
 import { naira } from "@/lib/catalogue";
 import { getContent } from "@/lib/content";
 import type { Tier } from "@/lib/preorder";
-import { preorderStore } from "@/lib/preorder-store";
-import { byStatus, daily, sales, since, taken } from "@/lib/studio-stats";
+import { itemsOf, preorderStore } from "@/lib/preorder-store";
+import { byStatus, daily, sales, setsSold, since, taken } from "@/lib/studio-stats";
 import { requireStudio } from "@/lib/studio-auth";
 import { ThreadCount } from "../../loom/thread-count";
 import { DayChart } from "./charts";
@@ -56,7 +56,7 @@ export default async function Overview() {
       </PageHead>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Figure label="Taken" value={naira(taken(orders))} sub={`${sold.length} orders`} />
+        <Figure label="Taken" value={naira(taken(orders))} sub={`${sold.length} orders · ${setsSold(orders)} sets`} />
         <Figure label="Today" value={naira(today.taken)} sub={`${today.orders} orders`} />
         <Figure label="Last 7 days" value={naira(week.taken)} sub={`${week.orders} orders`} />
         <Figure label="In the workshop" value={String(inWork)} sub={`${statuses.ready} ready to go`} />
@@ -121,7 +121,7 @@ export default async function Overview() {
                     <span className="truncate text-[14px] font-medium">{o.customer?.name ?? o.reference}</span>
                     <span className="price text-[13px]">{naira(o.paid)}</span>
                     <span className="label truncate" style={{ color: "var(--on-surface-soft)" }}>
-                      {dateTime(o.at)} · {o.garment ? `${o.garment.length}″` : ""}
+                      {dateTime(o.at)} · {(() => { const n = itemsOf(o).reduce((m, i) => m + i.qty, 0); return `${n} ${n === 1 ? "set" : "sets"}`; })()}
                     </span>
                     <StatusBadge status={o.status} />
                   </Link>

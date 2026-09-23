@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { getCatalogue } from "@/lib/content";
+import { sendReceipt } from "@/lib/order-mail";
 import { recordPayment } from "@/lib/preorder-server";
 import { signedByPaystack, verifyPayment } from "@/lib/paystack";
 
@@ -18,7 +20,13 @@ export async function POST(request: Request) {
   const event = JSON.parse(raw) as { event?: string; data?: { reference?: string } };
   const reference = event.data?.reference;
   if (event.event === "charge.success" && reference) {
-    await recordPayment(reference, await verifyPayment(reference), (await getCatalogue()).terms);
+    const cat = await getCatalogue();
+    const { outcome, order } = await recordPayment(reference, await verifyPayment(reference), cat);
+    // the customer never came back to the site: the receipt still goes to them
+    if (outcome === "recorded" && order) {
+      const origin = new URL(request.url).origin;
+      after(() => sendReceipt(order, cat, origin).catch((err) => console.error("Receipt email failed.", err)));
+    }
   }
   // Paystack only needs to hear it arrived
   return new Response("ok");
