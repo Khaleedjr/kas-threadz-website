@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { DESIGNS, GARMENT_LABEL, NECKLINES, naira, type Garment } from "@/lib/catalogue";
 import { COLOURS, FABRICS, type LoomConfig } from "@/lib/loom";
 import { ADULT_LENGTHS, CHILD_SIZES, PREORDER, tierFor } from "@/lib/preorder";
@@ -11,6 +11,7 @@ import { GarmentPreview } from "./garment-preview";
 import { FLATS, GarmentFlat } from "./garment-flat";
 import { ZoomStage } from "./zoom-stage";
 import { PreorderPanel } from "./preorder-panel";
+import { PreviewDock } from "./preview-dock";
 
 /* The 3D preview (`garment-3d.tsx`, `src/lib/jallabiya-3d.ts`) is set aside
    for now: the Loom shows the drawn view only. The files are kept so it can
@@ -51,6 +52,8 @@ export function Loom() {
   const length = config.measurements.height ?? LENGTH_RANGE.standard;
   const tier = tierFor(length);
   const child = CHILD_SIZES.find((c) => c.length === length);
+  // the full preview, which the phone dock watches for going off screen
+  const previewRef = useRef<HTMLDivElement>(null);
 
   /* the shape of the pane the preview is shown in: the jallabiya's drawing is
      cropped tight to the garment, so it is taller and narrower than the rest */
@@ -118,6 +121,7 @@ export function Loom() {
               drawing's own shape, as well as by the column it sits in. The
               height left is the screen less the nav, the label and the zoom row. */}
           <div
+            ref={previewRef}
             className="w-full"
             // as wide as the height left over allows at the pane's shape, so the
             // garment is as big as the screen can hold without scrolling
@@ -132,6 +136,29 @@ export function Loom() {
           </div>
         </div>
       </section>
+
+      {/* on a phone, the preview stays in sight while the steps below are chosen */}
+      {necklines && design && (
+        <PreviewDock
+          watch={previewRef}
+          ratio={FLAT_RATIO}
+          lines={[
+            `${colour.name} ${fabric.name.toLowerCase()} jallabiya`,
+            `${design.code} · ${config.thread === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`}`,
+            child ? `${length} in · children, ${child.age}` : `${length} in · adult`,
+            naira(PREORDER[tier].price),
+          ]}
+        >
+          <GarmentPreview
+            garment={config.garment}
+            colour={colour.hex}
+            fabric={fabric}
+            design={design}
+            thread={tones}
+            length={length}
+          />
+        </PreviewDock>
+      )}
 
       {/* the draft */}
       <section className="px-8 py-8">
