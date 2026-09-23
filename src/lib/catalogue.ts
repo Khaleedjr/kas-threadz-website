@@ -150,6 +150,25 @@ export const DESIGNS: Design[] = [
   })),
 ];
 
+/**
+ * The jallabiya necklines the Loom offers, in their own thread colours.
+ *
+ * Stand-in names: the studio sent these as screen captures without their
+ * machine file names, so each is numbered in the order it was sent. When the
+ * file names arrive they replace the numbers here; an invented code must never
+ * take their place. The images are cut by `scripts/neckline-designs.py`.
+ */
+export const NECKLINES: Array<Pick<Design, "code" | "label" | "placement" | "image">> =
+  Array.from({ length: 14 }, (_, i) => {
+    const n = String(i + 1).padStart(2, "0");
+    return {
+      code: `Neckline ${n}`,
+      label: "Neckline",
+      placement: "Neck opening & chest",
+      image: `/img/designs/necklines/nl${n}.png`,
+    };
+  });
+
 export const GARMENT_LABEL: Record<Garment, string> = {
   kaftan: "Kaftan",
   senator: "Senator",

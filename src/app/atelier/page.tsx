@@ -65,13 +65,13 @@ export default function AtelierPage() {
 
         <section className="relative min-h-[340px]">
           <Image
-            src="/img/work/kaftan-cream-detail.jpg"
-            alt="Close view of cocoa cross-stitch embroidery on a cream kaftan placket"
+            src="/img/work/jallab-maroon.jpg"
+            alt="A maroon jallabiya with a cream embroidered neckline and a gold tassel"
             fill
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
-            style={{ objectPosition: "center 30%" }}
+            style={{ objectPosition: "center 20%" }}
           />
         </section>
       </div>

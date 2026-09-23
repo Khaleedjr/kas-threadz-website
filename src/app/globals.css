@@ -257,6 +257,32 @@
     color: var(--on-surface);
   }
 
+  /* The garment stage and its design overlays.
+     `src/lib/garment.ts` emits `.garment-svg` and `.design-overlay`, so these
+     names have to stay in step with it. */
+  .garment-stage {
+    position: relative;
+    aspect-ratio: 500 / 660;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .garment-stage .garment-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* A design is shown in the thread colours it was digitised in. The hairline
+     shadow is the thread standing proud of the cloth. */
+  .design-overlay {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-repeat: no-repeat;
+    background-size: contain;
+    filter: drop-shadow(0 0.6px 0.5px rgba(0, 0, 0, 0.4));
+  }
+
   /* A chip that has to stay readable over photography it cannot control. */
   .chip-over-photo {
     font-family: var(--font-mono);

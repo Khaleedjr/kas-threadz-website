@@ -9,120 +9,61 @@
 
 import type { Garment } from "./catalogue";
 
-export type LightingKey = "daylight" | "tungsten" | "evening";
-
 export type LoomConfig = {
   garment: Garment;
   fabric: string;
   colour: string;
   design: string | null;
+  /** the thread the design is run in: "original" keeps the design's own colours */
+  thread: string;
   measurements: Measurements;
 };
 
 export type Measurements = {
-  chest?: number;
-  shoulder?: number;
-  sleeve?: number;
-  length?: number;
-  neck?: number;
+  /** the standard length, in inches. Jallabiya runs 54 to 62. */
+  height?: number;
   fit: "regular" | "slim" | "relaxed";
 };
 
 export type Fabric = {
   id: string;
   name: string;
-  /** the mill's own name for the line */
-  house: string;
   /** one line, for the Loom where space is tight */
   character: string;
-  /** the longer read, for the fabrics page */
-  note: string;
-  bestFor: string;
+  /** what this cloth adds to the base price */
   add: number;
-  swatch: string;
-  /** photographs of the same cloth in the colours the studio stocks */
-  colourways: string[];
 };
 
+/* Two cloths for now. The fuller material library is coming back later, so
+   the fabrics page is held on a coming-soon note in the meantime. */
 export const FABRICS: Fabric[] = [
   {
-    id: "sevenstar",
-    name: "Seven Star",
-    house: "Florence · Wool Premium",
-    character: "Smooth solid wool. The one to pick when the embroidery is the point.",
-    note: "Our smoothest cloth, with only a whisper of twill in the weave. No pattern to compete with the thread, which is why heavy chest panels go on this one.",
-    bestFor: "Heavy embroidery",
-    add: 18000,
-    swatch: "/img/fabrics/seven-royal.jpg",
-    colourways: ["/img/fabrics/seven-royal.jpg", "/img/fabrics/seven-navy.jpg", "/img/fabrics/seven-charcoal.jpg"],
+    id: "cotton",
+    name: "Cotton",
+    character: "Matte and breathable. The everyday cloth that wears all day.",
+    add: 0,
   },
   {
-    id: "focus",
-    name: "Focus",
-    house: "Florence · Wool Premium",
-    character: "Tonal satin stripe that catches light rather than colour.",
-    note: "The stripe catches light rather than colour, so the cloth shifts between matte and sheen as you move. It is the reason this one photographs so well at evening events.",
-    bestFor: "Occasions",
+    id: "silk",
+    name: "Silk",
+    character: "A soft sheen that lifts the colour. The one for an occasion.",
     add: 15000,
-    swatch: "/img/fabrics/focus-navy.jpg",
-    colourways: ["/img/fabrics/focus-navy.jpg", "/img/fabrics/focus-maroon.jpg", "/img/fabrics/focus-teal.jpg"],
-  },
-  {
-    id: "properstripes",
-    name: "Proper Stripes",
-    house: "Premium Stripe",
-    character: "Bold pinstripe with real spacing. Carries a room on its own.",
-    note: "A confident pinstripe with real distance between the lines. It carries a room by itself, so we usually pair it with restrained work: a neckline and cuffs rather than a full front.",
-    bestFor: "Statements",
-    add: 14000,
-    swatch: "/img/fabrics/proper-charcoal.jpg",
-    colourways: ["/img/fabrics/proper-charcoal.jpg", "/img/fabrics/proper-navy.jpg", "/img/fabrics/proper-teal.jpg"],
-  },
-  {
-    id: "express",
-    name: "Express",
-    house: "Noble Thinker",
-    character: "Fine pinstripe with a dry, crisp hand.",
-    note: "The stripe is subtle enough for daywear but holds a sharp line, so it suits a fitted kaftan and anything meant to read as tailored rather than flowing.",
-    bestFor: "Fitted kaftans",
-    add: 12000,
-    swatch: "/img/fabrics/express-beige.jpg",
-    colourways: ["/img/fabrics/express-beige.jpg", "/img/fabrics/express-sky.jpg"],
-  },
-  {
-    id: "noblethinker",
-    name: "Noble Thinker",
-    house: "Elegance Beyond Time",
-    character: "Everyday fine stripe. Drapes easily, resists creasing.",
-    note: "The most forgiving cloth in the library. It drapes easily, resists creasing and takes colour beautifully. The one most clients come back for.",
-    bestFor: "Everyday",
-    add: 10000,
-    swatch: "/img/fabrics/noble-tan.jpg",
-    colourways: ["/img/fabrics/noble-tan.jpg", "/img/fabrics/noble-grey.jpg", "/img/fabrics/noble-teal.jpg"],
   },
 ];
 
 export const COLOURS: Array<{ hex: string; name: string }> = [
-  { hex: "#20364f", name: "Navy" },
-  { hex: "#2f4a3d", name: "Emerald" },
-  { hex: "#4a3728", name: "Chocolate" },
-  { hex: "#1a1518", name: "Black" },
-  { hex: "#e9e2d6", name: "Cream" },
-  { hex: "#521218", name: "Burgundy" },
-  { hex: "#5a5560", name: "Slate" },
-  { hex: "#b99a6b", name: "Gold" },
+  { hex: "#f4f3ef", name: "White" },
+  { hex: "#1b1819", name: "Black" },
+  { hex: "#5a3d29", name: "Brown" },
+  { hex: "#cbb188", name: "Carton" },
+  { hex: "#5b1a22", name: "Maroon" },
+  { hex: "#22314e", name: "Navy Blue" },
+  { hex: "#8fbadd", name: "Sky Blue" },
+  { hex: "#4a4b4f", name: "Dark Ash" },
+  { hex: "#b6bbc1", name: "Silver" },
+  { hex: "#6a4a33", name: "Coffee Brown" },
+  { hex: "#4b5334", name: "Army Green" },
 ];
-
-/**
- * Preview photography per garment. Until there are renders for every colour,
- * the preview at least has to be the garment you actually chose.
- */
-export const GARMENT_PREVIEW: Record<Garment, { src: string; alt: string }> = {
-  kaftan: { src: "/img/work/kaftan-grey-side.jpg", alt: "Kaftan on the stand, side view" },
-  senator: { src: "/img/work/kaftan-blue.jpg", alt: "Senator tunic, front view" },
-  jallabiya: { src: "/img/work/jallab-maroon.jpg", alt: "Jallabiya with tasselled placket" },
-  agbada: { src: "/img/work/agbada-blue.jpg", alt: "Agbada with embroidered chest panel" },
-};
 
 export const GARMENT_BASE: Record<Garment, number> = {
   senator: 25000,
@@ -132,29 +73,6 @@ export const GARMENT_BASE: Record<Garment, number> = {
 };
 
 export const EMBROIDERY_ADD = 15000;
-
-/**
- * Cloth changes character with the light it is under, and that is the single
- * biggest reason people hesitate to buy fabric they cannot touch. Each option
- * is a filter applied to the preview, not a different photograph.
- */
-export const LIGHTING: Record<LightingKey, { label: string; note: string; filter: string }> = {
-  daylight: {
-    label: "Daylight",
-    note: "Midday, outdoors. The truest reading of the colour.",
-    filter: "saturate(1) brightness(1) hue-rotate(0deg)",
-  },
-  tungsten: {
-    label: "Tungsten",
-    note: "Indoor bulbs. Warmer, and a shade heavier.",
-    filter: "saturate(1.06) brightness(0.96) sepia(0.16) hue-rotate(-6deg)",
-  },
-  evening: {
-    label: "Evening",
-    note: "Reception lighting. Cooler and deeper, the way it reads at an owambe.",
-    filter: "saturate(0.92) brightness(0.82) hue-rotate(6deg) contrast(1.05)",
-  },
-};
 
 export function estimate(config: LoomConfig): number {
   const fabric = FABRICS.find((f) => f.id === config.fabric);

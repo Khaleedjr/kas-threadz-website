@@ -50,6 +50,9 @@ export function StitchedMark({
     } catch {
       // private browsing: treat as already sewn rather than replaying every load
     }
+    // Replay the sew on every load so the mark stitches itself each visit.
+    // Remove this line to restore the once-per-session ceremony.
+    sewn = false;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (sewn || reduced) {
