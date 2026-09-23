@@ -85,6 +85,20 @@ export function normalise(raw: unknown): Catalogue {
         .filter((x) => SLUG.test(x.slug) && x.name && x.image)
     : d.pieces;
 
+  const sh = (r.shipping ?? {}) as Partial<Catalogue["shipping"]>;
+  const zones = Array.isArray(sh.zones)
+    ? sh.zones
+        .map((z) => ({
+          id: text(z?.id, 60),
+          label: text(z?.label, 60),
+          fee: whole(z?.fee, 0) ?? 0,
+          eta: text(z?.eta, 40) || "2 to 5 business days",
+          hidden: Boolean(z?.hidden),
+        }))
+        .filter((z) => SLUG.test(z.id) && z.label)
+    : d.shipping.zones;
+  const pickup = (sh.pickup ?? {}) as Partial<Catalogue["shipping"]["pickup"]>;
+
   const ph = (r.photos ?? {}) as Partial<Record<keyof Catalogue["photos"], unknown>>;
 
   return {
@@ -97,6 +111,15 @@ export function normalise(raw: unknown): Catalogue {
       description: typeof p.description === "string" ? text(p.description, 300) : d.preorder.description,
     },
     pieces,
+    shipping: {
+      zones,
+      pickup: {
+        on: typeof pickup.on === "boolean" ? pickup.on : d.shipping.pickup.on,
+        label: text(pickup.label, 60) || d.shipping.pickup.label,
+        note: typeof pickup.note === "string" ? text(pickup.note, 200) : d.shipping.pickup.note,
+      },
+      freeFrom: whole(sh.freeFrom, 0) ?? d.shipping.freeFrom,
+    },
     photos: { homeLoom: photo(ph.homeLoom), atelier: photo(ph.atelier) },
   };
 }

@@ -7,6 +7,7 @@
 import { PIECES, type Piece } from "./catalogue";
 import { COLOURS, FABRICS, type Fabric } from "./loom";
 import { PREORDER, type PreorderTerms } from "./preorder";
+import { DEFAULT_SHIPPING, type Shipping } from "./shipping";
 
 export type Colour = { hex: string; name: string; hidden?: boolean };
 
@@ -38,6 +39,8 @@ export type Catalogue = {
     description: string;
   };
   pieces: ShopPiece[];
+  /** where the studio delivers, what it costs, and collecting instead */
+  shipping: Shipping;
   photos: {
     /** the home page's photograph beside the Loom */
     homeLoom: Photo | null;
@@ -56,6 +59,7 @@ export const DEFAULT_CATALOGUE: Catalogue = {
       "Cut to your length in the cloth, colour and neckline you choose. One price covers all of it, paid in full to hold your set.",
   },
   pieces: PIECES,
+  shipping: DEFAULT_SHIPPING,
   photos: { homeLoom: null, atelier: null },
 };
 

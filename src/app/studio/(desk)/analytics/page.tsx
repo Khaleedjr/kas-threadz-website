@@ -2,7 +2,7 @@ import { naira } from "@/lib/catalogue";
 import { getContent } from "@/lib/content";
 import { STATUS_LABEL, preorderStore } from "@/lib/preorder-store";
 import { requireStudio } from "@/lib/studio-auth";
-import { breakdowns, byStatus, customers, daily, sales, taken } from "@/lib/studio-stats";
+import { breakdowns, byStatus, customers, daily, deliveryTaken, sales, setsSold, taken } from "@/lib/studio-stats";
 import { DayChart } from "../charts";
 import { Bars, Figure, PageHead, Panel } from "../ui";
 
@@ -24,8 +24,8 @@ export default async function AnalyticsPage() {
       <PageHead title="Analytics" note="What has sold, what sells best, and who is buying. Cancelled orders are left out of the money and the rankings." />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Figure label="Taken" value={naira(money)} />
-        <Figure label="Orders" value={String(sold.length)} sub={cancelled ? `${cancelled} cancelled` : undefined} />
+        <Figure label="Taken" value={naira(money)} sub={`${naira(deliveryTaken(orders))} of it delivery`} />
+        <Figure label="Orders" value={String(sold.length)} sub={`${setsSold(orders)} sets${cancelled ? ` · ${cancelled} cancelled` : ""}`} />
         <Figure label="Average order" value={naira(sold.length ? Math.round(money / sold.length) : 0)} />
         <Figure label="Customers" value={String(people.length)} sub={`${people.filter((p) => p.orders > 1).length} came back`} />
       </div>

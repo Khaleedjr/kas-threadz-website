@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { setsIn, useCart } from "@/lib/cart";
 
 const NAV = [
   { href: "/collection", label: "Collection" },
@@ -125,6 +126,22 @@ function MenuToggle({ open, onToggle }: { open: boolean; onToggle: () => void })
   );
 }
 
+/** The cart, once there is something in it: nothing to look at before then. */
+function CartLink() {
+  const sets = setsIn(useCart());
+  if (!sets) return null;
+  return (
+    <Link
+      href="/cart"
+      className="rounded-sm border px-[12px] py-[9px] text-[10px] font-medium uppercase tracking-[0.2em] whitespace-nowrap"
+      style={{ borderColor: "currentColor" }}
+      aria-label={`Your cart, ${sets} ${sets === 1 ? "set" : "sets"}`}
+    >
+      Cart · {sets}
+    </Link>
+  );
+}
+
 function CommissionButton() {
   return (
     <Link
@@ -178,6 +195,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
       >
         <MarkLockup />
         <div className="flex items-center gap-3">
+          <CartLink />
           <CommissionButton />
           <MenuToggle open onToggle={onClose} />
         </div>
@@ -219,6 +237,7 @@ export function SiteNav() {
         <MarkLockup />
         <DesktopLinks />
         <div className="flex items-center gap-3">
+          <CartLink />
           <CommissionButton />
           <MenuToggle open={open} onToggle={() => setOpen(!open)} />
         </div>
@@ -259,6 +278,7 @@ export function RevealNav({ after = 220 }: { after?: number }) {
         <MarkLockup />
         <DesktopLinks />
         <div className="flex items-center gap-3">
+          <CartLink />
           <CommissionButton />
           <MenuToggle open={open} onToggle={() => setOpen(!open)} />
         </div>

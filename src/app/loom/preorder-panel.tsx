@@ -1,29 +1,30 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { naira } from "@/lib/catalogue";
+import { cart, setsIn, useCart, MAX_SETS } from "@/lib/cart";
 import { tierFor, type PreorderGarment, type Stock, type Tier } from "@/lib/preorder";
-import { useCatalogue } from "./catalogue-context";
 import { whatsappLink } from "@/lib/site";
+import { useCatalogue } from "./catalogue-context";
 import { ThreadCount } from "./thread-count";
 
 /** How often the count is refreshed while the Loom is open. */
 const REFRESH_MS = 20000;
 
 /**
- * The preorder: how many sets are left of each size, and paying for one in
- * full. The count is live, shared by everyone looking, and a set only leaves
- * it once its payment is confirmed.
+ * The preorder: how many sets are left of each size, and putting the one
+ * built into the cart. More than one can be built and added; they are paid
+ * for together at checkout. The count is live and shared by everyone
+ * looking, and a set only leaves it once its payment is confirmed.
  */
 export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; summary: string }) {
   const { terms: PREORDER, preorder } = useCatalogue();
   const tier = tierFor(garment.length);
+  const items = useCart();
   const [stock, setStock] = useState<Stock | null>(null);
   const [countFailed, setCountFailed] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
+  const [added, setAdded] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -48,32 +49,25 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
     };
   }, [refresh]);
 
+  // a new build is a new question: the last "added" note goes
+  const key = `${garment.fabric}|${garment.colour}|${garment.design}|${garment.thread}|${garment.length}`;
+  const [shownFor, setShownFor] = useState(key);
+  if (shownFor !== key) {
+    setShownFor(key);
+    setAdded(null);
+  }
+
+  const inCart = items.filter((i) => tierFor(i.length) === tier).reduce((n, i) => n + i.qty, 0);
   const left = stock?.[tier].left;
   const soldOut = left === 0;
+  const noMore = left !== undefined && left > 0 && inCart >= left;
+  const full = setsIn(items) >= MAX_SETS;
   const closed = !preorder.open;
+  const sets = setsIn(items);
+  const subtotal = items.reduce((n, i) => n + PREORDER[tierFor(i.length)].price * i.qty, 0);
 
-  async function pay(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/preorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ garment, customer }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body.url) {
-        setError(body.error ?? "Something went wrong. Please try again.");
-        setBusy(false);
-        refresh();
-        return;
-      }
-      window.location.href = body.url;
-    } catch {
-      setError("We could not reach the studio. Check your connection and try again.");
-      setBusy(false);
-    }
+  function add() {
+    if (cart.add(garment)) setAdded(summary);
   }
 
   return (
@@ -90,54 +84,48 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
 
       <div className="mt-5 flex flex-wrap items-center gap-4">
         <p className="price text-[24px] font-bold">{naira(PREORDER[tier].price)}</p>
-        {!open && (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            disabled={soldOut || closed}
-            className="rounded-sm px-6 py-[13px] text-[10.5px] font-medium uppercase tracking-[0.2em] disabled:opacity-40"
-            style={{ background: "var(--action)", color: "var(--on-action)" }}
-          >
-            {closed ? "Preorders closed for now" : soldOut ? `${PREORDER[tier].name} sets sold out` : "Preorder and pay"}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={add}
+          disabled={closed || soldOut || noMore || full}
+          className="rounded-sm px-6 py-[13px] text-[10.5px] font-medium uppercase tracking-[0.2em] disabled:opacity-40"
+          style={{ background: "var(--action)", color: "var(--on-action)" }}
+        >
+          {closed
+            ? "Preorders closed for now"
+            : soldOut
+              ? `${PREORDER[tier].name} sets sold out`
+              : noMore
+                ? "All that are left are in your cart"
+                : full
+                  ? "Your cart is full"
+                  : "Add to cart"}
+        </button>
         <p className="label" style={{ color: "var(--on-surface-soft)" }}>
-          {PREORDER[tier].name} · paid in full now
+          {PREORDER[tier].name} · paid in full at checkout
         </p>
       </div>
 
-      {open && (
-        <form onSubmit={pay} className="mt-5 grid max-w-[420px] gap-3">
-          <p className="text-[13px]" style={{ color: "var(--on-surface-soft)" }}>
-            {summary}. Paystack takes the payment and emails the receipt; the studio follows up on
-            WhatsApp about delivery.
+      {added && (
+        <p role="status" className="mt-4 text-[13px] leading-relaxed" style={{ color: "var(--on-surface)" }}>
+          Added: {added}. Build another to add it too, or check out when you are ready.
+        </p>
+      )}
+
+      {sets > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-sm border px-4 py-3" style={{ borderColor: "var(--line-dashed)" }}>
+          <p className="text-[14px]">
+            Your cart · {sets} {sets === 1 ? "set" : "sets"} · <span className="price">{naira(subtotal)}</span>
           </p>
-          <Field label="Name" value={customer.name} autoComplete="name"
-            onChange={(v) => setCustomer((c) => ({ ...c, name: v }))} />
-          <Field label="Email, for the receipt" type="email" value={customer.email} autoComplete="email"
-            onChange={(v) => setCustomer((c) => ({ ...c, email: v }))} />
-          <Field label="Phone, on WhatsApp" type="tel" value={customer.phone} autoComplete="tel"
-            onChange={(v) => setCustomer((c) => ({ ...c, phone: v }))} />
-          {error && (
-            <p role="alert" className="text-[13px]" style={{ color: "var(--accent)" }}>
-              {error}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="submit"
-              disabled={busy || soldOut}
-              className="rounded-sm px-6 py-[13px] text-[10.5px] font-medium uppercase tracking-[0.2em] disabled:opacity-50"
-              style={{ background: "var(--action)", color: "var(--on-action)" }}
-            >
-              {busy ? "Opening Paystack" : `Pay ${naira(PREORDER[tier].price)}`}
-            </button>
-            <button type="button" onClick={() => setOpen(false)} className="label"
-              style={{ color: "var(--on-surface-soft)" }}>
-              Cancel
-            </button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Link href="/cart" className="label rounded-sm border px-4 py-[10px]" style={{ borderColor: "var(--on-surface)" }}>
+              View cart
+            </Link>
+            <Link href="/checkout" className="label rounded-sm px-4 py-[10px]" style={{ background: "var(--action)", color: "var(--on-action)" }}>
+              Checkout
+            </Link>
           </div>
-        </form>
+        </div>
       )}
 
       <a href={whatsappLink(`Hello, a question about the jallabiya preorder: ${summary}`)}
@@ -171,23 +159,5 @@ function Count({ tier, stock, failed, active }: { tier: Tier; stock: Stock | nul
       </p>
       <ThreadCount left={left} total={total} active={active} failed={failed} />
     </div>
-  );
-}
-
-function Field({ label, value, onChange, type = "text", autoComplete }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  autoComplete?: string;
-}) {
-  return (
-    <label className="grid gap-1">
-      <span className="label" style={{ color: "var(--on-surface-soft)" }}>{label}</span>
-      <input required type={type} value={value} autoComplete={autoComplete}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-sm border bg-transparent px-3 py-[10px] text-[14px] outline-none focus:border-[var(--accent)]"
-        style={{ borderColor: "var(--line-dashed)" }} />
-    </label>
   );
 }
