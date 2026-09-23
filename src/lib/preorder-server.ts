@@ -8,7 +8,6 @@ import { NECKLINES } from "./catalogue";
 import { COLOURS, FABRICS } from "./loom";
 import { THREADS } from "./loom-preview";
 import {
-  CHILD_SIZES,
   PREORDER,
   isOfferedLength,
   tierFor,
@@ -55,10 +54,9 @@ export function checkOrder(
 /** The order in words, as the studio reads it. */
 export function describe(g: PreorderGarment) {
   const tier = tierFor(g.length);
-  const child = CHILD_SIZES.find((s) => s.length === g.length);
   return {
     tier,
-    size: child ? `${g.length} inches (children, ${child.age})` : `${g.length} inches (adult)`,
+    size: `${g.length} inches (${tier === "children" ? "children" : "adult"})`,
     fabric: FABRICS.find((f) => f.id === g.fabric)?.name ?? g.fabric,
     colour: COLOURS.find((x) => x.hex === g.colour)?.name ?? g.colour,
     design: g.design,

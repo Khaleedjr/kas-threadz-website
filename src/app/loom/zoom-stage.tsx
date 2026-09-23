@@ -34,8 +34,14 @@ export function ZoomStage({
   ratio = 500 / 660,
   focus = { x: 0.5, y: 0.18 },
   start,
+  overlay,
 }: {
   children: ReactNode;
+  /**
+   * Laid over the whole garment at 1x, sized to it, for marks that point at
+   * its parts. Zoomed in, the view is for looking, so it is taken away.
+   */
+  overlay?: ReactNode;
   /** the garment's width over its height */
   ratio?: number;
   /** where the buttons zoom in towards from 1x: the neckline, by default */
@@ -207,7 +213,8 @@ export function ZoomStage({
   const zoomed = z > 1;
 
   return (
-    <div>
+    // a size container, for the controls row; nothing inside is fixed
+    <div className="@container">
       <div className="relative">
         <div
           ref={port}
@@ -227,6 +234,10 @@ export function ZoomStage({
         >
           <div style={{ width: `${z * 100}%` }}>{children}</div>
         </div>
+
+        {!zoomed && overlay && (
+          <div className="pointer-events-none absolute inset-0">{overlay}</div>
+        )}
 
         {/* the pane's edge, drawn only once there is something beyond it */}
         {zoomed && (
@@ -277,22 +288,35 @@ export function ZoomStage({
       {/* below the stage, not over it: laid on the cloth they would vanish
           into whichever colour was chosen */}
       <div className="mt-2 flex items-center justify-end gap-1">
+        {/* each hint only where the pane is wide enough for it beside the
+            buttons: on a narrow one a clipped word is worse than none */}
         <span className="label mr-auto min-w-0 truncate" style={{ color: "var(--on-surface-soft)" }}>
           {zoomed ? (
             <>
-              <span className="[@media(pointer:coarse)]:hidden">Drag, scroll or use the map</span>
-              <span className="hidden [@media(pointer:coarse)]:inline">Swipe or tap the map</span>
+              <span className="@max-[380px]:hidden [@media(pointer:coarse)]:hidden">
+                Drag, scroll or use the map
+              </span>
+              <span className="hidden @max-[320px]:hidden! [@media(pointer:coarse)]:inline">
+                Swipe or tap the map
+              </span>
             </>
           ) : (
             <>
-              <span className="[@media(pointer:coarse)]:hidden">Double-click to zoom</span>
-              <span className="hidden [@media(pointer:coarse)]:inline">Pinch to zoom</span>
+              <span className="@max-[250px]:hidden [@media(pointer:coarse)]:hidden">
+                Double-click to zoom
+              </span>
+              <span className="hidden @max-[190px]:hidden! [@media(pointer:coarse)]:inline">
+                Pinch to zoom
+              </span>
             </>
           )}
         </span>
-        <span className="label mr-1 tabular-nums" style={{ color: "var(--on-surface-soft)" }}>
-          {z.toFixed(1)}&times;
-        </span>
+        {/* only once zoomed: at 1x the hint says it all, and a narrow pane needs the room */}
+        {zoomed && (
+          <span className="label mr-1 tabular-nums" style={{ color: "var(--on-surface-soft)" }}>
+            {z.toFixed(1)}&times;
+          </span>
+        )}
         <ZoomButton label="Zoom out" disabled={!zoomed} onClick={() => nudge(-1)}>
           &minus;
         </ZoomButton>

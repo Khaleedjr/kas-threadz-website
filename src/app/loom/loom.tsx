@@ -1,17 +1,26 @@
 "use client";
 
-import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
-import { DESIGNS, GARMENT_LABEL, NECKLINES, naira, type Garment } from "@/lib/catalogue";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { DESIGNS, GARMENT_LABEL, NECKLINES, type Garment } from "@/lib/catalogue";
 import { COLOURS, FABRICS, type LoomConfig } from "@/lib/loom";
-import { ADULT_LENGTHS, CHILD_SIZES, PREORDER, tierFor } from "@/lib/preorder";
-import { FLAT_RATIO, LENGTH_RANGE } from "@/lib/jallabiya-flat";
-import { THREADS, threadFilter, threadTones } from "@/lib/loom-preview";
+import { PREORDER, tierFor } from "@/lib/preorder";
+import { FLAT_RATIO, LENGTH_RANGE, flatCallouts } from "@/lib/jallabiya-flat";
+import { THREADS, threadTones } from "@/lib/loom-preview";
 import { GarmentPreview } from "./garment-preview";
 import { FLATS, GarmentFlat } from "./garment-flat";
 import { ZoomStage } from "./zoom-stage";
 import { PreorderPanel } from "./preorder-panel";
-import { PreviewDock } from "./preview-dock";
+import { GarmentLabels, type GarmentLabel } from "./garment-labels";
+import { Sheet } from "./sheet";
+import {
+  Choice,
+  ColourChoices,
+  DesignChoices,
+  FabricChoices,
+  SizeChoices,
+  ThreadChoices,
+  ThreadFilter,
+} from "./pickers";
 
 /* The 3D preview (`garment-3d.tsx`, `src/lib/jallabiya-3d.ts`) is set aside
    for now: the Loom shows the drawn view only. The files are kept so it can
@@ -30,15 +39,37 @@ function designsFor(garment: Garment) {
   return DESIGNS.filter((d) => d.family === family);
 }
 
-export function Loom() {
-  const [config, setConfig] = useState<LoomConfig>({
+/** The choices a label beside the garment opens, on a phone. */
+type SheetId = "design" | "fabric" | "colour" | "size";
+
+/**
+ * How high on the screen the part being changed is brought before its sheet
+ * rises, as a share of the screen's height: the designs take the most room,
+ * so the neckline goes nearest the top.
+ */
+const CLEAR_OF_SHEET: Record<SheetId, number> = { design: 0.12, fabric: 0.26, colour: 0.26, size: 0.3 };
+
+/* What the Loom opens on. A phone opens on white cloth with Neckline 11,
+   the studio's choice for the small screen; a wide screen on navy with the
+   first neckline. */
+const OPENING = {
+  phone: { colour: "#f4f3ef", design: "Neckline 11" },
+  wide: { colour: "#22314e", design: NECKLINES[0].code },
+};
+
+export function Loom({ phone = false }: { phone?: boolean }) {
+  const [config, setConfig] = useState<LoomConfig>(() => ({
     garment: "jallabiya",
     fabric: "cotton",
-    colour: "#22314e",
-    design: NECKLINES[0].code,
+    colour: OPENING[phone ? "phone" : "wide"].colour,
+    design: OPENING[phone ? "phone" : "wide"].design,
     thread: "original",
     measurements: { height: LENGTH_RANGE.standard, fit: "regular" },
-  });
+  }));
+  /* the sheet that is open, and the one last opened, which it keeps showing
+     while it slides away */
+  const [sheet, setSheet] = useState<SheetId | null>(null);
+  const [shown, setShown] = useState<SheetId>("design");
 
   const available = useMemo(() => designsFor(config.garment), [config.garment]);
   const design = available.find((d) => d.code === config.design) ?? available[0];
@@ -51,19 +82,138 @@ export function Loom() {
   const necklines = config.garment === "jallabiya";
   const length = config.measurements.height ?? LENGTH_RANGE.standard;
   const tier = tierFor(length);
-  const child = CHILD_SIZES.find((c) => c.length === length);
-  // the full preview, which the phone dock watches for going off screen
-  const previewRef = useRef<HTMLDivElement>(null);
+  const threadWords =
+    config.thread === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`;
+
+  function set<K extends keyof LoomConfig>(key: K, value: LoomConfig[K]) {
+    setConfig((c) => {
+      const next = { ...c, [key]: value };
+      if (key === "garment") {
+        next.design = designsFor(value as Garment)[0]?.code ?? null;
+      }
+      return next;
+    });
+  }
+  const setLength = (h: number) =>
+    setConfig((c) => ({ ...c, measurements: { ...c.measurements, height: h } }));
+
+  const closeSheet = useCallback(() => setSheet(null), []);
+
+  const openSheet = useCallback((id: string, partY: number) => {
+    const which = id as SheetId;
+    // bring the part being changed up clear of the sheet, so the change is seen
+    const clear = window.innerHeight * CLEAR_OF_SHEET[which];
+    if (partY > clear) {
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollBy({ top: partY - clear, behavior: reduced ? "auto" : "smooth" });
+    }
+    setShown(which);
+    setSheet(which);
+  }, []);
+
+  // the sheets are a phone's; widened past one, the steps take over
+  useEffect(() => {
+    const wide = matchMedia("(min-width: 1024px)");
+    const onChange = () => wide.matches && setSheet(null);
+    wide.addEventListener("change", onChange);
+    return () => wide.removeEventListener("change", onChange);
+  }, []);
+
+  /* the build, labelled beside the garment on a phone, top to bottom */
+  const callouts = flatCallouts({ length, neckline: necklines ? design?.image : null });
+  const labels: GarmentLabel[] =
+    necklines && design
+      ? [
+          { id: "design", label: "Design", value: `${design.code}, ${threadWords}`, ...callouts.design },
+          { id: "colour", label: "Colour", value: colour.name, ...callouts.colour },
+          { id: "fabric", label: "Fabric", value: fabric.name, ...callouts.fabric },
+          { id: "size", label: "Size", value: `${length} inches, ${PREORDER[tier].name.toLowerCase()}`, ...callouts.size },
+        ]
+      : [];
 
   /* the shape of the pane the preview is shown in: the jallabiya's drawing is
      cropped tight to the garment, so it is taller and narrower than the rest */
   const paneRatio = flat ? flat.ratio : config.garment === "jallabiya" ? FLAT_RATIO : 500 / 660;
+
+  /* Each choice, as the sheet shows it. A pick closes the sheet, so the
+     garment is in full view as it changes; the thread is the exception, since
+     it recolours the designs in the sheet as well, to choose between them. */
+  const sheets: Record<SheetId, { label: string; note: string; body: ReactNode }> = {
+    design: {
+      label: "Design",
+      note: design ? `${design.code} · ${threadWords}` : "None",
+      body: (
+        <>
+          {necklines && (
+            <div className="mb-5">
+              <ThreadChoices value={config.thread} colour={colour.hex} onPick={(t) => set("thread", t)} fit="sheet" />
+            </div>
+          )}
+          <DesignChoices
+            designs={available}
+            value={design?.code}
+            colour={colour.hex}
+            threaded={Boolean(tones)}
+            necklines={necklines}
+            onPick={(code) => {
+              set("design", code);
+              closeSheet();
+            }}
+            fit="sheet"
+          />
+        </>
+      ),
+    },
+    fabric: {
+      label: "Fabric",
+      note: fabric.name,
+      body: (
+        <FabricChoices
+          value={config.fabric}
+          onPick={(id) => {
+            set("fabric", id);
+            closeSheet();
+          }}
+          fit="sheet"
+        />
+      ),
+    },
+    colour: {
+      label: "Colour",
+      note: colour.name,
+      body: (
+        <ColourChoices
+          value={config.colour}
+          onPick={(hex) => {
+            set("colour", hex);
+            closeSheet();
+          }}
+          fit="sheet"
+        />
+      ),
+    },
+    size: {
+      label: "Size",
+      note: `${length} inches · ${PREORDER[tier].name.toLowerCase()}`,
+      body: (
+        <SizeChoices
+          value={length}
+          onPick={(h) => {
+            setLength(h);
+            closeSheet();
+          }}
+          fit="sheet"
+        />
+      ),
+    },
+  };
 
   const drawn = (
     <ZoomStage
       ratio={paneRatio}
       // the jallabiya's neckline sits high in its frame, above the long body
       focus={config.garment === "jallabiya" ? { x: 0.5, y: 0.066 } : undefined}
+      overlay={labels.length ? <GarmentLabels labels={labels} open={sheet} onOpen={openSheet} /> : undefined}
     >
       {flat ? (
         <GarmentFlat garment={config.garment} colour={colour.hex} design={design ?? null} />
@@ -80,16 +230,6 @@ export function Loom() {
     </ZoomStage>
   );
 
-  function set<K extends keyof LoomConfig>(key: K, value: LoomConfig[K]) {
-    setConfig((c) => {
-      const next = { ...c, [key]: value };
-      if (key === "garment") {
-        next.design = designsFor(value as Garment)[0]?.code ?? null;
-      }
-      return next;
-    });
-  }
-
   return (
     /* minmax(0, …) so a zoomed preview scrolls inside its pane instead of
        pushing its column, and the page, wider than the screen */
@@ -97,35 +237,46 @@ export function Loom() {
       id="main"
       className="grid flex-1 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
     >
+      {/* the tiles in the steps and the sheet borrow this to show each design in the chosen thread */}
+      <ThreadFilter tones={tones} />
+
       {/* The preview is pinned for the whole draft and takes the column it is
           given. A configurator whose subject is a thumbnail is a form. */}
       <section className="relative flex flex-col border-b border-[var(--line)] px-6 py-6 lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <p className="label shrink-0" style={{ color: "var(--on-surface-soft)" }}>
-          Live preview · pinned
+          {labels.length ? (
+            <>
+              {/* on a phone the caption is the instruction, short enough for one line */}
+              <span className="lg:hidden">Tap a label to change it</span>
+              <span className="hidden lg:inline">Live preview · pinned</span>
+            </>
+          ) : (
+            "Live preview · pinned"
+          )}
         </p>
         <span
-          className="absolute left-5 top-12 h-[9px] w-[9px] rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+          className={`absolute left-5 top-12 h-[9px] w-[9px] rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.35)] ${labels.length ? "hidden lg:block" : ""}`}
           style={{ background: "var(--accent)" }}
           aria-hidden
         />
         <span
-          className="absolute right-5 top-12 h-[9px] w-[9px] rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.35)]"
+          className={`absolute right-5 top-12 h-[9px] w-[9px] rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.35)] ${labels.length ? "hidden lg:block" : ""}`}
           style={{ background: "var(--color-pin)" }}
           aria-hidden
         />
 
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 pt-4">
-          {/* the figure holds one screen: it is sized off the height it has,
-              not off a fixed pixel width, so it never runs past the fold */}
-          {/* the width it can take is bounded by the height it has, at the
-              drawing's own shape, as well as by the column it sits in. The
-              height left is the screen less the nav, the label and the zoom row. */}
+          {/* the figure holds one screen: the width it can take is bounded by
+              the height it has, at the drawing's own shape, as well as by the
+              column it sits in. The height left is the screen less the nav,
+              the label and the zoom row. */}
+          {/* on a phone a little shorter than the screen allows, so the
+              labels have paper beside it and the price is nearer */}
           <div
-            ref={previewRef}
-            className="w-full"
-            // as wide as the height left over allows at the pane's shape, so the
-            // garment is as big as the screen can hold without scrolling
-            style={{ maxWidth: `min(92%, 900px, calc((100dvh - 250px) * ${paneRatio.toFixed(4)}))` }}
+            className="w-full [--preview-share:0.86] lg:[--preview-share:1]"
+            style={{
+              maxWidth: `min(92%, 900px, calc((100dvh - 250px) * var(--preview-share) * ${paneRatio.toFixed(4)}))`,
+            }}
           >
             {drawn}
             <p className="sr-only">
@@ -137,251 +288,78 @@ export function Loom() {
         </div>
       </section>
 
-      {/* on a phone, the preview stays in sight while the steps below are chosen */}
-      {necklines && design && (
-        <PreviewDock
-          watch={previewRef}
-          ratio={FLAT_RATIO}
-          lines={[
-            `${colour.name} ${fabric.name.toLowerCase()} jallabiya`,
-            `${design.code} · ${config.thread === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`}`,
-            child ? `${length} in · children, ${child.age}` : `${length} in · adult`,
-            naira(PREORDER[tier].price),
-          ]}
-        >
-          <GarmentPreview
-            garment={config.garment}
-            colour={colour.hex}
-            fabric={fabric}
-            design={design}
-            thread={tones}
-            length={length}
-          />
-        </PreviewDock>
-      )}
-
       {/* the draft */}
       <section className="px-8 py-8">
         <h1 className="text-[22px]">Build it before we cut it.</h1>
 
-        <Step n="01" title="Garment">
-          <div className="flex flex-wrap gap-2">
-            {GARMENTS.map((g) =>
-              COMING_SOON.has(g) ? (
-                <span
-                  key={g}
-                  aria-disabled
-                  className="label flex cursor-not-allowed flex-col items-center rounded-sm border border-dashed px-3 py-[6px] leading-tight"
-                  style={{ borderColor: "var(--line-dashed)", color: "var(--on-surface-soft)" }}
-                >
-                  <span className="opacity-60">{GARMENT_LABEL[g]}</span>
-                  <span className="mt-[3px] text-[8px] tracking-[0.16em]" style={{ color: "var(--accent)" }}>
-                    Coming soon
-                  </span>
-                </span>
-              ) : (
-                <Choice key={g} active={config.garment === g} onClick={() => set("garment", g)}>
-                  {GARMENT_LABEL[g]}
-                </Choice>
-              ),
-            )}
-          </div>
-        </Step>
+        {/* on a phone the choices are the labels on the garment; the steps are for a wide screen */}
+        {labels.length > 0 && (
+          <p className="label mt-3 leading-relaxed lg:hidden" style={{ color: "var(--on-surface-soft)" }}>
+            Kaftan and agbada coming soon
+          </p>
+        )}
 
-        <Step n="02" title="Fabric" note={fabric.character}>
-          <div className="flex flex-wrap gap-2">
-            {FABRICS.map((f) => (
-              <Choice
-                key={f.id}
-                active={config.fabric === f.id}
-                onClick={() => set("fabric", f.id)}
-              >
-                {f.name}
-              </Choice>
-            ))}
-          </div>
-        </Step>
-
-        <Step n="03" title="Colour" note={colour.name}>
-          <div className="flex flex-wrap gap-2">
-            {COLOURS.map((c) => (
-              <button
-                key={c.hex}
-                type="button"
-                onClick={() => set("colour", c.hex)}
-                aria-pressed={config.colour === c.hex}
-                title={c.name}
-                className="h-6 w-6 rounded-full"
-                style={{
-                  background: c.hex,
-                  boxShadow:
-                    config.colour === c.hex
-                      ? "0 0 0 1.5px var(--accent)"
-                      : "inset 0 0 0 1px rgba(0,0,0,0.2)",
-                }}
-              >
-                <span className="sr-only">{c.name}</span>
-              </button>
-            ))}
-          </div>
-        </Step>
-
-        <Step
-          n="04"
-          title="Embroidery"
-          note={design ? `${design.code} · ${design.placement}` : "None"}
-        >
-          {/* Every design is shown whole, in its own thread colours. A
-              neckline is shown on the chosen cloth, since that is the question
-              the picker is answering. The strip scrolls inside its own box so
-              it can never run into the next step. */}
-          <div className="max-h-[min(34dvh,300px)] overflow-y-auto pb-1 pr-1">
-            <ul
-              className={`grid gap-2 ${
-                necklines
-                  ? "grid-cols-[repeat(auto-fill,minmax(84px,1fr))]"
-                  : "grid-cols-[repeat(auto-fill,minmax(56px,1fr))]"
-              }`}
-            >
-              {available.map((d) => (
-                <li key={d.code}>
-                  <button
-                    type="button"
-                    onClick={() => set("design", d.code)}
-                    aria-pressed={design?.code === d.code}
-                    title={`${d.code} · ${d.label}`}
-                    className={`flex w-full flex-col items-center justify-between rounded-sm border p-[6px] ${
-                      necklines ? "h-[96px]" : "h-[104px]"
-                    }`}
-                    style={{
-                      borderColor: design?.code === d.code ? "var(--accent)" : "var(--line-dashed)",
-                      background: design?.code === d.code ? "rgba(157,59,44,0.06)" : undefined,
-                    }}
+        <div className={labels.length ? "hidden lg:block" : undefined}>
+          <Step n="01" title="Garment">
+            <div className="flex flex-wrap gap-2">
+              {GARMENTS.map((g) =>
+                COMING_SOON.has(g) ? (
+                  <span
+                    key={g}
+                    aria-disabled
+                    className="label flex cursor-not-allowed flex-col items-center rounded-sm border border-dashed px-3 py-[6px] leading-tight"
+                    style={{ borderColor: "var(--line-dashed)", color: "var(--on-surface-soft)" }}
                   >
-                    <span
-                      className="relative min-h-0 w-full flex-1 rounded-[2px]"
-                      style={necklines ? { background: colour.hex } : undefined}
-                    >
-                      <Image
-                        src={d.image}
-                        alt=""
-                        fill
-                        sizes="96px"
-                        className={necklines ? "object-contain p-[5px]" : "object-contain"}
-                        style={
-                          necklines
-                            ? tones
-                              ? { filter: "url(#loom-thread)" }
-                              : undefined
-                            : { opacity: 0.85 }
-                        }
-                      />
+                    <span className="opacity-60">{GARMENT_LABEL[g]}</span>
+                    <span className="mt-[3px] text-[8px] tracking-[0.16em]" style={{ color: "var(--accent)" }}>
+                      Coming soon
                     </span>
-                    <span
-                      className="mt-1 block w-full truncate font-mono text-[8px] tracking-[0.08em]"
-                      style={{
-                        color:
-                          design?.code === d.code ? "var(--accent)" : "var(--on-surface-soft)",
-                      }}
-                    >
-                      {d.code}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* The thread. "As designed" keeps each design's own colours; any
-              other runs the whole design in that thread, its light and dark
-              kept, so the tiles above and the preview both show it. */}
-          {necklines && (
-            <div className="mt-4">
-              <p className="label mb-2" style={{ color: "var(--on-surface-soft)" }}>
-                Thread · {thread.name}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {THREADS.map((t) => {
-                  const swatch =
-                    t.id === "original"
-                      ? "conic-gradient(#c9a227 0 25%, #3fb8b0 0 50%, #7c6ee0 0 75%, #e38b3a 0)"
-                      : t.id === "tonal"
-                        ? `radial-gradient(circle, ${threadTones("tonal", colour.hex)!.mid} 0 45%, ${colour.hex} 46%)`
-                        : (t.hex as string);
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => set("thread", t.id)}
-                      aria-pressed={config.thread === t.id}
-                      // named as thread: several share a name with a cloth colour above
-                      title={t.id === "original" ? "Thread as designed" : `${t.name} thread`}
-                      className="h-6 w-6 rounded-full"
-                      style={{
-                        background: swatch,
-                        boxShadow:
-                          config.thread === t.id
-                            ? "0 0 0 1.5px var(--accent)"
-                            : "inset 0 0 0 1px rgba(0,0,0,0.2)",
-                      }}
-                    >
-                      <span className="sr-only">
-                        {t.id === "original" ? "Thread as designed" : `${t.name} thread`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              {tones && (
-                // the tiles above borrow this to show each design in the chosen thread
-                <svg width="0" height="0" className="absolute" aria-hidden focusable="false">
-                  <filter
-                    id="loom-thread"
-                    colorInterpolationFilters="sRGB"
-                    dangerouslySetInnerHTML={{ __html: threadFilter(tones) }}
-                  />
-                </svg>
+                  </span>
+                ) : (
+                  <Choice key={g} active={config.garment === g} onClick={() => set("garment", g)}>
+                    {GARMENT_LABEL[g]}
+                  </Choice>
+                ),
               )}
             </div>
-          )}
-        </Step>
+          </Step>
 
-        <Step
-          n="05"
-          title="Size"
-          note={child ? `${length} inches · children, ${child.age}` : `${length} inches · adult`}
-        >
-          {/* Cut to a standard length, shoulder to hem: children by age, adults
-              every inch from 54 to 62. The size sets the price and which count
-              the set comes out of. The exact fit is taken at the fitting. */}
-          {([
-            ["children", CHILD_SIZES.map((c) => ({ length: c.length, age: c.age }))],
-            ["adult", ADULT_LENGTHS.map((l) => ({ length: l, age: "" }))],
-          ] as const).map(([t, sizes]) => (
-            <div key={t} className="mb-3">
-              <p className="label mb-2" style={{ color: "var(--on-surface-soft)" }}>
-                {PREORDER[t].name} · {naira(PREORDER[t].price)}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {sizes.map(({ length: h, age }) => (
-                  <Choice
-                    key={h}
-                    active={length === h}
-                    onClick={() =>
-                      setConfig((c) => ({ ...c, measurements: { ...c.measurements, height: h } }))
-                    }
-                  >
-                    {h}&Prime;{age ? ` · ${age}` : ""}
-                  </Choice>
-                ))}
-              </div>
+          <Step n="02" title="Fabric" note={fabric.character}>
+            <FabricChoices value={config.fabric} onPick={(id) => set("fabric", id)} fit="steps" />
+          </Step>
+
+          <Step n="03" title="Colour" note={colour.name}>
+            <ColourChoices value={config.colour} onPick={(hex) => set("colour", hex)} fit="steps" />
+          </Step>
+
+          <Step
+            n="04"
+            title="Embroidery"
+            note={design ? `${design.code} · ${design.placement}` : "None"}
+          >
+            {/* the strip scrolls inside its own box so it can never run into the next step */}
+            <div className="max-h-[min(34dvh,300px)] overflow-y-auto pb-1 pr-1">
+              <DesignChoices
+                designs={available}
+                value={design?.code}
+                colour={colour.hex}
+                threaded={Boolean(tones)}
+                necklines={necklines}
+                onPick={(code) => set("design", code)}
+                fit="steps"
+              />
             </div>
-          ))}
-          <p className="label" style={{ color: "var(--on-surface-soft)" }}>
-            Between sizes, take the longer: a jallabiya can be taken up, not let down.
-            {tier === "children" ? " The preview shows the design at adult proportions." : ""}
-          </p>
-        </Step>
+            {necklines && (
+              <div className="mt-4">
+                <ThreadChoices value={config.thread} colour={colour.hex} onPick={(t) => set("thread", t)} fit="steps" />
+              </div>
+            )}
+          </Step>
+
+          <Step n="05" title="Size" note={`${length} inches · ${PREORDER[tier].name.toLowerCase()}`}>
+            <SizeChoices value={length} onPick={setLength} fit="steps" />
+          </Step>
+        </div>
 
         {design && (
           <PreorderPanel
@@ -392,10 +370,16 @@ export function Loom() {
               thread: config.thread,
               length,
             }}
-            summary={`Jallabiya, ${child ? `children ${length}″ (${child.age})` : `adult ${length}″`}, ${colour.name.toLowerCase()} ${fabric.name.toLowerCase()}, ${design.code}, ${config.thread === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`}`}
+            summary={`Jallabiya, ${PREORDER[tier].name.toLowerCase()} ${length}″, ${colour.name.toLowerCase()} ${fabric.name.toLowerCase()}, ${design.code}, ${threadWords}`}
           />
         )}
       </section>
+
+      {labels.length > 0 && (
+        <Sheet open={sheet !== null} label={sheets[shown].label} note={sheets[shown].note} onClose={closeSheet}>
+          {sheets[shown].body}
+        </Sheet>
+      )}
     </div>
   );
 }
@@ -409,7 +393,7 @@ function Step({
   n: string;
   title: string;
   note?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div
@@ -427,30 +411,5 @@ function Step({
       {note && <p className="mt-1 mb-3 font-display text-[15px] font-semibold">{note}</p>}
       <div className={note ? "" : "mt-3"}>{children}</div>
     </div>
-  );
-}
-
-function Choice({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className="label rounded-sm border px-3 py-[9px] transition-colors"
-      style={{
-        borderColor: active ? "var(--accent)" : "var(--line-dashed)",
-        color: active ? "var(--accent)" : "var(--on-surface-soft)",
-      }}
-    >
-      {children}
-    </button>
   );
 }

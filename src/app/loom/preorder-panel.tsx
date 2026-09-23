@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { naira } from "@/lib/catalogue";
 import { PREORDER, tierFor, type PreorderGarment, type Stock, type Tier } from "@/lib/preorder";
 import { whatsappLink } from "@/lib/site";
+import { ThreadCount } from "./thread-count";
 
 /** How often the count is refreshed while the Loom is open. */
 const REFRESH_MS = 20000;
@@ -146,14 +147,13 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
 }
 
 /**
- * One size's count, as a run of stitches, one per set: the sets still to be
- * had are sewn solid, the ones gone are left as faint marks, so the line
- * visibly runs out as the preorder fills.
+ * One size's count, as a length of thread: the sets still to be had are
+ * inked, the ones gone are its ghost, so the thread visibly runs out as the
+ * preorder fills.
  */
 function Count({ tier, stock, failed, active }: { tier: Tier; stock: Stock | null; failed: boolean; active: boolean }) {
   const total = PREORDER[tier].total;
   const left = stock?.[tier].left;
-  const pitch = 6;
   return (
     <div className="rounded-sm border px-3 py-[10px]"
       style={{ borderColor: active ? "var(--accent)" : "var(--line-dashed)" }}>
@@ -165,13 +165,7 @@ function Count({ tier, stock, failed, active }: { tier: Tier; stock: Stock | nul
           {left === undefined ? (failed ? "-" : "counting") : left === 0 ? "sold out" : `${left} of ${total} left`}
         </span>
       </p>
-      <svg viewBox={`0 0 ${total * pitch} 6`} preserveAspectRatio="none" className="mt-2 block h-[6px] w-full" aria-hidden>
-        {Array.from({ length: total }, (_, i) => (
-          <rect key={i} x={i * pitch} y={1.5} width={pitch - 1.8} height={3} rx={1.2}
-            fill={left !== undefined && i < left ? "var(--accent)" : "var(--line-dashed)"}
-            opacity={left !== undefined && i < left ? 1 : 0.5} />
-        ))}
-      </svg>
+      <ThreadCount left={left} total={total} active={active} failed={failed} />
     </div>
   );
 }
