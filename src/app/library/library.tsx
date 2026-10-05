@@ -38,7 +38,7 @@ export function Library() {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-[clamp(18px,2.4vw,22px)]">The Design Library</h1>
           <p className="label" style={{ color: "var(--on-surface-soft)" }}>
-            {DESIGNS.length} machine files
+            {DESIGNS.length} designs
           </p>
         </div>
         <p
@@ -147,7 +147,7 @@ export function Library() {
             <span
               className="label mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-[7px]"
               style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-              title="Available once the studio's machine files are loaded"
+              title="Available once our designs are uploaded"
             >
               ▶ Play the stitch path
             </span>

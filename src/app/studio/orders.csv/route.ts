@@ -12,7 +12,7 @@ import { signedIn } from "@/lib/studio-auth";
 
 const HEAD = [
   "Date", "Reference", "Status", "Name", "Phone", "Email",
-  "Qty", "Size", "Fabric", "Colour", "Neckline", "Thread", "Each (NGN)", "Line (NGN)",
+  "Qty", "Size", "Fabric", "Colour", "Neckline", "Thread", "Cuffs", "Pendant", "Each (NGN)", "Line (NGN)",
   "Delivery", "Address", "Delivery fee (NGN)", "Order paid (NGN)", "Note",
 ];
 
@@ -43,7 +43,7 @@ export async function GET() {
       lines.push(
         [
           cell(r.date), cell(r.reference), cell(r.statusLabel), cell(r.name), phoneCell(r.phone), cell(r.email),
-          cell(i.qty), cell(i.size), cell(i.fabric), cell(i.colour), cell(i.design), cell(i.thread), cell(i.price), cell(i.price * i.qty),
+          cell(i.qty), cell(i.size), cell(i.fabric), cell(i.colour), cell(i.design), cell(i.thread), cell(i.sleeves ? "Embroidered" : "Plain"), cell(i.tassel ? "Gold" : "None"), cell(i.price), cell(i.price * i.qty),
           cell(firstLine && r.delivery ? r.delivery.label : ""),
           cell(firstLine && r.delivery?.method === "delivery" ? [r.delivery.address, r.delivery.city].filter(Boolean).join(", ") : ""),
           cell(firstLine && r.delivery ? r.delivery.fee : ""),

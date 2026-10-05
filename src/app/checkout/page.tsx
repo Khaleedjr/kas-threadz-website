@@ -16,7 +16,7 @@ export default async function CheckoutPage() {
       <SiteNav />
       <main id="main" className="mx-auto w-full max-w-[1100px] flex-1 px-5 py-[clamp(28px,5vw,56px)]">
         <p className="label" style={{ color: "var(--accent)" }}>
-          The Loom
+          Design Yours
         </p>
         <h1 className="mb-[clamp(20px,3vw,32px)] mt-2 text-[clamp(26px,3.6vw,38px)]">Checkout.</h1>
         <CatalogueProvider value={catalogue}>

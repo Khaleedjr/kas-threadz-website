@@ -10,7 +10,7 @@ export const SITE = {
   /** Set this to the real domain once it exists. */
   url: "https://kasthreadz.com",
   description:
-    "Kaftan, agbada, jallabiya and senator wear, machine-embroidered from the house design library and finished by hand at the Abuja atelier.",
+    "Kaftan, agbada, jallabiya and senator wear, embroidered by machine with our own designs and finished by hand in Abuja.",
   city: "Abuja",
   country: "NG",
   /** digits only, country code first, no spaces or plus sign */

@@ -12,11 +12,12 @@ import { DEFAULT_SHIPPING, type Shipping } from "./shipping";
 export type Colour = { hex: string; name: string; hidden?: boolean };
 
 /**
- * A cloth as the Loom offers it. `finish` is how the preview draws it: matte
- * like cotton, or with a sheen like silk. A new cloth takes one of the two
- * until it has its own drawing.
+ * A cloth as the Loom offers it. `finish` is how the preview draws it: matte,
+ * or with a sheen like silk. A new cloth takes one of the two until it has
+ * its own drawing. A cloth coming `soon` is shown in the Loom but cannot be
+ * chosen or ordered yet.
  */
-export type LoomFabric = Fabric & { finish: "matte" | "sheen"; hidden?: boolean };
+export type LoomFabric = Fabric & { finish: "matte" | "sheen"; hidden?: boolean; soon?: boolean };
 
 /** A made-to-order piece in the collection. */
 export type ShopPiece = Piece & { hidden?: boolean };
@@ -51,12 +52,13 @@ export type Catalogue = {
 
 export const DEFAULT_CATALOGUE: Catalogue = {
   colours: COLOURS,
-  fabrics: FABRICS.map((f) => ({ ...f, finish: f.id === "silk" ? "sheen" : "matte" })),
+  // the studio's cotton has a sheen of its own; silk is not offered yet
+  fabrics: FABRICS.map((f) => ({ ...f, finish: "sheen", soon: f.id === "silk" })),
   terms: PREORDER,
   preorder: {
     open: true,
     description:
-      "Cut to your length in the cloth, colour and neckline you choose. One price covers all of it, paid in full to hold your set.",
+      "Made to your length in the fabric, colour and neckline you choose. One price covers everything. Pay in full to reserve yours.",
   },
   pieces: PIECES,
   shipping: DEFAULT_SHIPPING,

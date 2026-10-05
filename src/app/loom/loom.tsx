@@ -1,13 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { DESIGNS, GARMENT_LABEL, NECKLINES, type Garment } from "@/lib/catalogue";
+import { DESIGNS, GARMENT_LABEL, NECKLINES, designName, type Garment } from "@/lib/catalogue";
 import type { LoomConfig } from "@/lib/loom";
-import { tierFor } from "@/lib/preorder";
+import { FINISH_WORDS, extrasWords, tierFor } from "@/lib/preorder";
 import { drawnFabric } from "@/lib/content-defaults";
 import { useCatalogue } from "./catalogue-context";
-import { FLAT_RATIO, LENGTH_RANGE, flatCallouts } from "@/lib/jallabiya-flat";
-import { THREADS, threadTones } from "@/lib/loom-preview";
+import {
+  FLAT_RATIO,
+  LENGTH_RANGE,
+  buildJallabiyaFlat,
+  flatCallouts,
+  type FlatState,
+  type FlatView,
+} from "@/lib/jallabiya-flat";
+import { THREADS, designAsset, threadTones } from "@/lib/loom-preview";
 import { GarmentPreview } from "./garment-preview";
 import { FLATS, GarmentFlat } from "./garment-flat";
 import { ZoomStage } from "./zoom-stage";
@@ -19,7 +26,10 @@ import {
   ColourChoices,
   DesignChoices,
   FabricChoices,
+  FinishChoices,
   SizeChoices,
+  Soon,
+  type Fit,
   ThreadChoices,
   ThreadFilter,
 } from "./pickers";
@@ -42,32 +52,45 @@ function designsFor(garment: Garment) {
 }
 
 /** The choices a label beside the garment opens, on a phone. */
-type SheetId = "design" | "fabric" | "colour" | "size";
+type SheetId = "design" | "tassel" | "fabric" | "colour" | "sleeves" | "size";
 
 /**
  * How high on the screen the part being changed is brought before its sheet
  * rises, as a share of the screen's height: the designs take the most room,
  * so the neckline goes nearest the top.
  */
-const CLEAR_OF_SHEET: Record<SheetId, number> = { design: 0.12, fabric: 0.26, colour: 0.26, size: 0.3 };
-
-/* What the Loom opens on. A phone opens on white cloth with Neckline 11,
-   the studio's choice for the small screen; a wide screen on navy with the
-   first neckline. */
-const OPENING = {
-  phone: { colour: "#f4f3ef", design: "Neckline 11" },
-  wide: { colour: "#22314e", design: NECKLINES[0].code },
+const CLEAR_OF_SHEET: Record<SheetId, number> = {
+  design: 0.12,
+  tassel: 0.2,
+  fabric: 0.26,
+  colour: 0.26,
+  sleeves: 0.3,
+  size: 0.3,
 };
 
-export function Loom({ phone = false }: { phone?: boolean }) {
+/* The finishing a jallabiya can take or leave: each part's name, and its two
+   choices as the steps, the sheets and the order all call them. */
+const FINISHING = {
+  sleeves: { name: "Sleeves", ...FINISH_WORDS.sleeves },
+  tassel: { name: "Pendant", ...FINISH_WORDS.tassel },
+};
+
+/* What the Loom opens on, on every screen: white cloth with the first
+   neckline, the studio's choice, with embroidered cuffs and the gold pendant. */
+const OPENING = { colour: "#f4f3ef", design: NECKLINES[0].code, sleeves: true, tassel: true };
+
+export function Loom() {
   const { colours: COLOURS, fabrics: FABRICS, terms: PREORDER, preorder } = useCatalogue();
   const [config, setConfig] = useState<LoomConfig>(() => ({
     garment: "jallabiya",
-    // the opening cloth and colour, if the studio still offers them
-    fabric: (FABRICS.find((f) => f.id === "cotton") ?? FABRICS[0]).id,
-    colour: (COLOURS.find((c) => c.hex === OPENING[phone ? "phone" : "wide"].colour) ?? COLOURS[0]).hex,
-    design: OPENING[phone ? "phone" : "wide"].design,
+    // the opening cloth and colour, if the studio still offers them: cotton,
+    // or the first cloth that can be ordered now
+    fabric: (FABRICS.find((f) => f.id === "cotton" && !f.soon) ?? FABRICS.find((f) => !f.soon) ?? FABRICS[0]).id,
+    colour: (COLOURS.find((c) => c.hex === OPENING.colour) ?? COLOURS[0]).hex,
+    design: OPENING.design,
     thread: "original",
+    sleeves: OPENING.sleeves,
+    tassel: OPENING.tassel,
     measurements: { height: LENGTH_RANGE.standard, fit: "regular" },
   }));
   /* the sheet that is open, and the one last opened, which it keeps showing
@@ -77,6 +100,8 @@ export function Loom({ phone = false }: { phone?: boolean }) {
 
   const available = useMemo(() => designsFor(config.garment), [config.garment]);
   const design = available.find((d) => d.code === config.design) ?? available[0];
+  // the design as it is read: a neckline by its name, anything else by its code
+  const named = design ? designName(design.code) : "";
   const fabric = FABRICS.find((f) => f.id === config.fabric) ?? FABRICS[0];
   const colour = COLOURS.find((c) => c.hex === config.colour) ?? COLOURS[0];
   const thread = THREADS.find((t) => t.id === config.thread) ?? THREADS[0];
@@ -86,6 +111,34 @@ export function Loom({ phone = false }: { phone?: boolean }) {
   const necklines = config.garment === "jallabiya";
   const length = config.measurements.height ?? LENGTH_RANGE.standard;
   const tier = tierFor(length);
+
+  /* the finishing choices, each drawn as the garment itself up close, in the
+     cloth, colour, design and thread chosen, either way. The steps and a
+     phone's sheet each get their own drawings: two drawings on one page must
+     not share ids, and the steps are hidden on a phone, where a picture
+     borrowing their ids would come out blank. */
+  const finishing = useMemo(() => {
+    if (!necklines) return null;
+    const base: FlatState = {
+      color: colour.hex,
+      fabric: drawnFabric(fabric).id,
+      neckline: designAsset(design ?? null, "neckline"),
+      thread: tones,
+      length,
+      sleeves: config.sleeves,
+      tassel: config.tassel,
+    };
+    const group = (key: "sleeves" | "tassel", view: FlatView, where: Fit) => ({
+      name: FINISHING[key].name,
+      options: [true, false].map((on) => ({
+        value: on,
+        label: on ? FINISHING[key].on : FINISHING[key].off,
+        picture: buildJallabiyaFlat({ ...base, [key]: on, variant: `${where}-${view}-${on}` }, view),
+      })),
+    });
+    const both = (where: Fit) => ({ sleeves: group("sleeves", "cuff", where), tassel: group("tassel", "pendant", where) });
+    return { steps: both("steps"), sheet: both("sheet") };
+  }, [necklines, colour.hex, fabric, design, tones, length, config.sleeves, config.tassel]);
   const threadWords =
     config.thread === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`;
 
@@ -128,8 +181,20 @@ export function Loom({ phone = false }: { phone?: boolean }) {
   const labels: GarmentLabel[] =
     necklines && design
       ? [
-          { id: "design", label: "Design", value: `${design.code}, ${threadWords}`, ...callouts.design },
+          { id: "design", label: "Design", value: `${named}, ${threadWords}`, ...callouts.design },
+          {
+            id: "tassel",
+            label: FINISHING.tassel.name,
+            value: config.tassel ? FINISHING.tassel.on : FINISHING.tassel.off,
+            ...callouts.tassel,
+          },
           { id: "colour", label: "Colour", value: colour.name, ...callouts.colour },
+          {
+            id: "sleeves",
+            label: FINISHING.sleeves.name,
+            value: config.sleeves ? FINISHING.sleeves.on : FINISHING.sleeves.off,
+            ...callouts.sleeves,
+          },
           { id: "fabric", label: "Fabric", value: fabric.name, ...callouts.fabric },
           { id: "size", label: "Size", value: `${length} inches, ${PREORDER[tier].name.toLowerCase()}`, ...callouts.size },
         ]
@@ -145,7 +210,7 @@ export function Loom({ phone = false }: { phone?: boolean }) {
   const sheets: Record<SheetId, { label: string; note: string; body: ReactNode }> = {
     design: {
       label: "Design",
-      note: design ? `${design.code} · ${threadWords}` : "None",
+      note: design ? `${named} · ${threadWords}` : "None",
       body: (
         <>
           {necklines && (
@@ -166,6 +231,36 @@ export function Loom({ phone = false }: { phone?: boolean }) {
             fit="sheet"
           />
         </>
+      ),
+    },
+    tassel: {
+      label: FINISHING.tassel.name,
+      note: config.tassel ? FINISHING.tassel.on : FINISHING.tassel.off,
+      body: finishing && (
+        <FinishChoices
+          {...finishing.sheet.tassel}
+          value={config.tassel}
+          onPick={(on) => {
+            set("tassel", on);
+            closeSheet();
+          }}
+          fit="sheet"
+        />
+      ),
+    },
+    sleeves: {
+      label: FINISHING.sleeves.name,
+      note: config.sleeves ? FINISHING.sleeves.on : FINISHING.sleeves.off,
+      body: finishing && (
+        <FinishChoices
+          {...finishing.sheet.sleeves}
+          value={config.sleeves}
+          onPick={(on) => {
+            set("sleeves", on);
+            closeSheet();
+          }}
+          fit="sheet"
+        />
       ),
     },
     fabric: {
@@ -230,6 +325,8 @@ export function Loom({ phone = false }: { phone?: boolean }) {
           design={design ?? null}
           thread={tones}
           length={config.measurements.height}
+          sleeves={necklines && config.sleeves}
+          tassel={necklines && config.tassel}
         />
       )}
     </ZoomStage>
@@ -286,8 +383,9 @@ export function Loom({ phone = false }: { phone?: boolean }) {
             {drawn}
             <p className="sr-only">
               {GARMENT_LABEL[config.garment]} in {colour.name} {fabric.name}
-              {design ? `, embroidered ${design.code}` : ""}
-              {design && tones ? ` in ${thread.name.toLowerCase()} thread` : ""}.
+              {design ? `, embroidered ${named}` : ""}
+              {design && tones ? ` in ${thread.name.toLowerCase()} thread` : ""}
+              {necklines ? `, ${extrasWords(config)}` : ""}.
             </p>
           </div>
         </div>
@@ -295,7 +393,7 @@ export function Loom({ phone = false }: { phone?: boolean }) {
 
       {/* the draft */}
       <section className="px-8 py-8">
-        <h1 className="text-[22px]">Build it before we cut it.</h1>
+        <h1 className="text-[22px]">See it before we sew it.</h1>
         {preorder.description && (
           <p className="mt-2 max-w-[52ch] text-[14px] leading-relaxed" style={{ color: "var(--on-surface-soft)" }}>
             {preorder.description}
@@ -314,17 +412,7 @@ export function Loom({ phone = false }: { phone?: boolean }) {
             <div className="flex flex-wrap gap-2">
               {GARMENTS.map((g) =>
                 COMING_SOON.has(g) ? (
-                  <span
-                    key={g}
-                    aria-disabled
-                    className="label flex cursor-not-allowed flex-col items-center rounded-sm border border-dashed px-3 py-[6px] leading-tight"
-                    style={{ borderColor: "var(--line-dashed)", color: "var(--on-surface-soft)" }}
-                  >
-                    <span className="opacity-60">{GARMENT_LABEL[g]}</span>
-                    <span className="mt-[3px] text-[8px] tracking-[0.16em]" style={{ color: "var(--accent)" }}>
-                      Coming soon
-                    </span>
-                  </span>
+                  <Soon key={g} name={GARMENT_LABEL[g]} />
                 ) : (
                   <Choice key={g} active={config.garment === g} onClick={() => set("garment", g)}>
                     {GARMENT_LABEL[g]}
@@ -345,7 +433,7 @@ export function Loom({ phone = false }: { phone?: boolean }) {
           <Step
             n="04"
             title="Embroidery"
-            note={design ? `${design.code} · ${design.placement}` : "None"}
+            note={design ? `${named} · ${design.placement}` : "None"}
           >
             {/* the strip scrolls inside its own box so it can never run into the next step */}
             <div className="max-h-[min(34dvh,300px)] overflow-y-auto pb-1 pr-1">
@@ -366,7 +454,20 @@ export function Loom({ phone = false }: { phone?: boolean }) {
             )}
           </Step>
 
-          <Step n="05" title="Size" note={`${length} inches · ${PREORDER[tier].name.toLowerCase()}`}>
+          {finishing && (
+            <Step
+              n="05"
+              title="Finishing"
+              note={`${config.sleeves ? FINISHING.sleeves.on : FINISHING.sleeves.off} · ${config.tassel ? FINISHING.tassel.on : FINISHING.tassel.off}`}
+            >
+              <div className="flex flex-wrap gap-x-8 gap-y-5">
+                <FinishChoices {...finishing.steps.sleeves} value={config.sleeves} onPick={(on) => set("sleeves", on)} fit="steps" />
+                <FinishChoices {...finishing.steps.tassel} value={config.tassel} onPick={(on) => set("tassel", on)} fit="steps" />
+              </div>
+            </Step>
+          )}
+
+          <Step n={finishing ? "06" : "05"} title="Size" note={`${length} inches · ${PREORDER[tier].name.toLowerCase()}`}>
             <SizeChoices value={length} onPick={setLength} fit="steps" />
           </Step>
         </div>
@@ -379,8 +480,10 @@ export function Loom({ phone = false }: { phone?: boolean }) {
               design: design.code,
               thread: config.thread,
               length,
+              sleeves: config.sleeves,
+              tassel: config.tassel,
             }}
-            summary={`Jallabiya, ${PREORDER[tier].name.toLowerCase()} ${length}″, ${colour.name.toLowerCase()} ${fabric.name.toLowerCase()}, ${design.code}, ${threadWords}`}
+            summary={`Jallabiya, ${PREORDER[tier].name.toLowerCase()} ${length}″, ${colour.name.toLowerCase()} ${fabric.name.toLowerCase()}, ${named}, ${threadWords}, ${extrasWords(config)}`}
           />
         )}
       </section>

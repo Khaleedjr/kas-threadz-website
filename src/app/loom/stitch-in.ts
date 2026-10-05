@@ -9,8 +9,10 @@ import { STITCHES, STITCH_DURATION, STITCH_FRONT } from "@/lib/stitching";
  *
  * The drawing carries everything this needs (see `necklineLayer` in
  * `jallabiya-flat.ts`): the design under a mask made from its sewing order,
- * a chalk guide of the whole design, and a hidden needle. This only moves
- * them, so the drawing is never rebuilt while the needle runs.
+ * a chalk guide of the whole design, and a hidden needle. The cuffs carry
+ * their own masks and chalk, on the same front, so they are sewn alongside
+ * the neck. This only moves them, so the drawing is never rebuilt while the
+ * needle runs.
  */
 
 /** How far the needle lifts out of the cloth between stitches, in drawing units. */
@@ -42,7 +44,10 @@ export function stitchIn(root: HTMLElement, href: string, onDone?: () => void): 
     root
       .querySelectorAll('[data-stitch="front"] > *')
       .forEach((f) => f.setAttribute("intercept", String(intercept)));
-    root.querySelector('[data-stitch="chalk"]')?.setAttribute("opacity", finished ? "0" : "0.55");
+    // the chalk under the neckline and under each cuff
+    root
+      .querySelectorAll('[data-stitch="chalk"]')
+      .forEach((c) => c.setAttribute("opacity", finished ? "0" : "0.55"));
 
     const needle = root.querySelector<SVGGElement>('[data-stitch="needle"]');
     if (!needle) return;

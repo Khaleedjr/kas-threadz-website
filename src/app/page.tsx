@@ -31,7 +31,7 @@ export default async function Home() {
         </p>
 
         <p className="label mt-[clamp(18px,3.4vh,38px)]" style={{ color: "var(--on-surface-soft)" }}>
-          Bespoke embroidery · Abuja · 55 machine files
+          Custom embroidery · Abuja
         </p>
 
         <div className="mt-[clamp(12px,2.2vh,24px)] flex flex-wrap justify-center gap-3">
@@ -40,7 +40,7 @@ export default async function Home() {
             className="rounded-sm px-6 py-[14px] text-[10.5px] font-medium uppercase tracking-[0.2em]"
             style={{ background: "var(--action)", color: "var(--on-action)" }}
           >
-            Commission a piece
+            Design yours
           </Link>
           <Link
             href="/collection"
@@ -106,15 +106,15 @@ export default async function Home() {
         </div>
         <div className="flex flex-col items-start justify-center px-8 py-10">
           <p className="label" style={{ color: "var(--accent)" }}>
-            The Loom
+            Design Yours
           </p>
-          <h2 className="mt-2 mb-3 text-[25px]">Build it before we cut it.</h2>
+          <h2 className="mt-2 mb-3 text-[25px]">See it before we sew it.</h2>
           <p
             className="max-w-[46ch] text-[14px] leading-[1.72]"
             style={{ color: "var(--on-surface-soft)" }}
           >
-            Fabric, colour, embroidery, measurements. The piece updates as you choose and the
-            estimate never hides.
+            Fabric, colour, embroidery, measurements. The picture changes as you choose, and the
+            price is always shown.
           </p>
           <ul className="my-4 flex flex-wrap gap-2">
             {["01 Fabric", "02 Colour", "03 Embroidery", "04 Measure", "05 Send"].map((step, i) => (
@@ -135,7 +135,7 @@ export default async function Home() {
             className="rounded-sm px-6 py-[14px] text-[10.5px] font-medium uppercase tracking-[0.2em]"
             style={{ background: "var(--action)", color: "var(--on-action)" }}
           >
-            Open the Loom
+            Start designing
           </Link>
         </div>
       </section>

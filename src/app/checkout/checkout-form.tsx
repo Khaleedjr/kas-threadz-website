@@ -193,7 +193,7 @@ export function CheckoutForm() {
                   {i.qty > 1 && <span className="font-mono">{i.qty} × </span>}
                   {w.size}, {w.cloth}
                   <span className="block text-[12px]" style={{ color: "var(--on-surface-soft)" }}>
-                    <span className="font-mono">{w.design}</span> · {w.thread}
+                    <span className="font-mono">{w.design}</span> · {w.thread} · {w.extras}
                   </span>
                 </span>
                 <span className="price text-[13px]">{naira(w.price * i.qty)}</span>

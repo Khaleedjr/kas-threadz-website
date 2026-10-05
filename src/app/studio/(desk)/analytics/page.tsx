@@ -53,6 +53,12 @@ export default async function AnalyticsPage() {
         <Panel title="Thread">
           <Bars rows={b.thread} />
         </Panel>
+        <Panel title="Cuffs and pendant">
+          <Bars rows={b.sleeves} />
+          <div className="mt-5">
+            <Bars rows={b.tassel} />
+          </div>
+        </Panel>
         <Panel title="In the workshop">
           <Bars rows={(Object.keys(statuses) as Array<keyof typeof statuses>).map((s) => [STATUS_LABEL[s], statuses[s]] as [string, number]).filter(([, n]) => n > 0)} />
         </Panel>

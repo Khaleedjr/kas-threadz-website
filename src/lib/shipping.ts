@@ -58,7 +58,7 @@ export const DEFAULT_SHIPPING: Shipping = {
   ],
   pickup: {
     on: true,
-    label: "Collect from the atelier",
+    label: "Pick up from our shop",
     note: "Collect from the studio in Abuja. We message you on WhatsApp as soon as it is ready.",
   },
   freeFrom: 100000,

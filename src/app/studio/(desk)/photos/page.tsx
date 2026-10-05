@@ -23,7 +23,7 @@ export default async function PhotosPage({
         <div className="grid gap-3 xl:grid-cols-2">
           <Panel title="Home page">
             <PhotoField
-              label="Beside “Build it before we cut it”"
+              label="Beside “See it before we sew it”"
               hint="A tall photograph works best."
               urlName="homeLoomUrl"
               altName="homeLoomAlt"

@@ -22,6 +22,8 @@ export function GarmentPreview({
   design,
   thread,
   length,
+  sleeves = false,
+  tassel = false,
 }: {
   garment: Garment;
   colour: string;
@@ -31,6 +33,10 @@ export function GarmentPreview({
   thread?: ThreadTones | null;
   /** the jallabiya's length in inches, from the Loom's Length step */
   length?: number;
+  /** the jallabiya's neckline pattern round both cuffs */
+  sleeves?: boolean;
+  /** a tassel at the foot of the jallabiya's neck opening */
+  tassel?: boolean;
 }) {
   const markup = useMemo(() => {
     /* The jallabiya has its own drawing, traced from the studio's sketch,
@@ -42,6 +48,8 @@ export function GarmentPreview({
         neckline: designAsset(design, "neckline"),
         thread,
         length,
+        sleeves,
+        tassel,
       });
     }
     const svg = build({ type: garment, color: colour, fabric: fabric.id });
@@ -59,7 +67,7 @@ export function GarmentPreview({
       if (pocket) designs += overlay(a.pocket, pocket);
     }
     return svg + (design ? designs : "");
-  }, [garment, colour, fabric.id, design, thread, length]);
+  }, [garment, colour, fabric.id, design, thread, length, sleeves, tassel]);
 
   /* A newly chosen neckline is stitched into the cloth. Only a change sews:
      the design on arrival is simply there, already made. */

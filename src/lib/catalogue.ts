@@ -151,23 +151,33 @@ export const DESIGNS: Design[] = [
 ];
 
 /**
- * The jallabiya necklines the Loom offers, in their own thread colours.
+ * The jallabiya necklines the Loom offers, in their own thread colours, in
+ * the order the studio shows them.
  *
  * Stand-in names: the studio sent these as screen captures without their
- * machine file names, so each is numbered in the order it was sent. When the
- * file names arrive they replace the numbers here; an invented code must never
- * take their place. The images are cut by `scripts/neckline-designs.py`.
+ * machine file names. Each is filed under the number it was sent as, its
+ * `code`: that is what a cart or an order keeps and what its images are named
+ * by, so an order never changes design. What everyone reads is `name`,
+ * numbered by where it now stands; the studio put the eleventh one sent
+ * first. When the file names arrive they replace the names here; an invented
+ * code must never take their place. The images are cut by
+ * `scripts/neckline-designs.py`.
  */
-export const NECKLINES: Array<Pick<Design, "code" | "label" | "placement" | "image">> =
-  Array.from({ length: 14 }, (_, i) => {
-    const n = String(i + 1).padStart(2, "0");
-    return {
-      code: `Neckline ${n}`,
-      label: "Neckline",
-      placement: "Neck opening & chest",
-      image: `/img/designs/necklines/nl${n}.png`,
-    };
-  });
+const SHOWN_ORDER = [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14];
+
+const two = (n: number) => String(n).padStart(2, "0");
+
+export const NECKLINES: Array<Pick<Design, "code" | "label" | "placement" | "image"> & { name: string }> =
+  SHOWN_ORDER.map((sent, i) => ({
+    code: `Neckline ${two(sent)}`,
+    name: `Neckline ${two(i + 1)}`,
+    label: "Neckline",
+    placement: "Neck opening & chest",
+    image: `/img/designs/necklines/nl${two(sent)}.png`,
+  }));
+
+/** A design as it is read: a neckline by its name, anything else by its code. */
+export const designName = (code: string) => NECKLINES.find((n) => n.code === code)?.name ?? code;
 
 export const GARMENT_LABEL: Record<Garment, string> = {
   kaftan: "Kaftan",

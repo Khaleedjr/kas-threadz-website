@@ -5,8 +5,8 @@
  *
  * The first run is 100 sets, split between adult and children's sizes, and
  * each set is paid for in full when it is ordered. The price covers
- * everything in the Loom: any colour, cotton or silk, any neckline design
- * and thread.
+ * everything in the Loom: any colour, any fabric on offer, any neckline
+ * design and thread, and the cuffs and pendant either way.
  */
 
 export type Tier = "adult" | "children";
@@ -47,6 +47,24 @@ export type PreorderGarment = {
   design: string;
   thread: string;
   length: number;
+  /**
+   * The neckline's pattern sewn round both cuffs, and the pendant: a gold
+   * tassel on a cord from the foot of the neck opening. A build from before
+   * either was offered has neither, which is what that customer saw and
+   * paid for.
+   */
+  sleeves?: boolean;
+  tassel?: boolean;
 };
+
+/** What the cuffs and the pendant are called, either way. */
+export const FINISH_WORDS = {
+  sleeves: { on: "Embroidered cuffs", off: "Plain cuffs" },
+  tassel: { on: "Gold pendant", off: "No pendant" },
+};
+
+/** A build's cuffs and pendant in words, each said either way so the studio never has to guess. */
+export const extrasWords = (g: Pick<PreorderGarment, "sleeves" | "tassel">) =>
+  `${(g.sleeves ? FINISH_WORDS.sleeves.on : FINISH_WORDS.sleeves.off).toLowerCase()}, ${(g.tassel ? FINISH_WORDS.tassel.on : FINISH_WORDS.tassel.off).toLowerCase()}`;
 
 export type PreorderCustomer = { name: string; email: string; phone: string };

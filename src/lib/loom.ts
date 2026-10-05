@@ -16,6 +16,10 @@ export type LoomConfig = {
   design: string | null;
   /** the thread the design is run in: "original" keeps the design's own colours */
   thread: string;
+  /** the design's pattern round both cuffs, or plain sleeves */
+  sleeves: boolean;
+  /** a tassel at the foot of the neck opening */
+  tassel: boolean;
   measurements: Measurements;
 };
 
@@ -40,7 +44,7 @@ export const FABRICS: Fabric[] = [
   {
     id: "cotton",
     name: "Cotton",
-    character: "Matte and breathable. The everyday cloth that wears all day.",
+    character: "Breathable, with a soft sheen. The everyday cloth that wears all day.",
     add: 0,
   },
   {

@@ -71,7 +71,13 @@ export function useCart(): CartItem[] {
 export const setsIn = (items: CartItem[]) => items.reduce((n, i) => n + i.qty, 0);
 
 const same = (a: PreorderGarment, b: PreorderGarment) =>
-  a.fabric === b.fabric && a.colour === b.colour && a.design === b.design && a.thread === b.thread && a.length === b.length;
+  a.fabric === b.fabric &&
+  a.colour === b.colour &&
+  a.design === b.design &&
+  a.thread === b.thread &&
+  a.length === b.length &&
+  Boolean(a.sleeves) === Boolean(b.sleeves) &&
+  Boolean(a.tassel) === Boolean(b.tassel);
 
 export const cart = {
   /** Add a build, or one more of it if the same build is already in the cart. */

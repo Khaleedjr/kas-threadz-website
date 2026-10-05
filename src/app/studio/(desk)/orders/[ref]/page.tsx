@@ -53,6 +53,7 @@ export default async function OrderPage({
                     {i.size}, {i.colour} {i.fabric.toLowerCase()}
                     <span className="block text-[13px]" style={{ color: "var(--on-surface-soft)" }}>
                       <span className="code">{i.design}</span> · {threadWords(i.thread)}
+                      <span className="block">{i.extras}</span>
                     </span>
                   </span>
                   <span className="price text-[13px]">{naira(i.price * i.qty)}</span>

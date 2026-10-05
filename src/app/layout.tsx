@@ -23,15 +23,15 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://kasthreadz.com"),
   title: {
-    default: "KAS THREADZ · Bespoke Embroidery, Abuja",
+    default: "KAS THREADZ · Custom Embroidery, Abuja",
     template: "%s · KAS THREADZ",
   },
   description:
-    "Kaftan, agbada, jallabiya and senator wear, machine-embroidered from the house design library and finished by hand at the Abuja atelier.",
+    "Kaftan, agbada, jallabiya and senator wear, embroidered by machine with our own designs and finished by hand in Abuja.",
   openGraph: {
-    title: "KAS THREADZ · Bespoke Embroidery, Abuja",
+    title: "KAS THREADZ · Custom Embroidery, Abuja",
     description:
-      "Bespoke tailoring and embroidery from the house design library. Every design code is a real machine file.",
+      "Custom tailoring and embroidery with our own designs. Every design code is a real design we sew.",
     locale: "en_NG",
     type: "website",
   },
