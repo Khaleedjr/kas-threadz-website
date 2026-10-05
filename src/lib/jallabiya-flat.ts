@@ -10,12 +10,14 @@
    runs on to the length chosen in the Loom, 54 to 62 inches, so the
    hem visibly drops as the length goes up.
 
-   The garment itself is plain, no trim at the neck or the cuffs: the
-   neckline chosen in the Loom is the only embroidery on it, placed
-   with its arm tips on the shoulder seams as everywhere else.
+   The garment itself is plain, no trim at the neck: the neckline chosen
+   in the Loom is its embroidery, placed with its arm tips on the
+   shoulder seams as everywhere else, and its own motif runs round both
+   cuffs, just above the turned hem of each sleeve.
    ============================================================ */
 
 import { luminance, shade } from "./garment";
+import { NECKLINE_BANDS } from "./neckline-bands";
 import { NECKLINE_FIT, type NecklineFit } from "./neckline-fit";
 import { STITCH_FRONT, chalkFor } from "./stitching";
 import { threadFilter, type ThreadTones } from "./loom-preview";
@@ -28,7 +30,16 @@ export type FlatState = {
   length?: number;
   /** the thread the design is run in; left out, it keeps its own colours */
   thread?: ThreadTones | null;
+  /** the neckline's pattern round both cuffs */
+  sleeves?: boolean;
+  /** a tassel at the foot of the neck opening, on a pointed placket: the Loom's pendant */
+  tassel?: boolean;
+  /** set when the same build is drawn more than once on a page, so each drawing keeps its own ids */
+  variant?: string;
 };
+
+/** The whole garment, or one part of it up close, as a picker shows it. */
+export type FlatView = "whole" | "cuff" | "pendant";
 
 /** The Loom's Length step offers these, in inches. The drawing's frame fits the longest. */
 export const LENGTH_RANGE = { min: 54, max: 62, standard: 58 };
@@ -64,6 +75,24 @@ const CUFF_EDGE: [P, P, P, P] = [CUFF_OUTER, [262, 634], [205, 642], CUFF_INNER]
 const NECK_INNER: [P, P, P, P] = [[58, 97], [58.4, 125.6], [24.8, 139], [0, 139]];
 /** the seam where the neck band meets the body */
 const NECK_OUTER: [P, P, P, P] = [SHOULDER_NECK, [90, 133.5], [30, 160], [0, 160]];
+/** where the neck slit ends, at the foot of the opening */
+const SLIT_FOOT = NECK_OUTER[3][1] + 108;
+/** the turned cuff's fold, from the sleeve's outer edge to its inner one */
+const CUFF_FOLD: [P, P, P, P] = [
+  [CUFF_OUTER[0] - 1.5, CUFF_OUTER[1] - 15],
+  [260.5, 619],
+  [206, 627],
+  [CUFF_INNER[0] + 1.5, CUFF_INNER[1] - 15],
+];
+
+/**
+ * Which way the sleeve runs where it meets the cuff: how far out it goes for
+ * every unit down, the mean of its two edges there.
+ */
+const SLEEVE_LEAN =
+  ((CUFF_OUTER[0] - SLEEVE_OUTER[2][0]) / (CUFF_OUTER[1] - SLEEVE_OUTER[2][1]) +
+    (CUFF_INNER[0] - SLEEVE_INNER[2][0]) / (CUFF_INNER[1] - SLEEVE_INNER[2][1])) /
+  2;
 
 /** The body's side seam falls in a straight line, flaring a little to the hem. */
 const sideAt = (y: number) => UNDERARM[0] + (y - UNDERARM[1]) * 0.0435;
@@ -203,22 +232,177 @@ function designBox(fit: NecklineFit) {
   return { x: C - w / 2, y: tipY - fit.tip * h, w, h, tipHalf, tipY };
 }
 
+/** How far above the fold the cuff band sits. */
+const CUFF_GAP = 5;
+/** The narrow pieces the cuff band is laid round the sleeve in. */
+const CUFF_PIECES = 30;
+
+const r4 = (n: number) => Math.round(n * 1e4) / 1e4;
+
+const cubicAt = ([a, b, c, d]: [P, P, P, P], t: number): P => {
+  const s = 1 - t;
+  const k = [s * s * s, 3 * s * s * t, 3 * s * t * t, t * t * t];
+  return [
+    k[0] * a[0] + k[1] * b[0] + k[2] * c[0] + k[3] * d[0],
+    k[0] * a[1] + k[1] * b[1] + k[2] * c[1] + k[3] * d[1],
+  ];
+};
+
 /**
- * The neckline, and everything that sews it in.
+ * One sleeve's cuff band, laid round it just above the turned cuff: the
+ * pieces, for `<defs>`, and the two ends of the fold it follows.
+ *
+ * The sleeve is a tube seen from the front and the fold is its rim, so the
+ * band goes round it as round a cylinder: full size across the middle, drawn
+ * in toward the edges where the sleeve turns away, and following the rim's
+ * curve. It is laid in narrow pieces, each flat on its own stretch of sleeve
+ * and meeting the next along the sleeve's own line, so it bends without a
+ * join. `length` and `depth` are the band's, in drawing units, with its
+ * middle at the middle of the sleeve.
+ */
+function cuffBand(side: 1 | -1, href: string, length: number, depth: number) {
+  const fold = CUFF_FOLD.map(([h, y]) => [C + side * h, y]) as [P, P, P, P];
+  const outer = fold[0];
+  const inner = fold[3];
+  const chord: P = [inner[0] - outer[0], inner[1] - outer[1]];
+  const cc = chord[0] ** 2 + chord[1] ** 2;
+  const radius = Math.sqrt(cc) / 2;
+  // points along the fold, and how far across the sleeve each one is
+  const steps = 96;
+  const pts = Array.from({ length: steps + 1 }, (_, k) => cubicAt(fold, k / steps));
+  const across = pts.map(([x, y]) => ((x - outer[0]) * chord[0] + (y - outer[1]) * chord[1]) / cc);
+  const rim = (q: number): P => {
+    let k = 0;
+    while (k < steps - 1 && across[k + 1] < q) k++;
+    const f = Math.min(1, Math.max(0, (q - across[k]) / (across[k + 1] - across[k] || 1)));
+    return [pts[k][0] + f * (pts[k + 1][0] - pts[k][0]), pts[k][1] + f * (pts[k + 1][1] - pts[k][1])];
+  };
+
+  // round the front of the sleeve, edge to edge, or as far as the band reaches
+  const reach = Math.min(Math.PI / 2, length / 2 / radius);
+  const lean = SLEEVE_LEAN * side;
+  const lift = depth + CUFF_GAP;
+  let pieces = "";
+  for (let k = 0; k < CUFF_PIECES; k++) {
+    const a0 = -reach + (2 * reach * k) / CUFF_PIECES;
+    const a1 = -reach + (2 * reach * (k + 1)) / CUFF_PIECES;
+    // where the piece starts and ends along the band, and on the rim
+    const x0 = length / 2 + radius * a0;
+    const x1 = length / 2 + radius * a1;
+    const p0 = rim((1 + Math.sin(a0)) / 2);
+    const p1 = rim((1 + Math.sin(a1)) / 2);
+    // along the band follows the rim; down the band runs down the sleeve
+    const m = [(p1[0] - p0[0]) / (x1 - x0), (p1[1] - p0[1]) / (x1 - x0), lean, 1, p0[0] - lift * lean, p0[1] - lift];
+    // a hair wider than its share, so no cloth shows between one piece and the next
+    const w = r2(x1 - x0 + 0.4);
+    pieces +=
+      `<g transform="matrix(${m.map(r4).join(" ")})">` +
+      `<svg width="${w}" height="${r2(depth)}" viewBox="${r2(x0)} 0 ${w} ${r2(depth)}" preserveAspectRatio="none" overflow="hidden">` +
+      `<use href="${href}"/></svg></g>`;
+  }
+  return { pieces, outer, inner };
+}
+
+/* ------------------------------------------------------------ the pendant */
+/* The tassel, which the Loom calls the pendant. As the studio's reference
+   has it: the neck opening finished with a narrow placket that ends in a
+   point, and from the point a cord with a gold tassel on it. The tassel hangs
+   clear below the embroidery, never over it, and its cord runs behind the
+   design, so the design is never covered. */
+
+/** the placket's half width, how far past the slit's foot its point reaches, and how long the point is */
+const PLACKET_HALF = 5.5;
+const PLACKET_POINT = 12;
+const PLACKET_TAPER = 22;
+/** the house gold, the colour of the tassel cord */
+const GOLD = { dark: "#86622a", mid: "#c9a45c", light: "#efd89f" };
+
+/** where the cord leaves the placket */
+const PLACKET_TIP = SLIT_FOOT + PLACKET_POINT;
+/** how far below the embroidery the pendant hangs */
+const PENDANT_CLEAR = 10;
+/** the longest cord drawn from the placket; below a design longer than this reaches, it comes from behind the design's foot */
+const CORD_MAX = 180;
+const CORD_FROM_FOOT = 60;
+
+/** Where the pendant's knot sits: clear below the chosen design, or just under the placket's point when the design ends above it. */
+export function pendantTop(neckline: string | null | undefined): number {
+  const fit = neckline ? NECKLINE_FIT[neckline] : undefined;
+  const b = fit ? designBox(fit) : null;
+  return Math.max(PLACKET_TIP + 14, b ? b.y + b.h + PENDANT_CLEAR : 0);
+}
+
+/** The placket's outline, drawn over the opening in place of the plain slit. */
+function placketPath(): string {
+  const top = NECK_OUTER[3][1];
+  const bend = PLACKET_TIP - PLACKET_TAPER;
+  return (
+    `M ${C - PLACKET_HALF} ${top} L ${C - PLACKET_HALF} ${bend} L ${C} ${PLACKET_TIP} ` +
+    `L ${C + PLACKET_HALF} ${bend} L ${C + PLACKET_HALF} ${top}`
+  );
+}
+
+/**
+ * The cord and the tassel on it: a knot, a round head, a binding, and the
+ * fringe. It is drawn under the design, so where the cord passes behind the
+ * embroidery the embroidery shows, and the tassel hangs below it at `top`.
+ */
+function tasselLayer(id: string, top: number): { art: string; defs: string } {
+  // it hangs a hair off the centre, as a cord falls
+  const cx = C + 0.8;
+  const x = (n: number) => r2(cx + n);
+  const y = (n: number) => r2(top + n);
+  const from = top - PLACKET_TIP <= CORD_MAX ? PLACKET_TIP : top - CORD_FROM_FOOT;
+  const fall = top - from;
+  const cord = `M ${C} ${r2(from)} C ${C + 2.2} ${r2(from + fall * 0.35)} ${C - 1.2} ${r2(from + fall * 0.7)} ${x(0)} ${y(1.5)}`;
+  const gold = `fill="url(#tg${id})" stroke="${GOLD.dark}" stroke-width="0.5"`;
+  let fringe = "";
+  for (let k = -3; k <= 3; k++) {
+    fringe += `<path d="M ${x(k * 1.45)} ${y(15)} L ${x(k * 2.2)} ${y(46.3)}" stroke="${GOLD.dark}" stroke-opacity="0.4" stroke-width="0.45"/>`;
+  }
+  const art =
+    `<g filter="url(#td${id})">` +
+    `<path d="${cord}" fill="none" stroke="${GOLD.dark}" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<path d="${cord}" fill="none" stroke="${GOLD.mid}" stroke-width="0.7" stroke-linecap="round"/>` +
+    // the skirt, then the head over its top, then the binding between them
+    `<path d="M ${x(-5.1)} ${y(13.9)} L ${x(5.1)} ${y(13.9)} C ${x(6)} ${y(23)} ${x(7)} ${y(34)} ${x(7.6)} ${y(46)} ` +
+    `Q ${x(0)} ${y(49.2)} ${x(-7.6)} ${y(46)} C ${x(-7)} ${y(34)} ${x(-6)} ${y(23)} ${x(-5.1)} ${y(13.9)} Z" ${gold}/>` +
+    fringe +
+    `<path d="M ${x(-5)} ${y(11.5)} C ${x(-5)} ${y(6)} ${x(-2.9)} ${y(3)} ${x(0)} ${y(3)} ` +
+    `C ${x(2.9)} ${y(3)} ${x(5)} ${y(6)} ${x(5)} ${y(11.5)} Z" ${gold}/>` +
+    `<path d="M ${x(-1.8)} ${y(5)} Q ${x(-2.7)} ${y(8)} ${x(-2.4)} ${y(10.5)}" fill="none" stroke="${GOLD.light}" stroke-opacity="0.8" stroke-width="0.8" stroke-linecap="round"/>` +
+    `<rect x="${x(-5.6)}" y="${y(10.7)}" width="11.2" height="3.2" rx="1" ${gold}/>` +
+    `<ellipse cx="${x(0)}" cy="${y(1.5)}" rx="2.7" ry="2.3" ${gold}/>` +
+    `</g>`;
+  const defs =
+    `<linearGradient id="tg${id}" gradientUnits="userSpaceOnUse" x1="${x(-7.5)}" y1="0" x2="${x(7.5)}" y2="0">` +
+    `<stop offset="0" stop-color="${GOLD.dark}"/><stop offset="0.28" stop-color="${GOLD.mid}"/>` +
+    `<stop offset="0.46" stop-color="${GOLD.light}"/><stop offset="0.68" stop-color="${GOLD.mid}"/>` +
+    `<stop offset="1" stop-color="${GOLD.dark}"/></linearGradient>` +
+    `<filter id="td${id}" x="-60%" y="-10%" width="220%" height="120%">` +
+    `<feDropShadow dx="1.2" dy="1.6" stdDeviation="1" flood-color="#2a1c14" flood-opacity="0.35"/></filter>`;
+  return { art, defs };
+}
+
+/**
+ * The neckline and its cuffs, and everything that sews them in.
  *
  * It is always drawn fully sewn: the reveal mask's front sits past the end of
  * the order. Stitching it in only moves that front and shows the chalk guide
  * and the needle, which `stitch-in.ts` does in the page, so the drawing never
- * has to be rebuilt while the needle runs.
+ * has to be rebuilt while the needle runs. The cuffs, when the sleeves are
+ * to carry the design, are sewn by the same front as the neck, each from the
+ * sleeve's outer edge in.
  */
 function necklineLayer(
   href: string,
   id: string,
   lum: number,
   thread: ThreadTones | null,
-): { art: string; needle: string; defs: string } {
+  sleeves: boolean,
+): { art: string; needle: string; defs: string; cuffs: string[] } {
   const fit = NECKLINE_FIT[href];
-  if (!fit) return { art: "", needle: "", defs: "" };
+  if (!fit) return { art: "", needle: "", defs: "", cuffs: [] };
   const b = designBox(fit);
   const x = r2(b.x), y = r2(b.y), iw = r2(b.w), ih = r2(b.h);
   const box = `x="${x}" y="${y}" width="${iw}" height="${ih}"`;
@@ -254,14 +438,47 @@ function necklineLayer(
     `<circle cx="5.3" cy="-33" r="2" fill="none" stroke="#8d96a2" stroke-width="1.1"/>` +
     `<circle r="3.6" fill="#fffaf0" stroke="#2c2f35" stroke-opacity="0.5" stroke-width="1"/>` +
     `</g>`;
-  return { art, needle, defs };
+
+  /* the cuffs, one for each sleeve in the order the sleeves are drawn: the
+     band is drawn once and every piece of both cuffs borrows it */
+  const band = NECKLINE_BANDS[href];
+  if (!band || !sleeves) return { art, needle, defs, cuffs: [] };
+  const length = band.length * b.w;
+  const depth = band.depth * b.w;
+  const frame = `x="${r2(FRAME.x)}" y="${r2(FRAME.y)}" width="${r2(FRAME.w)}" height="${r2(FRAME.h)}"`;
+  let cuffDefs = `<image id="cb${id}" href="${band.image}" width="${r2(length)}" height="${r2(depth)}" preserveAspectRatio="none"/>`;
+  const cuffs = ([1, -1] as const).map((side, i) => {
+    const c = cuffBand(side, `#cb${id}`, length, depth);
+    // sewn from the sleeve's outer edge in: its order runs dark to light across it
+    cuffDefs +=
+      `<g id="cf${i}${id}">${c.pieces}</g>` +
+      `<linearGradient id="co${i}${id}" gradientUnits="userSpaceOnUse" x1="${r2(c.outer[0])}" y1="${r2(c.outer[1])}" x2="${r2(c.inner[0])}" y2="${r2(c.inner[1])}">` +
+      `<stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>` +
+      `<mask id="cs${i}${id}" maskUnits="userSpaceOnUse" ${frame}><rect ${frame} fill="url(#co${i}${id})" filter="url(#front${id})"/></mask>`;
+    return (
+      `<g clip-path="url(#sl${i}${id})">` +
+      `<use data-stitch="chalk" href="#cf${i}${id}" filter="url(#chalk${id})" opacity="0"/>` +
+      `<g filter="url(#emb${id})"><use href="#cf${i}${id}" mask="url(#cs${i}${id})"${tone}/></g>` +
+      `</g>`
+    );
+  });
+  return { art, needle, defs: defs + cuffDefs, cuffs };
 }
 
 /* ------------------------------------------------------------------ draw */
 
 function hashId(s: FlatState): string {
   const t = s.thread;
-  const key = [s.color, s.fabric, s.length ?? "", s.neckline ?? "", t ? `${t.dark}${t.mid}${t.light}` : ""].join("|");
+  const key = [
+    s.color,
+    s.fabric,
+    s.length ?? "",
+    s.neckline ?? "",
+    t ? `${t.dark}${t.mid}${t.light}` : "",
+    s.sleeves ? "sleeves" : "",
+    s.tassel ? "tassel" : "",
+    s.variant ?? "",
+  ].join("|");
   let h = 0x811c9dc5;
   for (let i = 0; i < key.length; i++) {
     h ^= key.charCodeAt(i);
@@ -307,15 +524,17 @@ export type FlatCallout = {
 
 /**
  * The Loom's labels on a phone, each in paper the garment leaves empty: the
- * design above the left shoulder, the colour beside the right sleeve, the
- * fabric beside the skirt and the size by the hem, which moves with the
- * length. The design's line ends on its own thread, wherever the chosen
- * neckline puts it.
+ * design above the left shoulder, the pendant and the colour beside the right
+ * sleeve, the sleeves below the left cuff, the fabric beside the skirt and
+ * the size by the hem, which moves with the length. The design's line ends
+ * on its own thread, wherever the chosen neckline puts it; the pendant's on
+ * its cord, just above where it hangs below the design, so the pin never
+ * hides the pendant itself.
  */
 export function flatCallouts(state: {
   length?: number;
   neckline?: string | null;
-}): Record<"design" | "colour" | "fabric" | "size", FlatCallout> {
+}): Record<"design" | "colour" | "fabric" | "size" | "tassel" | "sleeves", FlatCallout> {
   const { hemMid } = lengthOf({ color: "", fabric: "", length: state.length });
   const f = ([x, y]: P): FlatPoint => ({
     x: Math.round(((x - FRAME.x) / FRAME.w) * 1e4) / 1e4,
@@ -349,12 +568,17 @@ export function flatCallouts(state: {
   return {
     design: callout("left", [C - 196, 70], 40, design),
     colour: callout("right", [C + 262, 378], 20, [C + 205, 420]),
-    fabric: callout("left", [C - 196, 790], 30, [C - 100, 850]),
+    // low enough on the skirt to leave the sleeves' label room under the cuff
+    fabric: callout("left", [C - 196, 860], 30, [C - 100, 905]),
     size: callout("right", [C + 200, hemMid - 90], 26, [C + 90, hemMid - 14]),
+    // on the cord just above the pendant, below the design, where it hangs or would
+    tassel: callout("right", [C + 262, 250], 20, [C + 0.8, pendantTop(state.neckline) - 7]),
+    // below the cuff, the line rising straight up to the middle of its band
+    sleeves: callout("left", [C - 262, 692], 31, [C - 231, 607]),
   };
 }
 
-export function buildJallabiyaFlat(state: FlatState): string {
+export function buildJallabiyaFlat(state: FlatState, view: FlatView = "whole"): string {
   const s = state;
   const id = hashId(s);
   const silk = s.fabric === "silk";
@@ -411,15 +635,22 @@ export function buildJallabiyaFlat(state: FlatState): string {
   const fold = hemPoints(hemMid, half, HEM_FOLD);
   front += `<path d="M ${r2(fold[0][0])} ${r2(fold[0][1])}${smooth(fold)}" fill="none" stroke="${INK}" stroke-opacity="0.75" stroke-width="1.3"/>`;
 
-  // the neck slit, closed at its foot with a bar tack. It is drawn before the
+  // the neck opening: a slit closed at its foot with a bar tack, or, for a
+  // tassel, a pointed placket for it to hang from. It is drawn before the
   // design: the embroidery is worked around the opening, over its edges
-  front += `<path d="M ${C} ${NECK_OUTER[3][1]} L ${C} ${NECK_OUTER[3][1] + 108}" stroke="${INK}" stroke-width="1.5"/>`;
-  front += `<path d="M ${C - 5} ${NECK_OUTER[3][1] + 109} L ${C + 5} ${NECK_OUTER[3][1] + 109}" stroke="${inner}" stroke-opacity="0.9" stroke-width="2.4" stroke-linecap="round"/>`;
+  if (s.tassel) {
+    front += `<path d="${placketPath()}" fill="none" stroke="${INK}" stroke-opacity="0.7" stroke-width="1.3" stroke-linejoin="round"/>`;
+  } else {
+    front += `<path d="M ${C} ${NECK_OUTER[3][1]} L ${C} ${SLIT_FOOT}" stroke="${INK}" stroke-width="1.5"/>`;
+    front += `<path d="M ${C - 5} ${SLIT_FOOT + 1} L ${C + 5} ${SLIT_FOOT + 1}" stroke="${inner}" stroke-opacity="0.9" stroke-width="2.4" stroke-linecap="round"/>`;
+  }
 
   /* the neckline design, under the neck band */
   const design = s.neckline
-    ? necklineLayer(s.neckline, id, lum, s.thread ?? null)
-    : { art: "", needle: "", defs: "" };
+    ? necklineLayer(s.neckline, id, lum, s.thread ?? null, Boolean(s.sleeves))
+    : { art: "", needle: "", defs: "", cuffs: [] };
+  // the pendant hangs below the embroidery, its cord behind it
+  const tassel = s.tassel ? tasselLayer(id, pendantTop(s.neckline)) : { art: "", defs: "" };
 
   /* ---- the neck band and the neck slit ---- */
   const band =
@@ -441,9 +672,10 @@ export function buildJallabiyaFlat(state: FlatState): string {
     if (silk) arms += `<path d="${sp}" fill="url(#sheen${id})"/>`;
     // the sleeve head sits just below the seam, a touch in shadow
     arms += `<g clip-path="url(#sl${i}${id})" filter="url(#soft${id})"><path d="M ${at(side, SHOULDER_POINT)} ${curve(side, ARMHOLE)}" fill="none" stroke="#000" stroke-opacity="0.13" stroke-width="12"/></g>`;
-    // the turned cuff
-    const k = 15;
-    arms += `<path d="M ${at(side, [CUFF_OUTER[0] - 1.5, CUFF_OUTER[1] - k])} C ${at(side, [262 - 1.5, 634 - k])} ${at(side, [205 + 1, 642 - k])} ${at(side, [CUFF_INNER[0] + 1.5, CUFF_INNER[1] - k])}" fill="none" stroke="${INK}" stroke-opacity="0.75" stroke-width="1.3"/>`;
+    // the neckline's band, round the sleeve above the cuff
+    arms += design.cuffs[i] ?? "";
+    // the turned cuff, kept inside the sleeve where the fold meets its edge
+    arms += `<path d="M ${at(side, CUFF_FOLD[0])} ${curve(side, CUFF_FOLD)}" fill="none" stroke="${INK}" stroke-opacity="0.75" stroke-width="1.3" clip-path="url(#sl${i}${id})"/>`;
     arms += `<path d="${sp}" fill="none" stroke="${INK}" stroke-width="1.9" stroke-linejoin="round"/>`;
   });
 
@@ -511,11 +743,20 @@ export function buildJallabiyaFlat(state: FlatState): string {
     `<filter id="emb${id}" x="-5%" y="-5%" width="110%" height="110%"><feDropShadow dx="0" dy="0.8" stdDeviation="0.5" flood-color="#000" flood-opacity="0.4"/></filter>` +
     `<filter id="glow${id}" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="3"/></filter>` +
     design.defs +
+    tassel.defs +
     `<filter id="drop${id}" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#2a1c14" flood-opacity="0.2"/></filter>`;
 
-  return `<svg class="garment-svg" viewBox="${r2(FRAME.x)} ${r2(FRAME.y)} ${r2(FRAME.w)} ${r2(FRAME.h)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="jallabiya preview">
+  // the whole garment, or one part of it up close, filling a picker's tile
+  const box =
+    view === "cuff"
+      ? { x: C + 150, y: 520, w: 150, h: 130 }
+      : view === "pendant"
+        ? { x: C - 55, y: pendantTop(s.neckline) - 55, w: 110, h: 120 }
+        : FRAME;
+  const fit = view === "whole" ? "" : ` preserveAspectRatio="xMidYMid slice"`;
+  return `<svg class="garment-svg" viewBox="${r2(box.x)} ${r2(box.y)} ${r2(box.w)} ${r2(box.h)}"${fit} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="jallabiya preview">
     <defs>${defs}</defs>
-    <g filter="url(#drop${id})">${back}${form}${front}${design.art}${neck}${arms}${outline}</g>
+    <g filter="url(#drop${id})">${back}${form}${front}${tassel.art}${design.art}${neck}${arms}${outline}</g>
     ${design.needle}
   </svg>`;
 }

@@ -5,17 +5,17 @@ import { SiteFooter, SiteNav } from "@/components/site-chrome";
 import { getCatalogue } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "The Atelier",
+  title: "About Us",
   description:
-    "How a KAS THREADZ piece is made in Abuja: consultation, cloth, digitised design, the make, and the final fitting.",
+    "How a KAS THREADZ piece is made in Abuja: talk it through, choose the fabric and design, we sew it, then you try it on.",
 };
 
 const PROCESS = [
-  { n: "01", title: "Consultation", body: "Occasion, references, budget. On WhatsApp or in the studio." },
-  { n: "02", title: "Fabric & colour", body: "Five house materials, any colour. Or bring your own cloth." },
-  { n: "03", title: "Design & measurements", body: "A file from the library, or a custom digitisation of your own motif." },
-  { n: "04", title: "The make", body: "Cut, embroidered, sewn, finished. A photo lands at every stage." },
-  { n: "05", title: "Fitting & delivery", body: "Fittings in the Abuja studio. Nationwide and diaspora by courier." },
+  { n: "01", title: "Talk to us", body: "Tell us the occasion, show us pictures, set a budget. On WhatsApp or at our shop." },
+  { n: "02", title: "Fabric & colour", body: "Pick from our five fabrics in any colour, or bring your own." },
+  { n: "03", title: "Design & measurements", body: "Pick one of our designs, or we can turn your own idea into one." },
+  { n: "04", title: "We make it", body: "Cut, embroidered, sewn and finished. We send you a photo at every step." },
+  { n: "05", title: "Fitting & delivery", body: "Try it on at our shop in Abuja, or we deliver anywhere in Nigeria and abroad." },
 ];
 
 export default async function AtelierPage() {
@@ -27,17 +27,17 @@ export default async function AtelierPage() {
       <div className="grid flex-1 md:grid-cols-2">
         <section id="main" className="px-8 py-12">
           <p className="label" style={{ color: "var(--accent)" }}>
-            The Atelier · Abuja
+            About Us · Abuja
           </p>
           <h1 className="mt-3 text-[clamp(28px,3.6vw,40px)]">
-            Machine precision.
+            Made by machine.
             <br />
-            Hand finish.
+            Finished by hand.
           </h1>
           <p className="mt-4 max-w-[48ch] text-[14px] leading-[1.72]" style={{ color: "var(--on-surface-soft)" }}>
-            Every piece begins as cloth on the cutting table and a file in the library. The
-            embroidery head runs the code. Everything after that is hands: seams, facing, cord,
-            tassel, press.
+            Every piece starts as plain fabric and one of our designs. The embroidery
+            machine sews the design. Everything after that is done by hand: the seams, the
+            edges, the cord, the tassel and the ironing.
           </p>
 
           <ol className="mt-8">
@@ -61,7 +61,7 @@ export default async function AtelierPage() {
             className="mt-8 inline-block rounded-sm px-6 py-[14px] text-[10.5px] font-medium uppercase tracking-[0.2em]"
             style={{ background: "var(--action)", color: "var(--on-action)" }}
           >
-            Start a commission
+            Start your order
           </Link>
         </section>
 

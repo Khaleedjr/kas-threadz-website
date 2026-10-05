@@ -50,7 +50,7 @@ export function PreorderPanel({ garment, summary }: { garment: PreorderGarment; 
   }, [refresh]);
 
   // a new build is a new question: the last "added" note goes
-  const key = `${garment.fabric}|${garment.colour}|${garment.design}|${garment.thread}|${garment.length}`;
+  const key = `${garment.fabric}|${garment.colour}|${garment.design}|${garment.thread}|${garment.length}|${garment.sleeves}|${garment.tassel}`;
   const [shownFor, setShownFor] = useState(key);
   if (shownFor !== key) {
     setShownFor(key);

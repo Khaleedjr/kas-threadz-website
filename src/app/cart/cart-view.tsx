@@ -26,6 +26,8 @@ export function BuildPicture({ item, width = 96 }: { item: CartItem; width?: num
         design={design}
         thread={threadTones(item.thread, item.colour)}
         length={item.length}
+        sleeves={Boolean(item.sleeves)}
+        tassel={Boolean(item.tassel)}
       />
     </div>
   );
@@ -95,11 +97,11 @@ export function CartView() {
                 </p>
                 <p className="mt-2 text-[15px]">{w.cloth}</p>
                 <p className="mt-1 text-[13px]" style={{ color: "var(--on-surface-soft)" }}>
-                  <span className="font-mono">{w.design}</span> · {w.thread}
+                  <span className="font-mono">{w.design}</span> · {w.thread} · {w.extras}
                 </p>
                 {w.unavailable && (
                   <p className="mt-2 text-[12px]" style={{ color: "var(--accent)" }}>
-                    This colour or cloth is no longer offered. Remove it and build it again.
+                    This colour or fabric is not on offer right now. Remove it and build it again.
                   </p>
                 )}
                 <div className="mt-auto flex flex-wrap items-center gap-3 pt-3">
@@ -134,7 +136,7 @@ export function CartView() {
           <span className="price text-[22px] font-bold">{naira(subtotal)}</span>
         </p>
         <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--on-surface-soft)" }}>
-          Delivery is worked out at checkout, or collect from the atelier for nothing.
+          Delivery is worked out at checkout, or pick it up from our shop in Abuja for free.
           {cat.shipping.freeFrom > 0 && ` Delivery is free on orders of ${naira(cat.shipping.freeFrom)} or more.`}
         </p>
         {short.map((s) => (

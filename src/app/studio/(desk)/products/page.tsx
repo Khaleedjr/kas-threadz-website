@@ -34,7 +34,7 @@ export default async function ProductsPage({
             <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--on-surface-soft)" }}>
               Adult {naira(cat.terms.adult.price)} · {cat.terms.adult.total} sets &nbsp;·&nbsp; Children{" "}
               {naira(cat.terms.children.price)} · {cat.terms.children.total} sets &nbsp;·&nbsp;{" "}
-              {cat.colours.filter((c) => !c.hidden).length} colours · {cat.fabrics.filter((f) => !f.hidden).length} fabrics
+              {cat.colours.filter((c) => !c.hidden).length} colours · {cat.fabrics.filter((f) => !f.hidden && !f.soon).length} fabrics
             </p>
           </div>
           <span className="label" style={{ color: cat.preorder.open ? "var(--accent)" : "var(--on-surface-soft)" }}>

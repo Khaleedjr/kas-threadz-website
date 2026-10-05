@@ -1,5 +1,6 @@
-import { naira } from "@/lib/catalogue";
+import { designName, naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
+import { extrasWords } from "@/lib/preorder";
 import { newReference, priceCheckout } from "@/lib/preorder-server";
 import { countsOf, preorderStore } from "@/lib/preorder-store";
 import { paystackReady, startPayment } from "@/lib/paystack";
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     await store.savePending({ ...priced, reference, createdAt: new Date().toISOString() });
     const sets = priced.items.reduce((n, i) => n + i.qty, 0);
     const summary = priced.items
-      .map((i) => `${i.qty} × ${i.garment.length}" ${i.described?.colour ?? ""} ${i.described?.fabric?.toLowerCase() ?? ""}, ${i.garment.design}`)
+      .map((i) => `${i.qty} × ${i.garment.length}" ${i.described?.colour ?? ""} ${i.described?.fabric?.toLowerCase() ?? ""}, ${designName(i.garment.design)}, ${extrasWords(i.garment)}`)
       .join("; ")
       .slice(0, 480);
     const url = await startPayment({

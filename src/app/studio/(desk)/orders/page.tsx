@@ -131,7 +131,7 @@ export default async function OrdersPage({
                       {r.items.map((i, n) => (
                         <span key={n} className="block">
                           {i.qty > 1 ? `${i.qty} × ` : ""}
-                          {i.garment.length}″ · {i.colour} {i.fabric.toLowerCase()} · <span className="code text-[12px]">{i.design}</span>
+                          {i.garment.length}″ · {i.colour} {i.fabric.toLowerCase()} · <span className="code text-[12px]">{i.design}</span> · {i.extras}
                         </span>
                       ))}
                       {r.delivery && (

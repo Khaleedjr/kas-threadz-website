@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { MARK_GROUPS, MARK_VIEWBOX } from "@/lib/mark-stitches";
 import { SITE } from "@/lib/site";
 
-export const alt = "KAS THREADZ, bespoke embroidery in Abuja";
+export const alt = "KAS THREADZ, custom embroidery in Abuja";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

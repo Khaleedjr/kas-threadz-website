@@ -5,6 +5,7 @@
 
 import { naira } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
+import { FINISH_WORDS } from "./preorder";
 import { describe } from "./preorder-server";
 import { itemsOf, type Order, type OrderStatus } from "./preorder-store";
 
@@ -55,7 +56,7 @@ export function byStatus(orders: Order[]): Record<OrderStatus, number> {
   return out;
 }
 
-/** What sells: each colour, neckline, cloth, thread, size and length, most first. */
+/** What sells: each colour, neckline, cloth, thread, size and length, and the cuffs and pendant either way, most first. */
 export function breakdowns(orders: Order[], cat: Catalogue) {
   const tally = () => new Map<string, number>();
   const b = {
@@ -65,6 +66,8 @@ export function breakdowns(orders: Order[], cat: Catalogue) {
     thread: tally(),
     tier: tally(),
     length: tally(),
+    sleeves: tally(),
+    tassel: tally(),
   };
   for (const o of sales(orders)) {
     for (const i of itemsOf(o)) {
@@ -77,6 +80,8 @@ export function breakdowns(orders: Order[], cat: Catalogue) {
       add(b.thread, w.thread);
       add(b.tier, cat.terms[w.tier].name);
       add(b.length, `${i.garment.length}″`);
+      add(b.sleeves, i.garment.sleeves ? FINISH_WORDS.sleeves.on : FINISH_WORDS.sleeves.off);
+      add(b.tassel, i.garment.tassel ? FINISH_WORDS.tassel.on : FINISH_WORDS.tassel.off);
     }
   }
   const ranked = (m: Map<string, number>) => [...m.entries()].sort((a, z) => z[1] - a[1]);
@@ -87,6 +92,8 @@ export function breakdowns(orders: Order[], cat: Catalogue) {
     thread: ranked(b.thread),
     tier: ranked(b.tier),
     length: ranked(b.length),
+    sleeves: ranked(b.sleeves),
+    tassel: ranked(b.tassel),
   };
 }
 

@@ -100,7 +100,7 @@ export default async function PiecePage({ params }: { params: Promise<{ slug: st
               className="rounded-sm px-6 py-[13px] text-[10.5px] font-medium uppercase tracking-[0.2em]"
               style={{ background: "var(--action)", color: "var(--on-action)" }}
             >
-              Commission this piece
+              Order this piece
             </Link>
             <Link
               href="/library"

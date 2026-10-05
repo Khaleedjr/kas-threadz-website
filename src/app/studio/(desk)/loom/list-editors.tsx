@@ -162,7 +162,8 @@ export function ColoursEditor({ initial }: { initial: Colour[] }) {
 
 /**
  * The cloths the Loom offers. A cloth's key is filed on every order, so an
- * existing cloth keeps its key; only its name, line and finish change.
+ * existing cloth keeps its key; only its name, line, finish and whether it is
+ * coming soon change.
  */
 export function FabricsEditor({ initial }: { initial: LoomFabric[] }) {
   const [list, setList] = useState(initial);
@@ -210,10 +211,14 @@ export function FabricsEditor({ initial }: { initial: LoomFabric[] }) {
               {(["matte", "sheen"] as const).map((finish) => (
                 <label key={finish} className="flex items-center gap-2">
                   <input type="radio" name={`finish-${i}`} checked={f.finish === finish} onChange={() => set(i, { finish })} />
-                  {finish === "matte" ? "Matte, like cotton" : "With a sheen, like silk"}
+                  {finish === "matte" ? "Matte" : "With a sheen, like silk"}
                 </label>
               ))}
             </div>
+            <label className="flex items-center gap-2 text-[13px]">
+              <input type="checkbox" checked={Boolean(f.soon)} onChange={(e) => set(i, { soon: e.target.checked })} />
+              Coming soon: shown in the Loom, but it cannot be chosen or ordered yet
+            </label>
           </li>
         ))}
       </ul>

@@ -85,8 +85,8 @@ export default async function ConfirmPage({
                       <dt className="label" style={{ color: "var(--on-surface-soft)" }}>{i.qty > 1 ? `${i.qty} ×` : "Set"}</dt>
                       <dd>
                         {i.garment.length}″ {cat.terms[w.tier].name.toLowerCase()}, {i.described?.colour ?? w.colour}{" "}
-                        {(i.described?.fabric ?? w.fabric).toLowerCase()}, <span className="font-mono text-[13px]">{i.garment.design}</span>,{" "}
-                        {w.thread === "As designed" ? "thread as designed" : `${w.thread.toLowerCase()} thread`}
+                        {(i.described?.fabric ?? w.fabric).toLowerCase()}, <span className="font-mono text-[13px]">{w.design}</span>,{" "}
+                        {w.thread === "As designed" ? "thread as designed" : `${w.thread.toLowerCase()} thread`}, {w.extras}
                       </dd>
                     </div>
                   );
@@ -95,7 +95,7 @@ export default async function ConfirmPage({
                   <>
                     <dt className="label" style={{ color: "var(--on-surface-soft)" }}>{d.method === "pickup" ? "Collect" : "Delivery"}</dt>
                     <dd>
-                      {d.method === "pickup" ? "From the atelier in Abuja" : [d.address, d.city, d.label].filter(Boolean).join(", ")}
+                      {d.method === "pickup" ? "Pick up from our shop in Abuja" : [d.address, d.city, d.label].filter(Boolean).join(", ")}
                       {d.method === "delivery" && ` · ${d.fee ? naira(d.fee) : "free"}`}
                     </dd>
                   </>

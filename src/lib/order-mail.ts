@@ -35,12 +35,12 @@ export async function sendReceipt(order: StoredOrder, cat: Catalogue, origin: st
   const first = order.customer?.name.split(" ")[0] ?? "";
   const lines = itemsOf(order).map((i) => {
     const w = describe(i.garment, cat);
-    return `${i.qty} × ${i.garment.length}″ ${cat.terms[w.tier].name.toLowerCase()}, ${i.described?.colour ?? w.colour} ${(i.described?.fabric ?? w.fabric).toLowerCase()}, ${i.garment.design}, ${w.thread === "As designed" ? "thread as designed" : `${w.thread.toLowerCase()} thread`}: ${naira(i.price * i.qty)}`;
+    return `${i.qty} × ${i.garment.length}″ ${cat.terms[w.tier].name.toLowerCase()}, ${i.described?.colour ?? w.colour} ${(i.described?.fabric ?? w.fabric).toLowerCase()}, ${w.design}, ${w.thread === "As designed" ? "thread as designed" : `${w.thread.toLowerCase()} thread`}, ${w.extras}: ${naira(i.price * i.qty)}`;
   });
   const d = order.delivery;
   const delivery = d
     ? d.method === "pickup"
-      ? "Collect from the atelier in Abuja. We message you on WhatsApp when it is ready."
+      ? "Pick up from our shop in Abuja. We message you on WhatsApp when it is ready."
       : `Delivery to ${[d.address, d.city, d.label].filter(Boolean).join(", ")}: ${d.fee ? naira(d.fee) : "free"}, ${d.eta.toLowerCase()} once it is made.`
     : "";
 

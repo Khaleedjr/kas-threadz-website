@@ -16,7 +16,7 @@ export default async function LoomOptionsPage() {
         <Panel title={`Colours · ${cat.colours.filter((c) => !c.hidden).length} on offer`}>
           <ColoursEditor initial={cat.colours} />
         </Panel>
-        <Panel title={`Fabrics · ${cat.fabrics.filter((f) => !f.hidden).length} on offer`}>
+        <Panel title={`Fabrics · ${cat.fabrics.filter((f) => !f.hidden && !f.soon).length} on offer`}>
           <FabricsEditor initial={cat.fabrics} />
         </Panel>
       </div>

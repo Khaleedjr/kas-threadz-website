@@ -18,6 +18,10 @@ export type ItemRow = {
   colour: string;
   design: string;
   thread: string;
+  /** the cuffs and the pendant, in words */
+  extras: string;
+  sleeves: boolean;
+  tassel: boolean;
   /** each, in naira */
   price: number;
 };
@@ -75,6 +79,9 @@ export function orderRow(o: Order, cat: Catalogue): OrderRow {
       colour: i.described?.colour || w.colour,
       design: w.design,
       thread: w.thread,
+      extras: w.extras,
+      sleeves: Boolean(i.garment.sleeves),
+      tassel: Boolean(i.garment.tassel),
       price: i.price,
     };
   });
@@ -97,13 +104,13 @@ export function orderRow(o: Order, cat: Catalogue): OrderRow {
     sets,
     summary: first
       ? items.length === 1 && first.qty === 1
-        ? `${first.size}, ${first.colour} ${first.fabric.toLowerCase()}, ${first.design}`
+        ? `${first.size}, ${first.colour} ${first.fabric.toLowerCase()}, ${first.design}, ${first.extras}`
         : `${sets} sets: ${items.map((i) => `${i.qty > 1 ? `${i.qty} × ` : ""}${i.garment.length}″ ${i.colour.toLowerCase()}`).join(", ")}`
       : "",
     delivery: d,
     deliveryText: d
       ? d.method === "pickup"
-        ? "Collect from the atelier"
+        ? "Pick up from our shop"
         : `${[d.address, d.city].filter(Boolean).join(", ")} (${d.label})`
       : "",
     subtotal: o.subtotal ?? items.reduce((n, i) => n + i.price * i.qty, 0),

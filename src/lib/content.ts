@@ -54,6 +54,7 @@ export function normalise(raw: unknown): Catalogue {
           add: 0,
           finish: f?.finish === "sheen" ? ("sheen" as const) : ("matte" as const),
           hidden: Boolean(f?.hidden),
+          soon: Boolean(f?.soon),
         }))
         .filter((f) => f.name && SLUG.test(f.id))
     : d.fabrics;
@@ -155,7 +156,8 @@ export const getCatalogue = unstable_cache(
     return {
       ...all,
       colours: colours.length ? colours : DEFAULT_CATALOGUE.colours,
-      fabrics: fabrics.length ? fabrics : DEFAULT_CATALOGUE.fabrics,
+      // the Loom needs at least one cloth that can be ordered now
+      fabrics: fabrics.some((f) => !f.soon) ? fabrics : DEFAULT_CATALOGUE.fabrics,
       pieces: all.pieces.filter((x) => !x.hidden),
     };
   },

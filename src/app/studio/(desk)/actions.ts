@@ -129,8 +129,8 @@ export async function saveColours(colours: Colour[]): Promise<{ ok: boolean; mes
 
 export async function saveFabrics(fabrics: LoomFabric[]): Promise<{ ok: boolean; message: string }> {
   await requireStudio();
-  if (!Array.isArray(fabrics) || !fabrics.some((f) => !f.hidden)) {
-    return { ok: false, message: "Keep at least one fabric on offer." };
+  if (!Array.isArray(fabrics) || !fabrics.some((f) => !f.hidden && !f.soon)) {
+    return { ok: false, message: "Keep at least one fabric that can be ordered now." };
   }
   // a new cloth takes a key from its name, never one already in use
   const used = new Set(fabrics.map((f) => f.id).filter(Boolean));

@@ -4,10 +4,10 @@
  * is paid. Server only, like the store and Paystack beside it.
  */
 
-import { NECKLINES } from "./catalogue";
+import { NECKLINES, designName } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import { THREADS } from "./loom-preview";
-import { isOfferedLength, tierFor, type PreorderCustomer, type PreorderGarment } from "./preorder";
+import { extrasWords, isOfferedLength, tierFor, type PreorderCustomer, type PreorderGarment } from "./preorder";
 import { preorderStore, type Delivery, type OrderItem, type PendingOrder, type StoredOrder } from "./preorder-store";
 import { deliveryFor } from "./shipping";
 import type { Verified } from "./paystack";
@@ -26,8 +26,13 @@ export function checkGarment(input: unknown, cat: Catalogue): PreorderGarment | 
     design: str(g.design, 40),
     thread: str(g.thread, 20) || "original",
     length: Number(g.length),
+    // on only when asked for: a build from before these were offered has neither
+    sleeves: g.sleeves === true,
+    tassel: g.tassel === true,
   };
-  if (!cat.fabrics.some((f) => f.id === garment.fabric)) return { error: "One of the fabrics in your cart is no longer offered." };
+  const fabric = cat.fabrics.find((f) => f.id === garment.fabric);
+  if (!fabric) return { error: "One of the fabrics in your cart is no longer offered." };
+  if (fabric.soon) return { error: `${fabric.name} is coming soon and cannot be ordered yet. Choose another fabric.` };
   if (!cat.colours.some((x) => x.hex === garment.colour)) return { error: "One of the colours in your cart is no longer offered." };
   if (!NECKLINES.some((n) => n.code === garment.design)) return { error: "One of the neckline designs in your cart is no longer offered." };
   if (!THREADS.some((t) => t.id === garment.thread)) return { error: "Choose a thread." };
@@ -98,8 +103,10 @@ export function describe(g: PreorderGarment, cat: Catalogue) {
     size: `${g.length} inches (${tier === "children" ? "children" : "adult"})`,
     fabric: cat.fabrics.find((f) => f.id === g.fabric)?.name ?? g.fabric,
     colour: cat.colours.find((x) => x.hex === g.colour)?.name ?? g.colour,
-    design: g.design,
+    design: designName(g.design),
     thread: THREADS.find((t) => t.id === g.thread)?.name ?? g.thread,
+    /** the cuffs and the pendant, in words */
+    extras: extrasWords(g),
   };
 }
 

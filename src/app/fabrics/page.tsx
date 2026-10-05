@@ -5,7 +5,7 @@ import { SiteFooter, SiteNav } from "@/components/site-chrome";
 export const metadata: Metadata = {
   title: "The Fabrics",
   description:
-    "The full material library is being restocked. Cotton and silk are available to commission in the Loom now.",
+    "The full material library is being restocked. Cotton can be ordered in Design Yours now, and silk is coming soon.",
 };
 
 export default function FabricsPage() {
@@ -28,15 +28,15 @@ export default function FabricsPage() {
           className="mx-auto mt-4 max-w-[46ch] text-[14px] leading-[1.72]"
           style={{ color: "var(--on-surface-soft)" }}
         >
-          The full cloth library is being restocked. In the meantime the Loom cuts in cotton and
-          silk, in every house colour, with the estimate always visible.
+          The full fabric library is being restocked. In the meantime you can order in cotton,
+          in every colour we offer, with the price always shown. Silk is coming soon.
         </p>
         <Link
           href="/loom"
           className="mt-8 inline-block rounded-sm px-6 py-[14px] text-[10.5px] font-medium uppercase tracking-[0.2em]"
           style={{ background: "var(--action)", color: "var(--on-action)" }}
         >
-          Open the Loom
+          Start designing
         </Link>
       </section>
 

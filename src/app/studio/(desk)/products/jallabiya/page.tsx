@@ -56,7 +56,7 @@ export default async function JallabiyaPage({
                 </span>
               </span>
             </label>
-            <Field label="Line under the heading" hint="A sentence or two under “Build it before we cut it.”">
+            <Field label="Line under the heading" hint="A sentence or two under “See it before we sew it.”">
               <textarea name="description" rows={3} defaultValue={cat.preorder.description} maxLength={300} {...input} />
             </Field>
           </div>

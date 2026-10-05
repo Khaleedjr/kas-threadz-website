@@ -85,12 +85,14 @@ async function garmentImage(item: OrderItem, cat: Catalogue, origin: string): Pr
     neckline: design?.image ?? null,
     thread: threadTones(g.thread, g.colour),
     length: g.length,
+    sleeves: Boolean(g.sleeves),
+    tassel: Boolean(g.tassel),
   });
   // the stitching machinery is for sewing it in on the page; the receipt shows it sewn
   svg = svg
     .replace(/<g data-stitch="needle"[\s\S]*?<\/g>/, "")
-    .replace(/<image data-stitch="chalk"[^>]*\/>/, "")
-    .replace(/ mask="url\(#sewn[^)]*\)"/g, "");
+    .replace(/<(image|use) data-stitch="chalk"[^>]*\/>/g, "")
+    .replace(/ mask="url\(#(sewn|cs)[^)]*\)"/g, "");
   const links = [...new Set([...svg.matchAll(/href="(\/img\/[^"]+\.png)"/g)].map((m) => m[1]))];
   for (const path of links) {
     if (path.endsWith("-order.png")) continue;
@@ -129,7 +131,7 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
   const picW = single ? 330 : Math.min(cardW - 40, perRow === 2 ? 300 : 240);
   const picH = Math.round(picW / FLAT_RATIO);
   const rows = Math.ceil(drawn.length / perRow);
-  const cardH = single ? picH + 48 : picH + 250;
+  const cardH = single ? picH + 48 : picH + 280;
   const extra = items.length > DRAWN ? 60 : 0;
   const H = 300 + rows * cardH + (rows - 1) * gap + extra + 470;
 
@@ -148,8 +150,9 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
     return {
       size: `${item.garment.length}″ ${cat.terms[w.tier].name.toLowerCase()}`,
       cloth: `${item.described?.colour || w.colour} ${(item.described?.fabric || w.fabric).toLowerCase()}`,
-      design: item.garment.design,
+      design: w.design,
       thread: !thread || thread.id === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`,
+      extras: w.extras,
     };
   };
 
@@ -162,6 +165,7 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
         <div style={{ fontFamily: "Jost", fontSize: big ? 30 : 22, color: INK }}>{l.cloth}</div>
         <div style={{ display: "flex", fontFamily: "Mono, Naira", fontSize: big ? 26 : 19, color: INK, letterSpacing: 1 }}>{l.design}</div>
         <div style={{ fontFamily: "Jost", fontSize: big ? 24 : 19, color: SOFT }}>{l.thread}</div>
+        <div style={{ fontFamily: "Jost", fontSize: big ? 24 : 19, color: SOFT }}>{l.extras}</div>
         <div style={{ display: "flex", fontFamily: "Mono, Naira", fontSize: big ? 28 : 21, color: INK, marginTop: big ? 12 : 4 }}>
           {item.qty > 1 ? `${item.qty} × ${naira(item.price)}` : naira(item.price)}
         </div>
@@ -223,7 +227,7 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
         {/* the money and where it goes */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 40, paddingTop: 28, borderTop: `2px dashed ${LINE}` }}>
           {row(`${sets} ${sets === 1 ? "set" : "sets"}`, naira(subtotal))}
-          {d && row(d.method === "pickup" ? "Collect from the atelier" : `Delivery · ${d.label}`, d.fee === 0 ? "Free" : naira(d.fee))}
+          {d && row(d.method === "pickup" ? "Pick up in Abuja" : `Delivery · ${d.label}`, d.fee === 0 ? "Free" : naira(d.fee))}
           {row("Paid", naira(order.paid), true)}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 28 }}>
@@ -231,7 +235,7 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
           <div style={{ display: "flex", fontFamily: "Jost", fontSize: 24, color: INK }}>
             {d
               ? d.method === "pickup"
-                ? "The atelier in Abuja. We message you on WhatsApp when it is ready."
+                ? "Our shop in Abuja. We message you on WhatsApp when it is ready."
                 : [order.customer?.name, d.address, d.city].filter(Boolean).join(", ")
               : order.customer?.name ?? ""}
           </div>

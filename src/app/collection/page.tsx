@@ -8,7 +8,7 @@ import { getCatalogue } from "@/lib/content";
 export const metadata: Metadata = {
   title: "The Collection",
   description:
-    "Kaftan, jallabiya and agbada pieces from the Abuja atelier, each with the house design code it is stitched from.",
+    "Kaftan, jallabiya and agbada pieces made in Abuja, each with the code of the design embroidered on it.",
 };
 
 export default async function CollectionPage() {
@@ -24,7 +24,7 @@ export default async function CollectionPage() {
         <h1 className="mt-2 text-[clamp(28px,4vw,42px)]">The Collection</h1>
         <p className="mt-3 max-w-[52ch] text-[14px] leading-[1.72]" style={{ color: "var(--on-surface-soft)" }}>
           Every piece is cut to measure and stitched from the house library. The code under each
-          name is the machine file it is embroidered with.
+          name is the design embroidered on it.
         </p>
       </section>
 
