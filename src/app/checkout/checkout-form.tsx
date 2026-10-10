@@ -77,7 +77,16 @@ export function CheckoutForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map(({ fabric, colour, design, thread, length, qty }) => ({ fabric, colour, design, thread, length, qty })),
+          items: items.map(({ fabric, colour, design, thread, length, sleeves, tassel, qty }) => ({
+            fabric,
+            colour,
+            design,
+            thread,
+            length,
+            sleeves,
+            tassel,
+            qty,
+          })),
           customer: contact,
           delivery: { method, zone, ...address },
         }),

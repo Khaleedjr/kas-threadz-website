@@ -16,7 +16,7 @@ export default async function SignInPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   if (await signedIn()) redirect("/studio");
-  const { wrong } = await searchParams;
+  const { wrong, wait } = await searchParams;
 
   return (
     <div data-register="paper" className="ground-paper flex min-h-dvh flex-col text-[var(--on-surface)]">
@@ -50,6 +50,11 @@ export default async function SignInPage({
               {wrong === "1" && (
                 <p role="alert" className="text-[13px]" style={{ color: "var(--accent)" }}>
                   That is not the password.
+                </p>
+              )}
+              {wait === "1" && (
+                <p role="alert" className="text-[13px]" style={{ color: "var(--accent)" }}>
+                  Too many tries from here. Wait a quarter of an hour, then try again.
                 </p>
               )}
               <button

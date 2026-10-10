@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { SiteFooter, SiteNav } from "@/components/site-chrome";
+import { isBuyer } from "@/lib/buyer";
 import { naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
 import { mailReady, sendReceipt } from "@/lib/order-mail";
@@ -24,6 +25,9 @@ export const metadata: Metadata = {
  * Paystack here, on the server, never taken on the page's word: only then is
  * it recorded and its sets counted as sold, and the receipt drawn and sent.
  * A payment that did not go through lets its sets go back.
+ *
+ * The order's name, address and receipt are shown only in the browser the
+ * order was started in. Anyone else with the reference sees that it is paid.
  */
 export default async function ConfirmPage({
   searchParams,
@@ -37,6 +41,7 @@ export default async function ConfirmPage({
   const { outcome, order } =
     verified && reference ? await recordPayment(reference, verified, cat) : { outcome: "invalid" as const, order: null };
   const paid = outcome !== "invalid" && order !== null;
+  const mine = reference ? await isBuyer(reference) : false;
 
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
@@ -44,21 +49,22 @@ export default async function ConfirmPage({
     // the email goes once, after this page has gone to the customer
     after(() => sendReceipt(order, cat, origin).catch((err) => console.error("Receipt email failed.", err)));
   }
-  if (!paid && reference) {
+  // only the browser that started it can give its sets back early; otherwise the hold simply runs out
+  if (!paid && mine) {
     const pending = await preorderStore()?.pending(reference);
     if (pending) await preorderStore()?.release(reference, countsOf(pending.items));
   }
 
   const items = order ? itemsOf(order) : [];
   const first = order?.customer?.name.split(" ")[0];
-  const receipt = order ? receiptPath(order.reference) : null;
+  const receipt = order && mine ? receiptPath(order.reference) : null;
   const d = order?.delivery;
 
   return (
     <div data-register="paper" className="ground-paper flex flex-1 flex-col text-[var(--on-surface)]">
       <SiteNav />
       <section id="main" className="mx-auto grid w-full max-w-[1100px] flex-1 items-start gap-[clamp(24px,4vw,56px)] px-5 py-[clamp(32px,6vw,64px)] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        {paid && order ? (
+        {paid && order && mine ? (
           <>
             <ClearCart />
             <div className="md:sticky md:top-8">
@@ -139,6 +145,30 @@ export default async function ConfirmPage({
               </a>
             )}
           </>
+        ) : paid && order ? (
+          <div className="md:col-span-2 mx-auto max-w-[560px]">
+            <p className="label" style={{ color: "var(--accent)" }}>
+              Order confirmed
+            </p>
+            <h1 className="mt-3 text-[clamp(28px,4.5vw,44px)]">This order is paid for and on the list.</h1>
+            <p className="mt-4 text-[14px] leading-[1.72]" style={{ color: "var(--on-surface-soft)" }}>
+              Its details show only in the browser it was ordered from, and the receipt went to the email given at checkout. For
+              anything else, message the studio with the reference.
+            </p>
+            <dl className="mt-8 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-dashed pt-5 text-[14px]" style={{ borderColor: "var(--line-dashed)" }}>
+              <dt className="label" style={{ color: "var(--on-surface-soft)" }}>Reference</dt>
+              <dd className="font-mono">{order.reference}</dd>
+            </dl>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href={whatsappLink(`Hello, about my order ${order.reference}`)}
+                className="rounded-sm px-6 py-[13px] text-[10.5px] font-medium uppercase tracking-[0.2em]"
+                style={{ background: "var(--action)", color: "var(--on-action)" }}
+              >
+                WhatsApp the studio
+              </a>
+            </div>
+          </div>
         ) : (
           <div className="md:col-span-2 mx-auto max-w-[560px]">
             <p className="label" style={{ color: "var(--accent)" }}>
