@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { requireStudio } from "@/lib/studio-auth";
 import { signOut } from "../actions";
+import { StudioMark } from "../studio-mark";
 import { DeskNav } from "./desk-nav";
 
 export const metadata: Metadata = {
@@ -23,9 +24,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
         style={{ borderColor: "var(--line)" }}
       >
         <div className="flex items-center justify-between gap-3 px-6 py-4 lg:py-6">
-          <Link href="/studio" className="label" style={{ color: "var(--on-surface)" }}>
-            KAS THREADZ <span style={{ color: "var(--accent)" }}>· Studio</span>
-          </Link>
+          <StudioMark href="/studio" />
           <form action={signOut} className="lg:hidden">
             <button type="submit" className="label underline underline-offset-4" style={{ color: "var(--on-surface-soft)" }}>
               Sign out

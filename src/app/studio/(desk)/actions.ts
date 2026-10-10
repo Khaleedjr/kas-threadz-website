@@ -54,6 +54,17 @@ export async function saveJallabiya(form: FormData) {
   redirect("/studio/products/jallabiya?saved=1");
 }
 
+/** Put every size back to its full count for the next run. Paid orders stay. */
+export async function startNewRun(form: FormData) {
+  await requireStudio();
+  // the box has to be ticked: the page asks before anything is reset
+  if (form.get("confirm") !== "on") redirect("/studio/products/jallabiya?reset=unticked");
+  await preorderStore()?.startRun();
+  revalidatePath("/studio", "layout");
+  revalidatePath("/loom");
+  redirect("/studio/products/jallabiya?reset=1");
+}
+
 /* ------------------------------------------------------------ collection */
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
