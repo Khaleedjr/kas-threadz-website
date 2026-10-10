@@ -38,7 +38,7 @@ export default async function AnalyticsPage() {
         <Panel title="Colours">
           <Bars rows={b.colour} />
         </Panel>
-        <Panel title="Necklines">
+        <Panel title="Designs">
           <Bars rows={b.design} />
         </Panel>
         <Panel title="Sizes">

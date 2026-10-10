@@ -58,7 +58,7 @@ export const DEFAULT_CATALOGUE: Catalogue = {
   preorder: {
     open: true,
     description:
-      "Made to your length in the fabric, colour and neckline you choose. One price covers everything. Pay in full to reserve yours.",
+      "Made to your length in the fabric, colour and design you choose. One price covers everything. Pay in full to reserve yours.",
   },
   pieces: PIECES,
   shipping: DEFAULT_SHIPPING,

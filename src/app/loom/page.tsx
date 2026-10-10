@@ -7,7 +7,7 @@ import { Loom } from "./loom";
 export const metadata: Metadata = {
   title: "Design Yours",
   description:
-    "Preorder the jallabiya: choose the cloth, colour, neckline embroidery and size, and pay in full. The first run is 100 sets, adult and children's.",
+    "Preorder the jallabiya: choose the cloth, colour, embroidery design and size, and pay in full. The first run is 100 sets, adult and children's.",
 };
 
 export default async function LoomPage() {

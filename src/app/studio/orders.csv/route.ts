@@ -12,7 +12,7 @@ import { signedIn } from "@/lib/studio-auth";
 
 const HEAD = [
   "Date", "Reference", "Status", "Name", "Phone", "Email",
-  "Qty", "Size", "Fabric", "Colour", "Neckline", "Thread", "Cuffs", "Pendant", "Each (NGN)", "Line (NGN)",
+  "Qty", "Size", "Fabric", "Colour", "Design", "Thread", "Cuffs", "Pendant", "Each (NGN)", "Line (NGN)",
   "Delivery", "Address", "Delivery fee (NGN)", "Order paid (NGN)", "Note",
 ];
 
