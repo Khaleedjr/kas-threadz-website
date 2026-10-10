@@ -3,12 +3,33 @@ import Link from "next/link";
 import { StitchedMark } from "@/components/stitched-mark";
 import { RevealNav, ScrollCue, SiteFooter } from "@/components/site-chrome";
 import { StudioSchema } from "@/components/structured-data";
-import { naira } from "@/lib/catalogue";
+import { NECKLINES, naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
+import { drawnFabric } from "@/lib/content-defaults";
+import { FEATURED } from "@/lib/featured-builds";
+import { FLAT_RATIO, LENGTH_RANGE, buildJallabiyaFlat } from "@/lib/jallabiya-flat";
 
 export default async function Home() {
-  const { photos, pieces } = await getCatalogue();
-  const featured = pieces.slice(0, 3);
+  const { photos, pieces, colours, fabrics, terms } = await getCatalogue();
+
+  /* A few finished jallabiyas, drawn as Design Yours draws them, in the cloth
+     it opens on. Drawn here on the server, so they arrive with the page. */
+  const cloth = fabrics.find((f) => f.id === "cotton" && !f.soon) ?? fabrics.find((f) => !f.soon) ?? fabrics[0];
+  const builds = FEATURED.flatMap((b) => {
+    const colour = colours.find((c) => c.hex === b.colour);
+    const design = NECKLINES.find((n) => n.code === b.design);
+    if (!colour || !design) return [];
+    const drawing = buildJallabiyaFlat({
+      color: colour.hex,
+      fabric: drawnFabric(cloth).id,
+      neckline: design.image,
+      length: LENGTH_RANGE.standard,
+      sleeves: true,
+      tassel: true,
+      variant: `home-${b.slug}`,
+    });
+    return [{ slug: b.slug, name: design.name, colour: colour.name, drawing }];
+  });
 
   return (
     <div data-register="cloth" className="ground-cloth flex-1 flex flex-col text-[var(--on-surface)]">
@@ -56,37 +77,44 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="px-8 py-12">
-        <div className="mb-5 flex items-baseline justify-between">
-          <h2 className="text-[19px]">The Collection</h2>
-          <Link href="/collection" className="label opacity-80 hover:opacity-100">
-            All pieces →
+      <section className="mx-auto w-full max-w-[calc(680px+2*clamp(16px,4vw,32px))] px-[clamp(16px,4vw,32px)] py-12">
+        <div className="mb-5 flex items-baseline justify-between gap-4">
+          <h2 className="text-[19px]">The Jallabiya</h2>
+          <Link href="/loom" className="label opacity-80 hover:opacity-100">
+            Design yours →
           </Link>
         </div>
 
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((piece, index) => (
-            <li key={piece.slug}>
+        {/* each opens Design Yours already set to it */}
+        <ul className="grid grid-cols-2 gap-[clamp(10px,2vw,16px)]">
+          {builds.map((b) => (
+            <li key={b.slug}>
+              {/* on the home page's own cloth, with a pool of light behind the garment so a dark one still reads */}
               <Link
-                href={`/collection/${piece.slug}`}
-                className="group relative block aspect-[3/4] overflow-hidden rounded-sm bg-[var(--color-cloth-deep)]"
+                href={`/loom/${b.slug}`}
+                className="group flex h-full flex-col overflow-hidden rounded-sm border transition-colors hover:border-[var(--line-dashed)]"
+                style={{
+                  borderColor: "var(--line)",
+                  background: "radial-gradient(70% 52% at 50% 40%, rgba(244, 239, 227, 0.085), rgba(244, 239, 227, 0) 72%)",
+                }}
+                aria-label={`${b.name} in ${b.colour}: open it in Design Yours`}
               >
-                <Image
-                  src={piece.image}
-                  alt={piece.alt}
-                  fill
-                  priority={index === 0}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover object-top transition-transform duration-700 ease-[var(--ease-thread)] group-hover:scale-[1.04]"
-                />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-[rgba(8,11,15,0.92)] via-[rgba(8,11,15,0.6)] to-transparent px-4 pb-3 pt-14">
-                  <div>
-                    <p className="font-display text-[14px] font-semibold">{piece.name}</p>
-                    <p className="mt-[2px] font-mono text-[9px] tracking-[0.14em] text-[var(--color-thread-dim)]">
-                      {piece.design}
-                    </p>
+                <div className="px-[10%] pt-[clamp(12px,2vw,20px)] pb-2">
+                  <div
+                    className="garment-stage transition-transform duration-700 ease-[var(--ease-thread)] group-hover:scale-[1.03]"
+                    style={{ aspectRatio: FLAT_RATIO }}
+                    dangerouslySetInnerHTML={{ __html: b.drawing }}
+                  />
+                </div>
+                <div className="@container mt-auto border-t px-[clamp(10px,1.6vw,16px)] py-3" style={{ borderColor: "var(--line)" }}>
+                  {/* side by side when the card has room for both, else the price under the name, the same on every card */}
+                  <div className="flex flex-col @min-[170px]:flex-row @min-[170px]:items-baseline @min-[170px]:justify-between @min-[170px]:gap-2">
+                    <p className="whitespace-nowrap font-display text-[14px] font-semibold">{b.name}</p>
+                    <p className="price whitespace-nowrap text-[13px]">{naira(terms.adult.price)}</p>
                   </div>
-                  <p className="price whitespace-nowrap text-[13px]">{naira(piece.fromPrice)}</p>
+                  <p className="mt-[3px] font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-thread-dim)]">
+                    {b.colour} {cloth.name.toLowerCase()}
+                  </p>
                 </div>
               </Link>
             </li>

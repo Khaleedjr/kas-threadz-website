@@ -35,7 +35,7 @@ export function checkGarment(input: unknown, cat: Catalogue): PreorderGarment | 
   if (!fabric) return { error: "One of the fabrics in your cart is no longer offered." };
   if (fabric.soon) return { error: `${fabric.name} is coming soon and cannot be ordered yet. Choose another fabric.` };
   if (!cat.colours.some((x) => x.hex === garment.colour)) return { error: "One of the colours in your cart is no longer offered." };
-  if (!NECKLINES.some((n) => n.code === garment.design)) return { error: "One of the neckline designs in your cart is no longer offered." };
+  if (!NECKLINES.some((n) => n.code === garment.design)) return { error: "One of the designs in your cart is no longer offered." };
   if (!THREADS.some((t) => t.id === garment.thread)) return { error: "Choose a thread." };
   if (!isOfferedLength(garment.length)) return { error: "Choose a length." };
   return garment;

@@ -157,9 +157,9 @@ export const DESIGNS: Design[] = [
  * Stand-in names: the studio sent these as screen captures without their
  * machine file names. Each is filed under the number it was sent as, its
  * `code`: that is what a cart or an order keeps and what its images are named
- * by, so an order never changes design. What everyone reads is `name`,
- * numbered by where it now stands; the studio put the eleventh one sent
- * first. When the file names arrive they replace the names here; an invented
+ * by, so an order never changes design. What everyone reads is `name`, a
+ * design numbered by where it now stands: the studio calls them designs, not
+ * necklines, and put the eleventh one sent first. When the file names arrive they replace the names here; an invented
  * code must never take their place. The images are cut by
  * `scripts/neckline-designs.py`.
  */
@@ -170,13 +170,13 @@ const two = (n: number) => String(n).padStart(2, "0");
 export const NECKLINES: Array<Pick<Design, "code" | "label" | "placement" | "image"> & { name: string }> =
   SHOWN_ORDER.map((sent, i) => ({
     code: `Neckline ${two(sent)}`,
-    name: `Neckline ${two(i + 1)}`,
-    label: "Neckline",
+    name: `Design ${two(i + 1)}`,
+    label: "Embroidery",
     placement: "Neck opening & chest",
     image: `/img/designs/necklines/nl${two(sent)}.png`,
   }));
 
-/** A design as it is read: a neckline by its name, anything else by its code. */
+/** A design as it is read: one of the Loom's by its name, anything else by its code. */
 export const designName = (code: string) => NECKLINES.find((n) => n.code === code)?.name ?? code;
 
 export const GARMENT_LABEL: Record<Garment, string> = {

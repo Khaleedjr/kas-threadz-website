@@ -76,21 +76,23 @@ const FINISHING = {
 };
 
 /* What the Loom opens on, on every screen: white cloth with the first
-   neckline, the studio's choice, with embroidered cuffs and the gold pendant. */
+   design, the studio's choice, with embroidered cuffs and the gold pendant.
+   A build shown on the home page opens it set to that build instead. */
 const OPENING = { colour: "#f4f3ef", design: NECKLINES[0].code, sleeves: true, tassel: true };
 
-export function Loom() {
+export function Loom({ opening }: { opening?: { colour: string; design: string } } = {}) {
   const { colours: COLOURS, fabrics: FABRICS, terms: PREORDER, preorder } = useCatalogue();
+  const start = { ...OPENING, ...opening };
   const [config, setConfig] = useState<LoomConfig>(() => ({
     garment: "jallabiya",
     // the opening cloth and colour, if the studio still offers them: cotton,
     // or the first cloth that can be ordered now
     fabric: (FABRICS.find((f) => f.id === "cotton" && !f.soon) ?? FABRICS.find((f) => !f.soon) ?? FABRICS[0]).id,
-    colour: (COLOURS.find((c) => c.hex === OPENING.colour) ?? COLOURS[0]).hex,
-    design: OPENING.design,
+    colour: (COLOURS.find((c) => c.hex === start.colour) ?? COLOURS[0]).hex,
+    design: start.design,
     thread: "original",
-    sleeves: OPENING.sleeves,
-    tassel: OPENING.tassel,
+    sleeves: start.sleeves,
+    tassel: start.tassel,
     measurements: { height: LENGTH_RANGE.standard, fit: "regular" },
   }));
   /* the sheet that is open, and the one last opened, which it keeps showing
