@@ -4,6 +4,7 @@
  * is paid. Server only, like the store and Paystack beside it.
  */
 
+import { randomInt } from "node:crypto";
 import { NECKLINES, designName } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import { THREADS } from "./loom-preview";
@@ -110,9 +111,15 @@ export function describe(g: PreorderGarment, cat: Catalogue) {
   };
 }
 
-/** A reference Paystack and the studio both file the order under. */
+const REF_LETTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+/**
+ * A reference Paystack and the studio both file the order under. Its tail is
+ * drawn from the system's secure random source, so one reference says
+ * nothing about the next.
+ */
 export const newReference = () =>
-  `KT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  `KT-${Date.now().toString(36).toUpperCase()}-${Array.from({ length: 6 }, () => REF_LETTERS[randomInt(REF_LETTERS.length)]).join("")}`;
 
 /**
  * Record a payment Paystack has confirmed, once. Recording it again does

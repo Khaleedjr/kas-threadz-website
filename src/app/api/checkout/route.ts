@@ -1,9 +1,11 @@
+import { markBuyer } from "@/lib/buyer";
 import { designName, naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
 import { extrasWords } from "@/lib/preorder";
 import { newReference, priceCheckout } from "@/lib/preorder-server";
 import { countsOf, preorderStore } from "@/lib/preorder-store";
 import { paystackReady, startPayment } from "@/lib/paystack";
+import { visitor, withinLimit } from "@/lib/rate-limit";
 
 /*
  * Check out a cart: check every build, price it all here from the studio's
@@ -11,6 +13,16 @@ import { paystackReady, startPayment } from "@/lib/paystack";
  * priced, and hand the customer to Paystack to pay exactly that. Nothing the
  * page sends sets a price.
  */
+
+/* a hold lasts half an hour, so that is the window. Mobile networks put
+   many customers behind one address, so the count of checkouts is generous;
+   the count of sets is what stops one address holding every set. */
+const WINDOW_S = 30 * 60;
+const CHECKOUTS = 20;
+const SETS = 40;
+
+const BUSY = "Too many checkouts from here just now. Please wait half an hour, or WhatsApp the studio.";
+
 export async function POST(request: Request) {
   const store = preorderStore();
   if (!store || !paystackReady()) {
@@ -21,11 +33,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "Preorders are closed for now. Please WhatsApp the studio." }, { status: 409 });
   }
 
+  const who = await visitor();
+  if (!(await withinLimit("checkout", who, CHECKOUTS, WINDOW_S))) return Response.json({ error: BUSY }, { status: 429 });
+
   const priced = priceCheckout(await request.json().catch(() => null), cat);
   if ("error" in priced) return Response.json({ error: priced.error }, { status: 400 });
 
-  const reference = newReference();
   const counts = countsOf(priced.items);
+  if (!(await withinLimit("checkout-sets", who, SETS, WINDOW_S, counts.adult + counts.children))) {
+    return Response.json({ error: BUSY }, { status: 429 });
+  }
+
+  const reference = newReference();
   const held = await store.hold(reference, counts, cat.terms);
   if (held !== "held") {
     const left = (await store.stock(cat.terms))[held].left;
@@ -67,6 +86,8 @@ export async function POST(request: Request) {
         ],
       },
     });
+    // only this browser is shown the order when Paystack sends the customer back
+    await markBuyer(reference);
     return Response.json({ url, reference });
   } catch {
     await store.release(reference, counts);
