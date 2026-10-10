@@ -1,7 +1,8 @@
 /*
- * How a chosen neckline is sewn into the cloth, shared by the flat preview
- * (`src/app/loom/stitch-in.ts`) and the 3D one (`jallabiya-3d.ts`) so the
- * two sew at the same pace.
+ * How a neckline is sewn into the cloth: its sewing order and the chalk
+ * guide, used by the flat drawing (`jallabiya-flat.ts`) and the 3D one
+ * (`jallabiya-3d.ts`). Neither sews a chosen design in on the page any more;
+ * a choice shows at once, already sewn.
  *
  * Every neckline carries its sewing order (see `scripts/neckline-designs.py`):
  * 0 is the first stitch, 1 the last. A design shows wherever its order is

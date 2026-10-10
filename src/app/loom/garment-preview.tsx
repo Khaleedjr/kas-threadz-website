@@ -1,12 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import type { Garment } from "@/lib/catalogue";
 import { anchors, build, overlay } from "@/lib/garment";
 import { FLAT_RATIO, buildJallabiyaFlat } from "@/lib/jallabiya-flat";
 import type { Fabric } from "@/lib/loom";
 import { designAsset, type PreviewDesign, type ThreadTones } from "@/lib/loom-preview";
-import { stitchIn, type Stitching } from "./stitch-in";
 
 /**
  * The garment as configured: a ghost mannequin product shot, drawn.
@@ -69,36 +68,10 @@ export function GarmentPreview({
     return svg + (design ? designs : "");
   }, [garment, colour, fabric.id, design, thread, length, sleeves, tassel]);
 
-  /* A newly chosen neckline is stitched into the cloth. Only a change sews:
-     the design on arrival is simply there, already made. */
-  const stage = useRef<HTMLDivElement>(null);
-  const seen = useRef<string | null | undefined>(undefined);
-  const running = useRef<Stitching | null>(null);
-  const neckline = garment === "jallabiya" ? designAsset(design, "neckline") : null;
-
-  // a drawing rebuilt mid-stitch (the colour changed, say) picks up where the needle is
-  useLayoutEffect(() => {
-    running.current?.apply();
-  }, [markup]);
-
-  useLayoutEffect(() => {
-    const before = seen.current;
-    seen.current = neckline;
-    if (before === undefined || !neckline || neckline === before) return;
-    if (!stage.current || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const run = stitchIn(stage.current, neckline, () => {
-      if (running.current === run) running.current = null;
-    });
-    running.current = run;
-    return () => {
-      run.stop();
-      if (running.current === run) running.current = null;
-    };
-  }, [neckline]);
-
+  /* A chosen neckline is simply there, already sewn: picking one answers at
+     once, with no stitching to wait through. */
   return (
     <div
-      ref={stage}
       className="garment-stage"
       // the jallabiya's drawing is cropped tight to the garment, taller than the others
       style={garment === "jallabiya" ? { aspectRatio: FLAT_RATIO } : undefined}
