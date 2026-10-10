@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 import { useId, useState } from "react";
 
 /**
@@ -37,11 +37,13 @@ export function PhotoField({
     setError(null);
     try {
       const name = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-      const blob = await upload(`studio/${name}`, file, { access: "public", handleUploadUrl: "/studio/upload" });
+      const blob = await uploadPresigned(`studio/${name}`, file, { access: "public", handleUploadUrl: "/studio/upload" });
       setSrc(blob.url);
-    } catch {
+    } catch (err) {
+      // the reason Blob gave, kept in the message: the desk is the studio's alone
+      const reason = err instanceof Error && err.message ? ` (${err.message})` : "";
       setError(
-        "The photo could not be uploaded. Check that a Blob store is connected in Vercel's Storage tab, and that the file is a JPEG, PNG or WebP under 15 MB.",
+        `The photo could not be uploaded. Check that a Blob store is connected in Vercel's Storage tab, and that the file is a JPEG, PNG or WebP under 15 MB.${reason}`,
       );
     } finally {
       setBusy(false);
