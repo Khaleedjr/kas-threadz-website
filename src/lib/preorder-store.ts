@@ -13,6 +13,12 @@
  * payment itself carries. Each paid order is written once and never
  * changed; what the studio adds afterwards is kept beside it.
  *
+ * The studio can start a new run: every size's sold count goes back to
+ * nought and the time is noted. Paid orders stay, as the record of what was
+ * taken, but cancelling or restoring one from an earlier run no longer moves
+ * the count, since its sets were never in this one. Sets someone is paying
+ * for at that moment stay held, so the last one cannot be sold twice.
+ *
  * Server only.
  */
 
@@ -30,6 +36,8 @@ const key = {
   order: (reference: string) => `preorder:order:${reference}`,
   meta: (reference: string) => `preorder:meta:${reference}`,
   pending: (reference: string) => `preorder:pending:${reference}`,
+  /** when the current run started, ISO 8601; none until the first new run */
+  run: "preorder:run",
 };
 
 /* Hold every set in an order if there are enough of each size, or none.
@@ -61,6 +69,12 @@ if redis.call('SET', KEYS[1], ARGV[1], 'NX') then
   return 1
 end
 return 0`;
+
+/* Start a new run: no set of any size sold, and the time it began. */
+const START_RUN = `
+redis.call('DEL', KEYS[1], KEYS[2])
+redis.call('SET', KEYS[3], ARGV[1])
+return 1`;
 
 /** Where an order is in the workshop, in the order it moves through. */
 export const ORDER_STATUSES = ["paid", "cutting", "embroidering", "ready", "delivered", "cancelled"] as const;
@@ -171,6 +185,10 @@ type Store = {
    */
   annotate(reference: string, change: Partial<Pick<OrderMeta, "status" | "note">>): Promise<Order | null>;
   tally(terms: PreorderTerms): Promise<Tally>;
+  /** when the current run started, or null if there has only been the first */
+  runStarted(): Promise<string | null>;
+  /** every size back to nought sold; orders and live holds stay */
+  startRun(): Promise<void>;
 };
 
 const NO_META: OrderMeta = { status: "paid", note: "", updatedAt: null };
@@ -178,9 +196,12 @@ const newestFirst = (a: Order, b: Order) => b.at.localeCompare(a.at);
 const parse = <T,>(v: unknown): T | null => (typeof v === "string" ? (JSON.parse(v) as T) : ((v as T) ?? null));
 const members = (reference: string, n: number) => Array.from({ length: n }, (_, i) => `${reference}#${i + 1}`);
 
-/** How a status change moves the sold count: a cancellation gives the sets back. */
-const soldShift = (from: OrderStatus, to: OrderStatus) =>
-  from !== "cancelled" && to === "cancelled" ? -1 : from === "cancelled" && to !== "cancelled" ? 1 : 0;
+/**
+ * How a status change moves the sold count: a cancellation gives the sets
+ * back. An order paid before the current run started is not in its count.
+ */
+const soldShift = (order: StoredOrder, from: OrderStatus, to: OrderStatus, run: string | null) =>
+  run && order.at < run ? 0 : from !== "cancelled" && to === "cancelled" ? -1 : from === "cancelled" && to !== "cancelled" ? 1 : 0;
 
 function redisStore(db: Redis): Store {
   async function withMeta(orders: StoredOrder[]): Promise<Order[]> {
@@ -259,7 +280,7 @@ function redisStore(db: Redis): Store {
         note: change.note ?? current.note,
         updatedAt: new Date().toISOString(),
       };
-      const shift = soldShift(current.status, next.status);
+      const shift = soldShift(current, current.status, next.status, await db.get<string>(key.run));
       if (shift) {
         const counts = countsOf(itemsOf(current));
         for (const tier of Object.keys(counts) as Tier[]) {
@@ -279,6 +300,13 @@ function redisStore(db: Redis): Store {
       }
       return out;
     },
+    async runStarted() {
+      const run = await db.get<string>(key.run);
+      return typeof run === "string" ? run : null;
+    },
+    async startRun() {
+      await db.eval(START_RUN, [key.sold("adult"), key.sold("children"), key.run], [new Date().toISOString()]);
+    },
   };
 }
 
@@ -288,6 +316,7 @@ function memoryStore(): Store {
   const orders = new Map<string, StoredOrder>();
   const metas = new Map<string, OrderMeta>();
   const pendings = new Map<string, PendingOrder>();
+  let run: string | null = null;
   const lapse = (t: Tier) => {
     const now = Date.now();
     for (const [ref, until] of holds[t]) if (until < now) holds[t].delete(ref);
@@ -347,7 +376,7 @@ function memoryStore(): Store {
         note: change.note ?? current.note,
         updatedAt: new Date().toISOString(),
       };
-      const shift = soldShift(current.status, next.status);
+      const shift = soldShift(o, current.status, next.status, run);
       const counts = countsOf(itemsOf(o));
       for (const t of Object.keys(counts) as Tier[]) sold[t] += shift * counts[t];
       metas.set(reference, next);
@@ -361,13 +390,21 @@ function memoryStore(): Store {
       }
       return out;
     },
+    async runStarted() {
+      return run;
+    },
+    async startRun() {
+      sold.adult = 0;
+      sold.children = 0;
+      run = new Date().toISOString();
+    },
   };
 }
 
 const globalStore = globalThis as unknown as { __kasPreorderStore?: Store; __kasStoreShape?: number };
 /* bumped whenever the store changes shape, so a dev server running since
    before the change builds a fresh stand-in instead of reusing an old one */
-const SHAPE = 3;
+const SHAPE = 4;
 
 /** The store, or null when production has no database connected yet. */
 export function preorderStore(): Store | null {

@@ -1,8 +1,8 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { signedIn, studioReady } from "@/lib/studio-auth";
 import { signIn } from "../actions";
+import { StudioMark } from "../studio-mark";
 
 export const metadata: Metadata = {
   title: "Studio",
@@ -21,9 +21,7 @@ export default async function SignInPage({
   return (
     <div data-register="paper" className="ground-paper flex min-h-dvh flex-col text-[var(--on-surface)]">
       <header className="border-b px-[clamp(16px,4vw,40px)] py-4" style={{ borderColor: "var(--line)" }}>
-        <Link href="/" className="label" style={{ color: "var(--on-surface)" }}>
-          KAS THREADZ <span style={{ color: "var(--accent)" }}>· Studio</span>
-        </Link>
+        <StudioMark href="/" />
       </header>
       <main id="main" className="mx-auto flex w-full max-w-[380px] flex-1 flex-col justify-center px-5 py-16">
         <p className="label" style={{ color: "var(--accent)" }}>
@@ -65,6 +63,19 @@ export default async function SignInPage({
                 Sign in
               </button>
             </form>
+            <details className="group mt-6 border-t border-dashed pt-4" style={{ borderColor: "var(--line-dashed)" }}>
+              <summary
+                className="label cursor-pointer list-none underline underline-offset-4 [&::-webkit-details-marker]:hidden"
+                style={{ color: "var(--on-surface-soft)" }}
+              >
+                Forgot the password?
+              </summary>
+              <p className="mt-3 text-[13px] leading-[1.7]" style={{ color: "var(--on-surface-soft)" }}>
+                There is no reset email: the password is kept only in the site&apos;s hosting, so nobody can be sent a way
+                round it. Whoever runs the hosting sets a new one there, as <code className="text-[12px]">STUDIO_PASSWORD</code>,
+                then redeploys. A new password signs everybody out of the desk.
+              </p>
+            </details>
           </>
         ) : (
           <>
