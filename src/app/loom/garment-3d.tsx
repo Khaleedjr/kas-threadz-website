@@ -47,12 +47,9 @@ export default function Garment3D({
     stage.current?.setThread(thread);
   }, [thread, supported]);
 
-  /* a newly chosen neckline is stitched in; the one there on arrival is simply there */
-  const seen = useRef<string | null | undefined>(undefined);
+  /* a chosen neckline is simply there, already sewn, as on the flat preview */
   useEffect(() => {
-    const sew = seen.current !== undefined && seen.current !== neckline;
-    seen.current = neckline;
-    stage.current?.setDesign(neckline, sew);
+    stage.current?.setDesign(neckline, false);
   }, [neckline, supported]);
 
   if (!supported) return <>{fallback}</>;

@@ -388,9 +388,8 @@ function tasselLayer(id: string, top: number): { art: string; defs: string } {
  * The neckline and its cuffs, and everything that sews them in.
  *
  * It is always drawn fully sewn: the reveal mask's front sits past the end of
- * the order. Stitching it in only moves that front and shows the chalk guide
- * and the needle, which `stitch-in.ts` does in the page, so the drawing never
- * has to be rebuilt while the needle runs. The cuffs, when the sleeves are
+ * the order. The chalk guide and the needle stay hidden: the page no longer
+ * sews a chosen design in, so the mask's front is never moved. The cuffs, when the sleeves are
  * to carry the design, are sewn by the same front as the neck, each from the
  * sleeve's outer edge in.
  */
