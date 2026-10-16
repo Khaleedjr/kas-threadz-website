@@ -8,6 +8,7 @@ import { isBuyer } from "@/lib/buyer";
 import { naira } from "@/lib/catalogue";
 import { getCatalogue } from "@/lib/content";
 import { mailReady, sendReceipt } from "@/lib/order-mail";
+import { threadPhrase } from "@/lib/build-words";
 import { describe, recordPayment } from "@/lib/preorder-server";
 import { countsOf, itemsOf, preorderStore } from "@/lib/preorder-store";
 import { verifyPayment } from "@/lib/paystack";
@@ -91,8 +92,9 @@ export default async function ConfirmPage({
                       <dt className="label" style={{ color: "var(--on-surface-soft)" }}>{i.qty > 1 ? `${i.qty} ×` : "Set"}</dt>
                       <dd>
                         {i.garment.length}″ {cat.terms[w.tier].name.toLowerCase()}, {i.described?.colour ?? w.colour}{" "}
-                        {(i.described?.fabric ?? w.fabric).toLowerCase()}, <span className="font-mono text-[13px]">{w.design}</span>,{" "}
-                        {w.thread === "As designed" ? "thread as designed" : `${w.thread.toLowerCase()} thread`}, {w.extras}
+                        {(i.described?.fabric ?? w.fabric).toLowerCase()},{" "}
+                        <span className={w.plain ? undefined : "font-mono text-[13px]"}>{w.design}</span>
+                        {threadPhrase(w.thread, w.plain) && `, ${threadPhrase(w.thread, w.plain)}`}, {w.extras}
                       </dd>
                     </div>
                   );

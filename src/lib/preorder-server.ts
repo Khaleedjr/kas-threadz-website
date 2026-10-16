@@ -5,7 +5,7 @@
  */
 
 import { randomInt } from "node:crypto";
-import { NECKLINES, designName } from "./catalogue";
+import { NECKLINES, NO_DESIGN, designName } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import { THREADS } from "./loom-preview";
 import { extrasWords, isOfferedLength, tierFor, type PreorderCustomer, type PreorderGarment } from "./preorder";
@@ -21,21 +21,24 @@ const str = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0
 /** Check one build against what the studio offers now. Returns the reason if it is not. */
 export function checkGarment(input: unknown, cat: Catalogue): PreorderGarment | { error: string } {
   const g = (input ?? {}) as Record<string, unknown>;
+  const design = str(g.design, 40);
+  const plain = design === NO_DESIGN;
   const garment: PreorderGarment = {
     fabric: str(g.fabric, 40),
     colour: str(g.colour, 7).toLowerCase(),
-    design: str(g.design, 40),
-    thread: str(g.thread, 20) || "original",
+    design,
+    // with no design there is nothing to sew, so no thread and no embroidered cuffs
+    thread: plain ? "original" : str(g.thread, 20) || "original",
     length: Number(g.length),
     // on only when asked for: a build from before these were offered has neither
-    sleeves: g.sleeves === true,
+    sleeves: !plain && g.sleeves === true,
     tassel: g.tassel === true,
   };
   const fabric = cat.fabrics.find((f) => f.id === garment.fabric);
   if (!fabric) return { error: "One of the fabrics in your cart is no longer offered." };
   if (fabric.soon) return { error: `${fabric.name} is coming soon and cannot be ordered yet. Choose another fabric.` };
   if (!cat.colours.some((x) => x.hex === garment.colour)) return { error: "One of the colours in your cart is no longer offered." };
-  if (!NECKLINES.some((n) => n.code === garment.design)) return { error: "One of the designs in your cart is no longer offered." };
+  if (!plain && !NECKLINES.some((n) => n.code === garment.design)) return { error: "One of the designs in your cart is no longer offered." };
   if (!THREADS.some((t) => t.id === garment.thread)) return { error: "Choose a thread." };
   if (!isOfferedLength(garment.length)) return { error: "Choose a length." };
   return garment;
@@ -105,6 +108,8 @@ export function describe(g: PreorderGarment, cat: Catalogue) {
     fabric: cat.fabrics.find((f) => f.id === g.fabric)?.name ?? g.fabric,
     colour: cat.colours.find((x) => x.hex === g.colour)?.name ?? g.colour,
     design: designName(g.design),
+    /** no embroidery at all: there is no thread to speak of */
+    plain: g.design === NO_DESIGN,
     thread: THREADS.find((t) => t.id === g.thread)?.name ?? g.thread,
     /** the cuffs and the pendant, in words */
     extras: extrasWords(g),

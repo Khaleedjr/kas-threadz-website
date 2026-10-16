@@ -13,6 +13,7 @@
  * Server only.
  */
 
+import { threadPhrase } from "./build-words";
 import { naira } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import { describe } from "./preorder-server";
@@ -35,7 +36,8 @@ export async function sendReceipt(order: StoredOrder, cat: Catalogue, origin: st
   const first = order.customer?.name.split(" ")[0] ?? "";
   const lines = itemsOf(order).map((i) => {
     const w = describe(i.garment, cat);
-    return `${i.qty} × ${i.garment.length}″ ${cat.terms[w.tier].name.toLowerCase()}, ${i.described?.colour ?? w.colour} ${(i.described?.fabric ?? w.fabric).toLowerCase()}, ${w.design}, ${w.thread === "As designed" ? "thread as designed" : `${w.thread.toLowerCase()} thread`}, ${w.extras}: ${naira(i.price * i.qty)}`;
+    const build = [w.design, threadPhrase(w.thread, w.plain), w.extras].filter(Boolean).join(", ");
+    return `${i.qty} × ${i.garment.length}″ ${cat.terms[w.tier].name.toLowerCase()}, ${i.described?.colour ?? w.colour} ${(i.described?.fabric ?? w.fabric).toLowerCase()}, ${build}: ${naira(i.price * i.qty)}`;
   });
   const d = order.delivery;
   const delivery = d

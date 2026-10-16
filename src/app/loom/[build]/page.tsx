@@ -33,7 +33,8 @@ export default async function FeaturedLoomPage({ params }: { params: Promise<{ b
     <div data-register="paper" className="ground-paper flex-1 flex flex-col text-[var(--on-surface)]">
       <SiteNav />
       <CatalogueProvider value={catalogue}>
-        <Loom opening={{ colour: featured.colour, design: featured.design }} />
+        {/* the home page draws these with embroidered cuffs and the gold pendant */}
+        <Loom opening={{ colour: featured.colour, design: featured.design, sleeves: true, tassel: true }} />
       </CatalogueProvider>
       <SiteFooter />
     </div>

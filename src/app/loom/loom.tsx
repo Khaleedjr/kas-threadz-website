@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { DESIGNS, GARMENT_LABEL, NECKLINES, designName, type Garment } from "@/lib/catalogue";
+import { DESIGNS, GARMENT_LABEL, NECKLINES, NO_DESIGN, designName, type Garment } from "@/lib/catalogue";
 import type { LoomConfig } from "@/lib/loom";
 import { FINISH_WORDS, extrasWords, tierFor } from "@/lib/preorder";
 import { drawnFabric } from "@/lib/content-defaults";
@@ -75,12 +75,14 @@ const FINISHING = {
   tassel: { name: "Pendant", ...FINISH_WORDS.tassel },
 };
 
-/* What the Loom opens on, on every screen: white cloth with the first
-   design, the studio's choice, with embroidered cuffs and the gold pendant.
-   A build shown on the home page opens it set to that build instead. */
-const OPENING = { colour: "#f4f3ef", design: NECKLINES[0].code, sleeves: true, tassel: true };
+/* What the Loom opens on, on every screen: plain white cloth with nothing
+   on it at all, no design, plain cuffs and no pendant, for the customer to
+   add to. A build shown on the home page opens it set to that build instead. */
+const OPENING = { colour: "#f4f3ef", design: NO_DESIGN, sleeves: false, tassel: false };
 
-export function Loom({ opening }: { opening?: { colour: string; design: string } } = {}) {
+type Opening = { colour: string; design: string; sleeves?: boolean; tassel?: boolean };
+
+export function Loom({ opening }: { opening?: Opening } = {}) {
   const { colours: COLOURS, fabrics: FABRICS, terms: PREORDER, preorder } = useCatalogue();
   const start = { ...OPENING, ...opening };
   const [config, setConfig] = useState<LoomConfig>(() => ({
@@ -101,7 +103,10 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
   const [shown, setShown] = useState<SheetId>("design");
 
   const available = useMemo(() => designsFor(config.garment), [config.garment]);
-  const design = available.find((d) => d.code === config.design) ?? available[0];
+  const necklines = config.garment === "jallabiya";
+  // the jallabiya can be had with nothing on it at all
+  const plain = necklines && config.design === NO_DESIGN;
+  const design = plain ? undefined : (available.find((d) => d.code === config.design) ?? available[0]);
   // the design as it is read: a neckline by its name, anything else by its code
   const named = design ? designName(design.code) : "";
   const fabric = FABRICS.find((f) => f.id === config.fabric) ?? FABRICS[0];
@@ -110,7 +115,6 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
   // how the design is recoloured for the thread; null keeps its own colours
   const tones = useMemo(() => threadTones(config.thread, colour.hex), [config.thread, colour.hex]);
   const flat = FLATS[config.garment];
-  const necklines = config.garment === "jallabiya";
   const length = config.measurements.height ?? LENGTH_RANGE.standard;
   const tier = tierFor(length);
 
@@ -143,12 +147,19 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
   }, [necklines, colour.hex, fabric, design, tones, length, config.sleeves, config.tassel]);
   const threadWords =
     config.thread === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`;
+  // the design and its thread in words, or that there is no design
+  const designWords = plain ? "No design" : `${named}, ${threadWords}`;
 
   function set<K extends keyof LoomConfig>(key: K, value: LoomConfig[K]) {
     setConfig((c) => {
       const next = { ...c, [key]: value };
       if (key === "garment") {
         next.design = designsFor(value as Garment)[0]?.code ?? null;
+      }
+      // nothing sewn on the jallabiya: no thread, and no design for the cuffs to carry
+      if (key === "design" && value === NO_DESIGN) {
+        next.thread = "original";
+        next.sleeves = false;
       }
       return next;
     });
@@ -181,9 +192,9 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
   /* the build, labelled beside the garment on a phone, top to bottom */
   const callouts = flatCallouts({ length, neckline: necklines ? design?.image : null });
   const labels: GarmentLabel[] =
-    necklines && design
+    necklines && (design || plain)
       ? [
-          { id: "design", label: "Design", value: `${named}, ${threadWords}`, ...callouts.design },
+          { id: "design", label: "Design", value: designWords, ...callouts.design },
           {
             id: "tassel",
             label: FINISHING.tassel.name,
@@ -212,20 +223,21 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
   const sheets: Record<SheetId, { label: string; note: string; body: ReactNode }> = {
     design: {
       label: "Design",
-      note: design ? `${named} · ${threadWords}` : "None",
+      note: plain ? "No design" : design ? `${named} · ${threadWords}` : "None",
       body: (
         <>
-          {necklines && (
+          {necklines && !plain && (
             <div className="mb-5">
               <ThreadChoices value={config.thread} colour={colour.hex} onPick={(t) => set("thread", t)} fit="sheet" />
             </div>
           )}
           <DesignChoices
             designs={available}
-            value={design?.code}
+            value={plain ? NO_DESIGN : design?.code}
             colour={colour.hex}
             threaded={Boolean(tones)}
             necklines={necklines}
+            none={necklines}
             onPick={(code) => {
               set("design", code);
               closeSheet();
@@ -253,7 +265,9 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
     sleeves: {
       label: FINISHING.sleeves.name,
       note: config.sleeves ? FINISHING.sleeves.on : FINISHING.sleeves.off,
-      body: finishing && (
+      body: plain ? (
+        <PlainCuffs />
+      ) : finishing && (
         <FinishChoices
           {...finishing.sheet.sleeves}
           value={config.sleeves}
@@ -435,21 +449,22 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
           <Step
             n="04"
             title="Embroidery"
-            note={design ? `${named} · ${design.placement}` : "None"}
+            note={plain ? "No design" : design ? `${named} · ${design.placement}` : "None"}
           >
             {/* the strip scrolls inside its own box so it can never run into the next step */}
             <div className="max-h-[min(34dvh,300px)] overflow-y-auto pb-1 pr-1">
               <DesignChoices
                 designs={available}
-                value={design?.code}
+                value={plain ? NO_DESIGN : design?.code}
                 colour={colour.hex}
                 threaded={Boolean(tones)}
                 necklines={necklines}
+                none={necklines}
                 onPick={(code) => set("design", code)}
                 fit="steps"
               />
             </div>
-            {necklines && (
+            {necklines && !plain && (
               <div className="mt-4">
                 <ThreadChoices value={config.thread} colour={colour.hex} onPick={(t) => set("thread", t)} fit="steps" />
               </div>
@@ -463,7 +478,11 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
               note={`${config.sleeves ? FINISHING.sleeves.on : FINISHING.sleeves.off} · ${config.tassel ? FINISHING.tassel.on : FINISHING.tassel.off}`}
             >
               <div className="flex flex-wrap gap-x-8 gap-y-5">
-                <FinishChoices {...finishing.steps.sleeves} value={config.sleeves} onPick={(on) => set("sleeves", on)} fit="steps" />
+                {plain ? (
+                  <PlainCuffs />
+                ) : (
+                  <FinishChoices {...finishing.steps.sleeves} value={config.sleeves} onPick={(on) => set("sleeves", on)} fit="steps" />
+                )}
                 <FinishChoices {...finishing.steps.tassel} value={config.tassel} onPick={(on) => set("tassel", on)} fit="steps" />
               </div>
             </Step>
@@ -474,18 +493,18 @@ export function Loom({ opening }: { opening?: { colour: string; design: string }
           </Step>
         </div>
 
-        {design && (
+        {(design || plain) && (
           <PreorderPanel
             garment={{
               fabric: config.fabric,
               colour: config.colour,
-              design: design.code,
+              design: plain ? NO_DESIGN : design!.code,
               thread: config.thread,
               length,
               sleeves: config.sleeves,
               tassel: config.tassel,
             }}
-            summary={`Jallabiya, ${PREORDER[tier].name.toLowerCase()} ${length}″, ${colour.name.toLowerCase()} ${fabric.name.toLowerCase()}, ${named}, ${threadWords}, ${extrasWords(config)}`}
+            summary={`Jallabiya, ${PREORDER[tier].name.toLowerCase()} ${length}″, ${colour.name.toLowerCase()} ${fabric.name.toLowerCase()}, ${plain ? "no design" : `${named}, ${threadWords}`}, ${extrasWords(config)}`}
           />
         )}
       </section>
@@ -525,6 +544,21 @@ function Step({
       </p>
       {note && <p className="mt-1 mb-3 font-display text-[15px] font-semibold">{note}</p>}
       <div className={note ? "" : "mt-3"}>{children}</div>
+    </div>
+  );
+}
+
+/* With no design there is nothing for the cuffs to carry: they are plain,
+   and say how to embroider them. */
+function PlainCuffs() {
+  return (
+    <div className="max-w-[30ch]">
+      <p className="label" style={{ color: "var(--on-surface-soft)" }}>
+        {FINISHING.sleeves.name}
+      </p>
+      <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--on-surface-soft)" }}>
+        {FINISHING.sleeves.off}. Choose a design and the cuffs can be embroidered with it too.
+      </p>
     </div>
   );
 }

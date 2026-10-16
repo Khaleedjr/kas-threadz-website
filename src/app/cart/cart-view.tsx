@@ -97,7 +97,8 @@ export function CartView() {
                 </p>
                 <p className="mt-2 text-[15px]">{w.cloth}</p>
                 <p className="mt-1 text-[13px]" style={{ color: "var(--on-surface-soft)" }}>
-                  <span className="font-mono">{w.design}</span> · {w.thread} · {w.extras}
+                  <span className={w.plain ? undefined : "font-mono"}>{w.design}</span>
+                  {w.thread && ` · ${w.thread}`} · {w.extras}
                 </p>
                 {w.unavailable && (
                   <p className="mt-2 text-[12px]" style={{ color: "var(--accent)" }}>
