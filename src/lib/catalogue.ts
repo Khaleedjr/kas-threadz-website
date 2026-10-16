@@ -176,8 +176,16 @@ export const NECKLINES: Array<Pick<Design, "code" | "label" | "placement" | "ima
     image: `/img/designs/necklines/nl${two(sent)}.png`,
   }));
 
+/**
+ * The jallabiya with no embroidery on it at all: what a cart or an order
+ * keeps in place of a design's code. No cuffs are embroidered and no thread
+ * is chosen, since there is nothing to sew.
+ */
+export const NO_DESIGN = "none";
+
 /** A design as it is read: one of the Loom's by its name, anything else by its code. */
-export const designName = (code: string) => NECKLINES.find((n) => n.code === code)?.name ?? code;
+export const designName = (code: string) =>
+  code === NO_DESIGN ? "No design" : (NECKLINES.find((n) => n.code === code)?.name ?? code);
 
 export const GARMENT_LABEL: Record<Garment, string> = {
   kaftan: "Kaftan",

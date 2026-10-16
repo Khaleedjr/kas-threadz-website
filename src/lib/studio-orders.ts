@@ -4,6 +4,7 @@
  * Server only.
  */
 
+import { threadPhrase } from "./build-words";
 import { naira } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import type { PreorderGarment } from "./preorder";
@@ -17,6 +18,8 @@ export type ItemRow = {
   fabric: string;
   colour: string;
   design: string;
+  /** no embroidery at all, so no thread */
+  plain: boolean;
   thread: string;
   /** the cuffs and the pendant, in words */
   extras: string;
@@ -65,7 +68,7 @@ export function whatsappFor(phone: string): string | null {
   return digits.length >= 10 ? `https://wa.me/${digits}` : null;
 }
 
-export const threadWords = (thread: string) => (thread === "As designed" ? "thread as designed" : `${thread.toLowerCase()} thread`);
+export const threadWords = (thread: string) => threadPhrase(thread, false);
 
 export function orderRow(o: Order, cat: Catalogue): OrderRow {
   const items: ItemRow[] = itemsOf(o).map((i) => {
@@ -78,6 +81,7 @@ export function orderRow(o: Order, cat: Catalogue): OrderRow {
       fabric: i.described?.fabric || w.fabric,
       colour: i.described?.colour || w.colour,
       design: w.design,
+      plain: w.plain,
       thread: w.thread,
       extras: w.extras,
       sleeves: Boolean(i.garment.sleeves),

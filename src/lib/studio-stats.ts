@@ -77,7 +77,8 @@ export function breakdowns(orders: Order[], cat: Catalogue) {
       add(b.colour, i.described?.colour || w.colour);
       add(b.design, w.design);
       add(b.fabric, i.described?.fabric || w.fabric);
-      add(b.thread, w.thread);
+      // a build with no design has no thread to count
+      if (!w.plain) add(b.thread, w.thread);
       add(b.tier, cat.terms[w.tier].name);
       add(b.length, `${i.garment.length}″`);
       add(b.sleeves, i.garment.sleeves ? FINISH_WORDS.sleeves.on : FINISH_WORDS.sleeves.off);

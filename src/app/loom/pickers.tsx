@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { designName, naira } from "@/lib/catalogue";
+import { NO_DESIGN, designName, naira } from "@/lib/catalogue";
 import { THREADS, threadFilter, threadTones, type ThreadTones } from "@/lib/loom-preview";
 import { ADULT_LENGTHS, CHILD_LENGTHS, type Tier } from "@/lib/preorder";
 import { useCatalogue } from "./catalogue-context";
@@ -240,6 +240,7 @@ export function DesignChoices({
   colour,
   threaded,
   necklines,
+  none = false,
   onPick,
   fit,
 }: {
@@ -249,10 +250,18 @@ export function DesignChoices({
   /** whether a thread other than the design's own is chosen; the tiles then borrow its filter */
   threaded: boolean;
   necklines: boolean;
+  /** offer the garment with no design on it at all, as the first tile */
+  none?: boolean;
   onPick: (code: string) => void;
   fit: Fit;
 }) {
   const sheet = fit === "sheet";
+  const tileHeight = sheet ? "h-[104px]" : necklines ? "h-[96px]" : "h-[104px]";
+  const caption = `mt-1 block w-full truncate font-mono ${sheet ? "text-[8.5px] tracking-[0.02em]" : "text-[8px] tracking-[0.08em]"}`;
+  const plainOn = value === NO_DESIGN;
+  // the neck opening is drawn in ink on a light cloth and in chalk on a dark one
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(colour.slice(i, i + 2), 16) || 0);
+  const seam = 0.299 * r + 0.587 * g + 0.114 * b > 140 ? "rgba(35, 42, 51, 0.5)" : "rgba(244, 239, 227, 0.55)";
   return (
     <ul
       className={`grid gap-2 ${
@@ -263,6 +272,37 @@ export function DesignChoices({
             : "grid-cols-[repeat(auto-fill,minmax(56px,1fr))]"
       }`}
     >
+      {none && (
+        <li>
+          <button
+            type="button"
+            onClick={() => onPick(NO_DESIGN)}
+            aria-pressed={plainOn}
+            title="No design: the garment with nothing embroidered on it"
+            className={`flex w-full flex-col items-center justify-between rounded-sm border p-[6px] ${tileHeight}`}
+            style={{
+              borderColor: plainOn ? "var(--accent)" : "var(--line-dashed)",
+              background: plainOn ? "rgba(157,59,44,0.06)" : undefined,
+            }}
+          >
+            {/* the cloth itself, with only its plain neck opening drawn on it */}
+            <span className="relative min-h-0 w-full flex-1 rounded-[2px]" style={{ background: colour }}>
+              <svg viewBox="0 0 40 40" className="absolute inset-0 h-full w-full" aria-hidden>
+                <path
+                  d="M13 9 Q20 16 27 9 M20 13.5 V27"
+                  fill="none"
+                  stroke={seam}
+                  strokeWidth="0.9"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <span className={caption} style={{ color: plainOn ? "var(--accent)" : "var(--on-surface-soft)" }}>
+              No design
+            </span>
+          </button>
+        </li>
+      )}
       {designs.map((d) => {
         const on = value === d.code;
         return (
@@ -272,9 +312,7 @@ export function DesignChoices({
               onClick={() => onPick(d.code)}
               aria-pressed={on}
               title={`${designName(d.code)} · ${d.label}`}
-              className={`flex w-full flex-col items-center justify-between rounded-sm border p-[6px] ${
-                sheet ? "h-[104px]" : necklines ? "h-[96px]" : "h-[104px]"
-              }`}
+              className={`flex w-full flex-col items-center justify-between rounded-sm border p-[6px] ${tileHeight}`}
               style={{
                 borderColor: on ? "var(--accent)" : "var(--line-dashed)",
                 background: on ? "rgba(157,59,44,0.06)" : undefined,
@@ -301,7 +339,7 @@ export function DesignChoices({
               </span>
               <span
                 // the whole name, always: a code is the file's name on the machine
-                className={`mt-1 block w-full truncate font-mono ${sheet ? "text-[8.5px] tracking-[0.02em]" : "text-[8px] tracking-[0.08em]"}`}
+                className={caption}
                 style={{ color: on ? "var(--accent)" : "var(--on-surface-soft)" }}
               >
                 {designName(d.code)}

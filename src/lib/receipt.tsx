@@ -10,6 +10,7 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { ImageResponse } from "next/og";
+import { threadPhrase } from "./build-words";
 import { naira } from "./catalogue";
 import type { Catalogue } from "./content-defaults";
 import { FLAT_RATIO, buildJallabiyaFlat } from "./jallabiya-flat";
@@ -151,7 +152,7 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
       size: `${item.garment.length}″ ${cat.terms[w.tier].name.toLowerCase()}`,
       cloth: `${item.described?.colour || w.colour} ${(item.described?.fabric || w.fabric).toLowerCase()}`,
       design: w.design,
-      thread: !thread || thread.id === "original" ? "thread as designed" : `${thread.name.toLowerCase()} thread`,
+      thread: threadPhrase(thread?.name, w.plain),
       extras: w.extras,
     };
   };
@@ -164,7 +165,7 @@ export async function receiptImage(order: StoredOrder, cat: Catalogue, origin: s
         {big && <div style={{ fontFamily: "Syne", fontSize: 44, color: INK }}>{l.size}</div>}
         <div style={{ fontFamily: "Jost", fontSize: big ? 30 : 22, color: INK }}>{l.cloth}</div>
         <div style={{ display: "flex", fontFamily: "Mono, Naira", fontSize: big ? 26 : 19, color: INK, letterSpacing: 1 }}>{l.design}</div>
-        <div style={{ fontFamily: "Jost", fontSize: big ? 24 : 19, color: SOFT }}>{l.thread}</div>
+        {l.thread && <div style={{ fontFamily: "Jost", fontSize: big ? 24 : 19, color: SOFT }}>{l.thread}</div>}
         <div style={{ fontFamily: "Jost", fontSize: big ? 24 : 19, color: SOFT }}>{l.extras}</div>
         <div style={{ display: "flex", fontFamily: "Mono, Naira", fontSize: big ? 28 : 21, color: INK, marginTop: big ? 12 : 4 }}>
           {item.qty > 1 ? `${item.qty} × ${naira(item.price)}` : naira(item.price)}
